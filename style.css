@@ -22,7 +22,7 @@ button { cursor: pointer; background: var(--accent); color: #211018; border: 1px
 button:hover { background: #ff92ae; }
 button:disabled { background: #373039; color: #92818b; cursor: default; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, .drop:focus-within { outline: 2px solid var(--accent); outline-offset: 4px; }
-button span { margin-left: 18px; }
+button span:not([data-i18n]) { margin-left: 18px; }
 .quiet { border-color: var(--line); background: #25252b; color: #dad6dc; }
 .quiet:hover { background: #303037; border-color: #55505a; }
 .small-button { min-height: 36px; padding: 8px 13px; font-size: 12px; }
@@ -190,3 +190,25 @@ body.embedded #preview-dialog { background: #1c1c1c; border-color: #444; }
 body.embedded #preview-dialog::backdrop { background: #000e; }
 body.embedded #preview-title { color: #ccc; }
 body.embedded #preview-image { background: #090909; }
+.settings-open { margin-left: 12px; }
+.app-header #quit { margin-left: auto; }
+.panel-heading { flex-wrap: wrap; }
+.panel-heading .settings-open { margin-left: 0; }
+#settings-dialog { color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; width: min(560px, 94vw); max-height: 90vh; padding: 24px; }
+#settings-dialog::backdrop { background: #000b; }
+.settings-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+.settings-form { display: flex; flex-direction: column; gap: 16px; }
+.settings-field { display: flex; align-items: center; justify-content: space-between; gap: 18px; font-size: 13px; }
+.settings-field select { width: 58%; }
+.settings-field > span { min-width: 0; }
+.settings-field input[type="checkbox"] { width: 17px; height: 17px; flex-shrink: 0; }
+.settings-exclusions { border-top: 1px solid var(--line); padding-top: 18px; }
+.settings-exclusions h3 { margin: 0; font-size: 14px; }
+.settings-exclusions p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.settings-excluded-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.settings-excluded-tags button { font-weight: 400; }
+.settings-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.settings-status { color: var(--muted); font-size: 12px; margin: 0; }
+.settings-status:empty { display: none; }
+body.embedded #settings-dialog { background: var(--panel); border-color: var(--line); }
+@media (max-width: 440px) { #settings-dialog { padding: 18px; } .app-header { flex-wrap: wrap; gap: 12px; } .settings-open { margin-left: 0; } }

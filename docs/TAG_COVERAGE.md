@@ -1,8 +1,8 @@
 # Tag-Abdeckung
 
-159 von 258 Tags haben eine automatische Modellzuordnung. Das beschreibt die Abdeckung, nicht die Erkennungsgenauigkeit.
+Bei den Standardeinstellungen haben 159 von 258 Tags eine automatische Modellzuordnung. Das beschreibt die Abdeckung, nicht die Erkennungsgenauigkeit.
 
-## Nur manuell
+## Bei Standardeinstellungen nur manuell
 
 Diese Tags haben entweder keine ausreichend passende Modellzuordnung oder sind bewusst von automatischen Vorschlägen ausgeschlossen. Alle bleiben manuell auswählbar.
 
@@ -106,7 +106,7 @@ Diese Tags haben entweder keine ausreichend passende Modellzuordnung oder sind b
 - gilf
 - degrading
 
-`hairy` und `watermark` sind wegen wiederholter Fehlzuordnungen von automatischen und unsicheren Treffern ausgeschlossen. Kontext- und Identitätsangaben sowie technische Tags der Upload-Seite werden ebenfalls nicht aus Bildern abgeleitet.
+`hairy` und `watermark` sind wegen wiederholter Fehlzuordnungen standardmäßig von automatischen und unsicheren Treffern ausgeschlossen. Diese beiden Ausschlüsse können in den Einstellungen entfernt werden; weitere benutzerdefinierte Ausschlüsse verringern die automatische Abdeckung. Kontext- und Identitätsangaben sowie technische Tags der Upload-Seite werden ebenfalls nicht aus Bildern abgeleitet.
 
 ## Aktualisieren
 

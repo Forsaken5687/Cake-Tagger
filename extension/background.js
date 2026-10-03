@@ -8,6 +8,9 @@ browser.runtime.onMessage.addListener((message, sender) => {
   const fromAnalysis = sender.url === analysisUrl || sender.url?.startsWith(analysisUrl + '?');
   const fromCake = sender.url?.startsWith('https://cake.ski/');
   if (sender.id !== browser.runtime.id || (!fromAnalysis && !fromCake)) return;
+  if (message?.type === 'cake-tagger:settings-get' || ((!fromCake) && message?.type === 'cake-tagger:settings-set')) {
+    return import(browser.runtime.getURL('extension/settings-background.mjs')).then(module => module.handleSettings(browser, message)).catch(() => ({ error: 'Einstellungen konnten nicht gespeichert werden.' }));
+  }
   if (message?.type === 'cake-tagger:tab-id') {
     return Promise.resolve(sender.tab?.id ?? null);
   }

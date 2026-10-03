@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Lokale Tag-Vorschläge für Videos und Übernahme in cake.ski-Uploadfelder.",
   "browser_specific_settings": {
     "gecko": {
@@ -11,6 +11,7 @@
     }
   },
   "host_permissions": ["https://cake.ski/*"],
+  "permissions": ["storage"],
   "icons": { "48": "assets/logo.svg", "96": "assets/logo.svg" },
   "action": { "default_title": "Cake Tagger öffnen", "default_icon": "assets/logo.svg" },
   "background": { "scripts": ["extension/background.js"] },

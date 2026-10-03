@@ -31,6 +31,7 @@ test('Firefox manifest confines page access and declares WASM CSP', () => {
   assert.ok(manifest.background.scripts.length);
   assert.equal(manifest.background.service_worker, undefined);
   assert.ok(manifest.content_security_policy.extension_pages.includes("'wasm-unsafe-eval'"));
-  assert.equal(manifest.permissions, undefined);
+  assert.deepEqual(manifest.permissions, ['storage']);
+  assert.equal(manifest.action.default_popup, undefined);
   assert.ok(!manifest.web_accessible_resources[0].resources.some(p => p.startsWith('model/') || p.startsWith('vendor/')));
 });

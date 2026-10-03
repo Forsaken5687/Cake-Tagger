@@ -22,6 +22,17 @@ Der Export wird als `cake-tags.json` über den Browser heruntergeladen. Es gibt 
 
 Bei einer Kopie aus Git fehlen drei große Abhängigkeiten. Einmalig `Setup.cmd` ausführen, um die festgelegten Dateien herunterzuladen und ihre Prüfsummen zu kontrollieren. Danach funktioniert die Anwendung offline. Bereits mitgelieferte Dateien werden geprüft und nicht erneut heruntergeladen.
 
+## Einstellungen
+
+**Einstellungen** ist auf der Hauptseite und in der eingebetteten Analyse verfügbar. Ein Klick auf das Firefox-Erweiterungssymbol öffnet direkt die separate Analyseansicht.
+
+- Sprache: Browsersprache, Deutsch oder Englisch. Tagnamen bleiben unverändert.
+- Bildanzahl: automatisch nach Videolänge oder 4 bis 48 Bilder.
+- Scores und unsichere Vorschläge ein- oder ausblenden.
+- Tags von neuen automatischen Vorschlägen ausschließen. `hairy` und `watermark` sind standardmäßig ausgeschlossen; diese Ausschlüsse lassen sich entfernen.
+
+**Speichern** übernimmt die Werte, **Standardwerte** setzt die Formularauswahl zurück. Bestehende Tag-Auswahlen und manuelle Ergänzungen bleiben erhalten. Einstellungen bleiben nach dem Neuladen gespeichert; Ergebnisse bleiben weiterhin nur in der Sitzung. Die Firefox-Ansichten teilen die Einstellungen über den Erweiterungsspeicher. Die eigenständige Oberfläche nutzt ihren Browser-Speicher und verwaltet eine separate Auswahl.
+
 ## Funktionen
 
 - Vergrößerbare Vorschaubilder mit Bildnavigation per Schaltfläche oder Pfeiltaste. Schließen über Escape, Schließen-Schaltfläche oder Klick außerhalb.
@@ -47,7 +58,7 @@ Ergebnisse, Korrekturen und Analyse-Cache bleiben im Arbeitsspeicher der Seite. 
 - Maximal zehn Minuten und 250 MiB pro Video. MP4/M4V mit H.264 sind geeignete Formate; weitere Formate hängen von der Unterstützung des Browsers ab.
 - Einzelbilder können kurze Ereignisse übersehen. **Ausgewogen** benötigt für die meisten Tags Treffer in mehr als der Hälfte der Bilder. Ausgewählte Kleidungs-, Accessoire- und Objekttags benötigen mindestens ein Viertel der Bilder (mindestens zwei), dafür aber einen Score von mindestens 0,65. Diese Regeln sind Heuristiken; ihre Wirkung auf die Erkennungsqualität muss mit neuen geprüften Videos bewertet werden.
 - `dance` benötigt mindestens einen Score von 0,65. Die Bildabdeckung ist eine Stichprobe und keine genaue Messung der Videodauer. Mehr Bilder ersetzen keine Bewegungsanalyse. Nicht vorgeschlagene Tags bleiben manuell ergänzbar.
-- `hairy` und `watermark` bleiben wegen häufiger Fehlzuordnungen auf die manuelle Auswahl beschränkt. Vorhandene Auswahlen und Prüfmarkierungen werden durch neue Regeln nicht geändert.
+- `hairy` und `watermark` sind wegen häufiger Fehlzuordnungen standardmäßig von automatischen Vorschlägen ausgeschlossen. Die Ausschlüsse sind im Einstellungsmenü änderbar. Vorhandene Auswahlen und Prüfmarkierungen werden durch neue Regeln nicht geändert.
 - JoyTag wurde überwiegend mit Zeichnungen und zusätzlich mit Fotos trainiert. Bei realen Videos sind Fehlzuordnungen möglich. Scores sind keine kalibrierten Wahrscheinlichkeiten.
 - 159 von 258 Tags haben eine automatische Modellzuordnung. Die übrigen Tags stehen in der [Abdeckungsübersicht](docs/TAG_COVERAGE.md). Kontext- und Identitätsangaben sowie technische Tags der Upload-Seite werden nicht automatisch abgeleitet.
 - Manuelle Korrekturen ändern die Auswahl dieser Sitzung; sie trainieren das Modell nicht.

@@ -1,13 +1,14 @@
 import { excluded } from './tag-policy.mjs';
 export const ANALYSIS_VERSION = 'coverage-v5';
 const details = new Set(['glasses', 'choker', 'collar', 'cat ears', 'bunny ears', 'maid outfit', 'skirt', 'underwear', 'lingerie', 'bikini', 'swimsuit', 'bra', 'panties', 'thigh highs', 'knee high socks', 'pantyhose', 'fishnet', 'high heels', 'hoodie', 'mask', 'earrings', 'piercings', 'hat', 'gag', 'blindfold', 'handcuffs', 'butt plug', 'dildo', 'vibrator', 'sex toy']);
-export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'majority') {
+export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'majority', options = {}) {
   if (!['majority', 'brief'].includes(coverage)) throw Error('Ungültige zeitliche Abdeckung.');
   const required = coverage === 'majority' ? Math.max(2, Math.floor(frameScores.length / 2) + 1) : 2;
   const predicted = [], uncertain = [];
+  const userExcluded = new Set(options.excludedTags ?? ['hairy', 'watermark']);
   for (const [tag, indices] of Object.entries(mapping)) {
     // Manual-only categories must not appear in either automatic output list.
-    if (excluded.has(tag)) continue;
+    if ((excluded.has(tag) && tag !== 'hairy' && tag !== 'watermark') || userExcluded.has(tag)) continue;
     const isDetail = coverage === 'majority' && details.has(tag);
     const tagThreshold = isDetail || tag === 'dance' ? Math.max(0.65, threshold) : threshold;
     const tagRequired = isDetail ? Math.max(2, Math.ceil(frameScores.length / 4)) : required;

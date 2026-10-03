@@ -4,7 +4,7 @@ $taggerNode = Join-Path $taggerRoot 'runtime/node.exe'
 if (-not (Test-Path -LiteralPath $taggerNode)) { throw 'Node.js fehlt. Bitte zuerst Setup.cmd ausführen.' }
 Push-Location $taggerRoot
 try {
-    foreach ($file in @('analysis-settings.mjs', 'app.js', 'engine-worker.js', 'static.mjs', 'tagging.mjs', 'sampling.mjs', 'tag-policy.mjs', 'corrections.mjs')) {
+    foreach ($file in @('analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'app.js', 'engine-worker.js', 'static.mjs', 'tagging.mjs', 'sampling.mjs', 'tag-policy.mjs', 'corrections.mjs')) {
         & $taggerNode --check $file
         if ($LASTEXITCODE -ne 0) { throw ('Syntaxprüfung fehlgeschlagen: ' + $file) }
     }

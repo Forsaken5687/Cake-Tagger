@@ -12,47 +12,47 @@
 <body>
 <main>
   <header class="app-header">
-    <a class="brand" href="#" aria-label="Cake Tagger Startseite"><svg class="brand-mark" aria-hidden="true" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#26232a"/>
+    <a class="brand" href="#" aria-label="Cake Tagger Startseite" data-i18n-aria-label="Cake Tagger Startseite"><svg class="brand-mark" aria-hidden="true" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#26232a"/>
   <path d="M19 12h17a6 6 0 0 1 4.24 1.76l12 12a6 6 0 0 1 0 8.48L34.24 51.24a6 6 0 0 1-8.48 0l-12-12A6 6 0 0 1 12 35V19a7 7 0 0 1 7-7Z" fill="#f4f2f3"/>
   <circle cx="22" cy="22" r="4" fill="#26232a"/>
   <path d="m27 34 6 6 11-12" fill="none" stroke="#f77598" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M48 12h5v5" fill="none" stroke="#a1d5be" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Cake<span class="brand-light">Tagger</span></span></a>
-    <button id="quit" class="quiet small-button">Programm beenden</button>
+    <button id="quit" class="quiet small-button" data-i18n="Programm beenden">Programm beenden</button>
   </header>
   <section class="intro" aria-labelledby="page-title">
-    <h1 id="page-title">Videos taggen</h1>
-    <p>Tag-Vorschläge für deine Videos.</p>
+    <h1 id="page-title" data-i18n="Videos taggen">Videos taggen</h1>
+    <p data-i18n="Tag-Vorschläge für deine Videos.">Tag-Vorschläge für deine Videos.</p>
   </section>
   <section class="panel" aria-labelledby="upload-title">
-    <div class="panel-heading"><h2 id="upload-title">Neue Videos</h2><div class="status"><span class="dot" aria-hidden="true"></span><span id="status" role="status" aria-live="polite">Verbindung wird geprüft …</span></div></div>
+    <div class="panel-heading"><h2 id="upload-title" data-i18n="Neue Videos">Neue Videos</h2><div class="status"><span class="dot" aria-hidden="true"></span><span id="status" role="status" aria-live="polite" data-i18n="Verbindung wird geprüft …">Verbindung wird geprüft …</span></div></div>
     <div class="upload-layout">
       <label class="drop" id="drop">
         <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span>
-        <strong>Videos hierher ziehen</strong><span>oder klicken und Dateien auswählen</span><span class="file-types">MP4 · M4V · WebM · MOV</span>
-        <input id="files" type="file" aria-label="Videos auswählen" accept="video/*,.m4v" multiple>
+        <strong data-i18n="Videos hierher ziehen">Videos hierher ziehen</strong><span data-i18n="oder klicken und Dateien auswählen">oder klicken und Dateien auswählen</span><span class="file-types">MP4 · M4V · WebM · MOV</span>
+        <input id="files" type="file" aria-label="Videos auswählen" data-i18n-aria-label="Videos auswählen" accept="video/*,.m4v" multiple>
       </label>
       <div class="analysis-options">
-        <label for="frames">Bilder pro Video</label>
-        <select id="frames"><option value="auto" selected>Automatisch nach Videolänge</option><option value="4">4 Bilder</option><option value="6">6 Bilder</option><option value="8">8 Bilder</option><option value="12">12 Bilder</option><option value="16">16 Bilder</option><option value="24">24 Bilder</option><option value="32">32 Bilder</option><option value="48">48 Bilder</option></select>
-        <button id="analyze" disabled>Tags vorschlagen <span aria-hidden="true">↗</span></button>
-        <button id="cancel" class="quiet" hidden>Analyse abbrechen</button>
+        <label for="frames" data-i18n="Bilder pro Video">Bilder pro Video</label>
+        <select id="frames"><option value="auto" selected data-i18n="Automatisch nach Videolänge">Automatisch nach Videolänge</option><option value="4" data-i18n="4 Bilder">4 Bilder</option><option value="6" data-i18n="6 Bilder">6 Bilder</option><option value="8" data-i18n="8 Bilder">8 Bilder</option><option value="12" data-i18n="12 Bilder">12 Bilder</option><option value="16" data-i18n="16 Bilder">16 Bilder</option><option value="24" data-i18n="24 Bilder">24 Bilder</option><option value="32" data-i18n="32 Bilder">32 Bilder</option><option value="48" data-i18n="48 Bilder">48 Bilder</option></select>
+        <button id="analyze" disabled><span data-i18n="Tags vorschlagen">Tags vorschlagen</span> <span aria-hidden="true">↗</span></button>
+        <button id="cancel" class="quiet" hidden data-i18n="Analyse abbrechen">Analyse abbrechen</button>
       </div>
     </div>
   </section>
   <div id="message" role="status" aria-live="polite"></div>
-  <div class="results-heading"><div><h2>Videos &amp; Tags</h2></div><span id="summary">Noch keine Videos ausgewählt.</span></div>
-  <section id="results" aria-label="Videoergebnisse"></section>
+  <div class="results-heading"><div><h2 data-i18n="Videos & Tags">Videos &amp; Tags</h2></div><span id="summary">Noch keine Videos ausgewählt.</span></div>
+  <section id="results" aria-label="Videoergebnisse" data-i18n-aria-label="Videoergebnisse"></section>
   <footer class="export-bar">
-    <div class="export-description"><strong>Export</strong><span class="export-hint">Ausgewählte Tags als JSON herunterladen.</span></div>
-    <div class="export-actions"><button id="export" disabled>JSON herunterladen <span aria-hidden="true">↓</span></button></div>
+    <div class="export-description"><strong>Export</strong><span class="export-hint" data-i18n="Ausgewählte Tags als JSON herunterladen.">Ausgewählte Tags als JSON herunterladen.</span></div>
+    <div class="export-actions"><button id="export" disabled><span data-i18n="JSON herunterladen">JSON herunterladen</span> <span aria-hidden="true">↓</span></button></div>
   </footer>
-  <div class="page-footer"><span>Cake Tagger</span><span>Ergebnisse bleiben bis zum Neuladen in dieser Sitzung.</span></div>
+  <div class="page-footer"><span>Cake Tagger</span><span data-i18n="Ergebnisse bleiben bis zum Neuladen in dieser Sitzung.">Ergebnisse bleiben bis zum Neuladen in dieser Sitzung.</span></div>
 </main>
 <dialog id="preview-dialog" aria-labelledby="preview-title">
   <div class="preview-content">
-    <div class="preview-heading"><span id="preview-title"></span><button id="preview-close" class="quiet" aria-label="Vorschaubild schließen">Schließen</button></div>
+    <div class="preview-heading"><span id="preview-title"></span><button id="preview-close" class="quiet" aria-label="Vorschaubild schließen" data-i18n-aria-label="Vorschaubild schließen" data-i18n="Schließen">Schließen</button></div>
     <img id="preview-image" alt="">
-    <div class="preview-navigation"><button id="preview-prev" class="quiet" aria-label="Vorheriges Vorschaubild">Zurück</button><span id="preview-position"></span><button id="preview-next" class="quiet" aria-label="Nächstes Vorschaubild">Weiter</button></div>
+    <div class="preview-navigation"><button id="preview-prev" class="quiet" aria-label="Vorheriges Vorschaubild" data-i18n-aria-label="Vorheriges Vorschaubild" data-i18n="Zurück">Zurück</button><span id="preview-position"></span><button id="preview-next" class="quiet" aria-label="Nächstes Vorschaubild" data-i18n-aria-label="Nächstes Vorschaubild" data-i18n="Weiter">Weiter</button></div>
   </div>
 </dialog>
 </body>

@@ -25,7 +25,7 @@ Nach einem Paket-Update bei `about:debugging#/runtime/this-firefox` die Erweiter
 
 Single und Bulk verwenden dieselbe eingebettete Ansicht. Sie bleibt beim Wechsel von Single zu Bulk geöffnet. Neue Dateien kommen hinzu, entfernte Dateien verschwinden aus der Auswahl; vorhandene Ergebnisse und Korrekturen bleiben für unveränderte Dateien erhalten. **Schließen** blendet die Ansicht aus, ohne die Sitzung zu löschen. Beim Neuladen von cake.ski beginnt eine neue Sitzung. Dateien, die vor dem Laden der Erweiterung ausgewählt wurden, müssen erneut im Upload-Bereich ausgewählt werden.
 
-Die Erweiterungsschaltfläche öffnet weiterhin eine separate Analyseansicht. Dort können Dateien unabhängig ausgewählt und Ergebnisse als JSON heruntergeladen werden; für eine Tag-Übernahme den gewünschten Upload-Tab auswählen.
+Die Erweiterungsschaltfläche öffnet direkt eine separate Analyseansicht. Sprache, Bildanzahl, Tag-Ausschlüsse und die Anzeige von Scores bzw. unsicheren Vorschlägen sind über **Einstellungen** in der separaten und der eingebetteten Analyseansicht erreichbar. Alle Firefox-Ansichten verwenden dieselben gespeicherten Einstellungen. Dort können Dateien unabhängig ausgewählt und Ergebnisse als JSON heruntergeladen werden; für eine Tag-Übernahme den gewünschten Upload-Tab auswählen.
 
 Die Erweiterung ergänzt nur ausgewählte Tags und erhält vorhandene Tags. Gemeinsame Bulk-Tags zählen als vorhanden. Für eine Karte ausgeschlossene gemeinsame Tags werden übersprungen. Beschreibungen, Performer, Upload-Fragen und Bestätigungen bleiben unverändert. Die erforderlichen Fragen in Single bleiben separat auszufüllen.
 

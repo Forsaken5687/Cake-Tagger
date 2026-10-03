@@ -5,7 +5,15 @@ const { isExtension, installIntegration, integrationButton } = location.protocol
   : { isExtension: false, installIntegration() {}, integrationButton() {} };
 import { samplingPlan } from './sampling.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analysis-settings.mjs';
+import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
+import { installSettings } from './settings-ui.mjs';
+import { setLanguage, t, translatePage } from './i18n.mjs';
 const $ = s => document.querySelector(s);
+const settingsStore = createSettingsStore(isExtension ? { runtime: browser.runtime } : { storage: localStorage, events: window });
+let settings;
+try { settings = await settingsStore.load(); } catch { settings = settingsStore.get(); }
+setLanguage(settings); translatePage();
+$('#status').removeAttribute('data-i18n');
 let token = location.hash.slice(1), allTags = [], entries = [], running = false, controller, stopping = false;
 let mapping, modelSignature, worker, workerSeq = 0, workerJobs = new Map();
 // Remove the legacy persistent analysis cache; current results live only in memory.
@@ -35,8 +43,8 @@ function infer(frames) {
   if (!worker) {
     worker = new Worker('/engine-worker.js');
     worker.onmessage = ({ data }) => {
-      if (data.type === 'state') $('#status').textContent = data.state;
-      if (data.type === 'progress') $('#status').textContent = `Analysiere Bild ${data.current} / ${data.total} …`;
+      if (data.type === 'state') $('#status').textContent = t(data.state);
+      if (data.type === 'progress') $('#status').textContent = t(`Analysiere Bild ${data.current} / ${data.total} …`);
       const pending = workerJobs.get(data.id);
       if (pending) {
         workerJobs.delete(data.id);
@@ -60,7 +68,7 @@ const api = async (url, options = {}) => {
   if (!r.ok) throw new Error(data.error || 'Anfrage fehlgeschlagen.');
   return data;
 };
-function message(text) { $('#message').textContent = text; }
+function message(text) { $('#message').textContent = t(text); }
 function remember(entry) {
   sessionRecords.set(entry.result.sha256, makeRecord(entry));
 }
@@ -85,17 +93,17 @@ async function status() {
     ]);
     allTags = tagText.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean); mapping = map;
     modelSignature = provenance.sha256 + JSON.stringify(map);
-    $('#status').textContent = 'Bereit';
+    $('#status').textContent = t('Bereit');
   } catch (e) { $('#status').textContent = e.message; }
 }
 function summary() {
   const complete = entries.filter(e => e.result).length;
-  $('#summary').textContent = `${entries.length} Videos · ${complete} analysiert`;
+  $('#summary').textContent = t(`${entries.length} Videos · ${complete} analysiert`);
   $('#analyze').disabled = running || preparing || !entries.some(e => e.hasFile) || !mapping;
   $('#export').disabled = !complete;
 }
 function textElement(name, text, cls) {
-  const e = document.createElement(name); e.textContent = text; if (cls) e.className = cls; return e;
+  const e = document.createElement(name); e.textContent = t(text); if (cls) e.className = cls; return e;
 }
 const previewDialog = $('#preview-dialog');
 let enlargedPreview;
@@ -103,7 +111,7 @@ function showPreview() {
   const { frames, index, filename } = enlargedPreview;
   $('#preview-title').textContent = filename;
   $('#preview-image').src = frames[index];
-  $('#preview-image').alt = `Vorschaubild ${index + 1} von ${frames.length}`;
+  $('#preview-image').alt = t(`Vorschaubild ${index + 1} von ${frames.length}`);
   $('#preview-position').textContent = `${index + 1} / ${frames.length}`;
   $('#preview-prev').disabled = index === 0;
   $('#preview-next').disabled = index === frames.length - 1;
@@ -146,8 +154,8 @@ function render() {
       const previews = textElement('div', '', 'previews');
       entry.frames.forEach((src, i) => {
         const button = textElement('button', '', 'preview-thumb'), img = document.createElement('img');
-        button.type = 'button'; button.setAttribute('aria-label', `Vorschaubild ${i + 1} vergrößern`);
-        img.src = src; img.alt = `Vorschaubild ${i + 1}`;
+        button.type = 'button'; button.setAttribute('aria-label', t(`Vorschaubild ${i + 1} vergrößern`));
+        img.src = src; img.alt = t(`Vorschaubild ${i + 1}`);
         button.append(img); button.onclick = () => openPreview(entry.frames, i, entry.file.name); previews.append(button);
       });
       card.append(previews);
@@ -158,6 +166,7 @@ function render() {
       card.append(tagHeading);
       const chips = textElement('div', '', 'tags');
       for (const tag of entry.selected.keys()) {
+        if (!settings.showUncertain && entry.result.uncertain.includes(tag) && !entry.selected.get(tag) && tagSource(entry, tag) === 'suggestion') continue;
         const label = textElement('label', '', 'chip'), box = document.createElement('input');
         box.type = 'checkbox'; box.checked = entry.selected.get(tag);
         const original = entry.result.tags.find(row => row.tag === tag) || entry.result.uncertainScores?.find(row => row.tag === tag);
@@ -165,13 +174,14 @@ function render() {
         const origin = source === 'unknown' ? 'Unbekannt' : source === 'suggestion' ? isUncertain ? 'Unsicher' : 'Vorschlag' : 'Ergänzt';
         label.classList.toggle('uncertain', isUncertain);
         label.classList.toggle('manual', origin === 'Ergänzt');
-        label.title = origin === 'Ergänzt' ? 'Manuell ergänzt' : origin === 'Unbekannt' ? 'Herkunft im alten Ergebnis nicht dokumentiert' : 'Ursprünglicher Modellvorschlag';
-        if (original?.supportingFrames) label.title += ` · erkannt in ${original.supportingFrames} von ${entry.result.sampledFrames} Vorschaubildern`;
+        label.title = t(origin === 'Ergänzt' ? 'Manuell ergänzt' : origin === 'Unbekannt' ? 'Herkunft im alten Ergebnis nicht dokumentiert' : 'Ursprünglicher Modellvorschlag');
+        if (original?.supportingFrames) label.title += t(` · erkannt in ${original.supportingFrames} von ${entry.result.sampledFrames} Vorschaubildern`);
         box.addEventListener('change', () => { entry.selected.set(tag, box.checked); changed(entry); render(); });
         label.append(box, textElement('span', tag), textElement('span', origin, 'tag-origin')); chips.append(label);
-        if (source === 'suggestion' && entry.originalSuggestionsKnown !== false && Number.isFinite(original?.confidence)) {
+        if (settings.showScores && source === 'suggestion' && entry.originalSuggestionsKnown !== false && Number.isFinite(original?.confidence)) {
           const score = textElement('span', `Score ${Math.round(original.confidence * 100)} %`, 'tag-score');
           score.title = 'Modellscore: Durchschnitt der zwei stärksten Bildtreffer. Keine gemessene Wahrscheinlichkeit für einen richtigen Tag.';
+          score.title = t(score.title);
           label.append(score);
         }
       }
@@ -180,7 +190,7 @@ function render() {
       if (entry.originalSuggestionsKnown === false) card.append(textElement('p', 'Aus altem Export übernommen. Ursprüngliche Vorschläge und Scores sind hier nicht vollständig bekannt.'));
       const add = textElement('div', '', 'tag-add'), input = document.createElement('input'), list = document.createElement('datalist');
       list.id = 'tags-' + entry.index; allTags.forEach(t => { const o = document.createElement('option'); o.value = t; list.append(o); });
-      input.type = 'text'; input.placeholder = 'Weiteren Tag suchen …'; input.setAttribute('list', list.id); input.setAttribute('aria-label', 'Tag ergänzen für ' + entry.file.name);
+      input.type = 'text'; input.placeholder = t('Weiteren Tag suchen …'); input.setAttribute('list', list.id); input.setAttribute('aria-label', t('Tag ergänzen für ' + entry.file.name));
       const button = textElement('button', 'Ergänzen', 'quiet');
       const addTag = () => {
         const found = allTags.find(t => t.toLowerCase() === input.value.trim().toLowerCase());
@@ -262,10 +272,14 @@ async function sample(file, setting, signal, knownHash) {
   } finally { video.removeAttribute('src'); video.load(); URL.revokeObjectURL(url); }
 }
 $('#analyze').onclick = async () => {
+  if (running || preparing) return;
+  running = true; summary();
+  try { settings = await settingsStore.load(); } catch (error) { running = false; summary(); message(error.message); return; }
   running = true; controller = new AbortController(); $('#files').disabled = true; $('#frames').disabled = true; $('#cancel').hidden = false; message(''); summary();
-  const setting = $('#frames').value;
+  const setting = settings.frames;
   const threshold = DEFAULT_THRESHOLD;
-  const coverage = DEFAULT_COVERAGE, analysisPolicy = ANALYSIS_VERSION + ':' + coverage;
+  const analysisSettings = { ...settings, excludedTags: [...settings.excludedTags] };
+  const coverage = DEFAULT_COVERAGE, analysisPolicy = ANALYSIS_VERSION + ':' + coverage + ':' + suggestionPolicy(analysisSettings);
   try {
     for (const entry of entries) {
       if (!entry.hasFile) continue;
@@ -284,7 +298,7 @@ $('#analyze').onclick = async () => {
         else {
           const inference = await infer(sampleData.inputs);
           controller.signal.throwIfAborted();
-          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
+          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage, analysisSettings), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
           await cached(key, result);
         }
         result = { ...result, sampledFrames: count, samplingMode: sampleData.samplingMode, durationSeconds: sampleData.durationSeconds };
@@ -300,7 +314,7 @@ $('#analyze').onclick = async () => {
       render();
     }
   } catch (e) { message(e.name === 'AbortError' ? 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.' : e.message); }
-  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = 'Bereit'; drainEmbeddedFiles(); }
+  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#frames').value = settings.frames; $('#cancel').hidden = true; render(); $('#status').textContent = t('Bereit'); drainEmbeddedFiles(); }
 };
 $('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
 $('#export').onclick = async () => {
@@ -320,9 +334,18 @@ $('#export').onclick = async () => {
 };
 $('#quit').onclick = async () => {
   controller?.abort(); terminateWorker(); stopping = true;
-  try { await api('/api/stop', { method: 'POST' }); $('#status').textContent = 'Programm beendet'; message('Du kannst dieses Fenster schließen.'); $('#analyze').disabled = true; } catch (e) { stopping = false; message(e.message); }
+  try { await api('/api/stop', { method: 'POST' }); $('#status').textContent = t('Programm beendet'); message('Du kannst dieses Fenster schließen.'); $('#analyze').disabled = true; } catch (e) { stopping = false; message(e.message); }
 };
 await status();
 installIntegration(receiveEmbeddedFiles);
+$('#frames').value = settings.frames;
+installSettings(settingsStore, allTags, document.body.classList.contains('embedded'));
+settingsStore.subscribe(next => {
+  settings = next; setLanguage(settings); translatePage();
+  if (!running) { $('#frames').value = settings.frames; if (mapping) $('#status').textContent = t('Bereit'); }
+  render();
+});
+$('#frames').onchange = async () => { try { await settingsStore.save({ ...settings, frames: $('#frames').value }); } catch (error) { message(error.message); } };
+window.addEventListener('focus', () => { void settingsStore.load().catch(() => {}); });
 render();
 

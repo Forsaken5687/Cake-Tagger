@@ -1,3 +1,4 @@
+import { t } from '../i18n.mjs';
 export const isExtension = location.protocol === 'moz-extension:';
 let select, refresh, busy = false;
 let embeddedTab = Number(new URL(location.href).searchParams.get('target'));
@@ -10,23 +11,23 @@ export function installIntegration(receiveFiles) {
   document.querySelector('#quit').hidden = true;
   if (embedded && channel) {
     document.body.classList.add('embedded');
-    document.querySelector('#upload-title').textContent = 'Analyse';
-    document.querySelector('.results-heading h2').textContent = 'Tag-Auswahl';
+    document.querySelector('#upload-title').dataset.i18n = 'Analyse'; document.querySelector('#upload-title').textContent = t('Analyse');
+    document.querySelector('.results-heading h2').dataset.i18n = 'Tag-Auswahl'; document.querySelector('.results-heading h2').textContent = t('Tag-Auswahl');
     window.addEventListener('message', event => {
       if (isFileMessage(event, parent, CAKE_ORIGIN, channel, File)) receiveFiles(event.data.files);
     });
     if (!Number.isInteger(embeddedTab) || embeddedTab <= 0) browser.runtime.sendMessage({ type: 'cake-tagger:tab-id' }).then(id => { embeddedTab = id; }).catch(() => {
-      document.querySelector('#message').textContent = 'Upload-Tab nicht erreichbar. Bitte cake.ski neu laden.';
+      document.querySelector('#message').textContent = t('Upload-Tab nicht erreichbar. Bitte cake.ski neu laden.');
     });
     parent.postMessage({ type: 'cake-tagger:ready', channel }, CAKE_ORIGIN);
     return;
   }
   const panel = document.createElement('section'); panel.className = 'panel integration-panel';
-  const title = document.createElement('h2'); title.textContent = 'cake.ski verbinden';
-  const label = document.createElement('label'); label.textContent = 'Upload-Tab';
+  const title = document.createElement('h2'); title.dataset.i18n = 'cake.ski verbinden'; title.textContent = t('cake.ski verbinden');
+  const label = document.createElement('label'); const labelText = document.createElement('span'); labelText.dataset.i18n = 'Upload-Tab'; labelText.textContent = t('Upload-Tab'); label.append(labelText);
   select = document.createElement('select'); select.setAttribute('aria-label', 'cake.ski Upload-Tab');
-  refresh = document.createElement('button'); refresh.className = 'quiet'; refresh.textContent = 'Tabs aktualisieren';
-  const note = document.createElement('p'); note.textContent = 'Dieselben Videos auf cake.ski auswählen, dann die geprüften Tags pro Datei ergänzen.';
+  refresh = document.createElement('button'); refresh.className = 'quiet'; refresh.dataset.i18n = 'Tabs aktualisieren'; refresh.textContent = t('Tabs aktualisieren');
+  const note = document.createElement('p'); note.dataset.i18n = 'Dieselben Videos auf cake.ski auswählen, dann die geprüften Tags pro Datei ergänzen.'; note.textContent = t('Dieselben Videos auf cake.ski auswählen, dann die geprüften Tags pro Datei ergänzen.');
   label.append(select); panel.append(title, label, refresh, note);
   document.querySelector('#message').before(panel);
   refresh.onclick = refreshTabs;
@@ -42,8 +43,8 @@ async function refreshTabs() {
       const option = document.createElement('option'); option.value = String(tab.id); option.textContent = tab.title || 'cake.ski'; select.append(option);
     }
     if ([...select.options].some(option => option.value === previous)) select.value = previous;
-    if (!tabs.length) { const option = document.createElement('option'); option.value = ''; option.textContent = 'Kein cake.ski-Tab geöffnet'; select.append(option); }
-  } catch { document.querySelector('#message').textContent = 'Bitte der Erweiterung Zugriff auf cake.ski erlauben.'; }
+    if (!tabs.length) { const option = document.createElement('option'); option.value = ''; option.textContent = t('Kein cake.ski-Tab geöffnet'); select.append(option); }
+  } catch { document.querySelector('#message').textContent = t('Bitte der Erweiterung Zugriff auf cake.ski erlauben.'); }
 }
 
 export function integrationButton(entry, makeElement, showMessage) {
