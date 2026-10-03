@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "path": "model/joytag-int8.onnx",
+      "url": "https://huggingface.co/IamTheStormThatIsApproaching/joytag-onnx-Q8_0-quantized/resolve/9829c49ee97c55ad42f23c619a9925a77dabc54c/joytag-Q8_0.onnx",
+      "sha256": "888419d6832b2e39404c6051842e04cacf71cf33f4ce0cb9096874e4f32eec01"
+    },
+    {
+      "path": "runtime/node.exe",
+      "url": "https://nodejs.org/dist/v24.19.0/win-x64/node.exe",
+      "sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+    },
+    {
+      "path": "vendor/ort-wasm-simd-threaded.wasm",
+      "url": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort-wasm-simd-threaded.wasm",
+      "sha256": "3398c10d07d229bd91b364548e130e0e51a8e5704b88c7c083ebbeb78842dee2"
+    }
+  ]
+}
+

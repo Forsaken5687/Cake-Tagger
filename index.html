@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cake Tagger</title><link rel="stylesheet" href="style.css"><script type="module" src="app.js"></script></head>
+<body>
+<main>
+  <header><div><span class="eyebrow">CAKE TAGGER</span><h1>Tags für deine Videos</h1><p>Videos analysieren, Vorschläge prüfen und Ergebnisse speichern.</p></div><button id="quit" class="quiet">Programm beenden</button></header>
+  <section class="panel">
+    <div class="status"><span class="dot"></span><span id="status">Verbindung wird geprüft …</span></div>
+    <p class="subtle">Die Analyse erfolgt lokal. Deine Videos bleiben auf deinem Rechner.</p>
+    <label class="drop" id="drop"><strong>Videos auswählen</strong><span>oder hierher ziehen · MP4, M4V, WebM, MOV</span><input id="files" type="file" accept="video/*,.m4v" multiple></label>
+    <div class="controls"><label>Vorschaubilder pro Video <select id="frames"><option value="4">4 · schneller</option><option value="6">6 · mehr Abdeckung</option><option value="8">8 · ausführlicher</option></select></label><label>Erkennungsschwelle<select id="threshold"><option value="0.4">0,4 · mehr Vorschläge</option><option value="0.5" selected>0,5 · ausgewogen</option><option value="0.65">0,65 · strenger</option></select></label><button id="analyze" disabled>Tags vorschlagen</button><button id="cancel" class="quiet" hidden>Analyse abbrechen</button></div>
+    <p class="subtle small">Prüfe die Vorschläge und ergänze fehlende Tags, bevor du ein Ergebnis als geprüft markierst.</p>
+  </section>
+  <div id="message" role="status" aria-live="polite"></div>
+  <p id="save-status" class="subtle small" role="status" aria-live="polite">Korrekturen werden automatisch lokal gespeichert.</p>
+  <section id="results" aria-label="Videoergebnisse"></section>
+  <footer><span id="summary">Noch keine Videos ausgewählt.</span><button id="export" class="quiet" disabled>Ergebnisse als JSON speichern</button></footer>
+  <p class="subtle small">Der Export speichert deine Auswahl und den Prüfstatus. Eine automatische Übertragung auf cake.ski ist derzeit nicht verfügbar.</p>
+</main>
+</body></html>
