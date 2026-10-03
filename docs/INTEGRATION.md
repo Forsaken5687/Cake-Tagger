@@ -19,7 +19,7 @@ Single wechselt bei mehreren ausgewählten Dateien mit mindestens einem Video au
 
 ## Vorgesehener Ablauf
 
-1. Lokale Analyse mit der vorhandenen Engine in einer eigenen Erweiterungsansicht.
+1. Upload-Dateiauswahl in die eingebettete Erweiterungsansicht übernehmen und lokal mit der vorhandenen Engine analysieren.
 2. Vorschläge prüfen und auswählen.
 3. Ausgewählte Tags dem passenden Single-Feld oder der passenden Bulk-Karte zuordnen.
 4. Bestehende Tags erhalten und doppelte Einträge vermeiden. Gemeinsame Bulk-Tags bei jeder Karte berücksichtigen. Ausdrücklich für eine Karte entfernte gemeinsame Tags nicht automatisch wieder ergänzen.

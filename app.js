@@ -12,6 +12,16 @@ let mapping, modelSignature, worker, workerSeq = 0, workerJobs = new Map();
 indexedDB.deleteDatabase('cake-tagger-browser-v1');
 const sessionRecords = new Map(), sessionCache = new Map();
 let preparing = false;
+let pendingEmbeddedFiles;
+async function receiveEmbeddedFiles(files) {
+  if (running || preparing) { pendingEmbeddedFiles = files; return; }
+  await setFiles(files);
+}
+function drainEmbeddedFiles() {
+  if (pendingEmbeddedFiles && !running && !preparing) {
+    const files = pendingEmbeddedFiles; pendingEmbeddedFiles = undefined; void receiveEmbeddedFiles(files);
+  }
+}
 async function cached(key, value) {
   if (value) sessionCache.set(key, value);
   return sessionCache.get(key);
@@ -121,7 +131,8 @@ function render() {
   $('#results').replaceChildren();
   if (!entries.length) {
     const empty = textElement('div', '', 'empty-state');
-    empty.append(textElement('span', '▤', 'empty-icon'), textElement('h3', 'Noch keine Videos'), textElement('p', 'Wähle Videos aus, um deine Tag-Auswahl zusammenzustellen.'));
+    const hint = document.body.classList.contains('embedded') ? 'Wähle Videos im Upload-Bereich aus.' : 'Wähle Videos aus, um deine Tag-Auswahl zusammenzustellen.';
+    empty.append(textElement('span', '▤', 'empty-icon'), textElement('h3', 'Noch keine Videos'), textElement('p', hint));
     $('#results').append(empty);
   }
   for (const entry of entries) {
@@ -192,13 +203,19 @@ async function setFiles(files) {
   preparing = true; summary(); message('Videos werden vorbereitet …');
   try {
       const next = [...files].filter(f => /\.(mp4|m4v|webm|mov)$/i.test(f.name)).map((file, index) => ({ file, index, hasFile: true, state: 'Wartet auf Analyse', selected: new Map() }));
-    for (const entry of next) {
-      try { entry.sha256 = await hashFile(entry.file); const record = sessionRecords.get(entry.sha256); if (record) await restore(entry, record); }
+    for (let i = 0; i < next.length; i++) {
+      const entry = next[i];
+      try {
+        entry.sha256 = await hashFile(entry.file);
+        const existing = entries.find(old => old.sha256 === entry.sha256);
+        if (existing) { next[i] = { ...existing, file: entry.file, index: entry.index }; continue; }
+        const record = sessionRecords.get(entry.sha256); if (record) await restore(entry, record);
+      }
       catch (e) { entry.error = e.message; }
     }
     entries = next;
     message('');
-  } finally { preparing = false; render(); }
+  } finally { preparing = false; render(); drainEmbeddedFiles(); }
 }
 $('#files').onchange = e => setFiles(e.target.files);
 $('#drop').ondragover = e => { e.preventDefault(); $('#drop').classList.add('over'); };
@@ -283,7 +300,7 @@ $('#analyze').onclick = async () => {
       render();
     }
   } catch (e) { message(e.name === 'AbortError' ? 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.' : e.message); }
-  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = 'Bereit'; }
+  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = 'Bereit'; drainEmbeddedFiles(); }
 };
 $('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
 $('#export').onclick = async () => {
@@ -305,7 +322,7 @@ $('#quit').onclick = async () => {
   controller?.abort(); terminateWorker(); stopping = true;
   try { await api('/api/stop', { method: 'POST' }); $('#status').textContent = 'Programm beendet'; message('Du kannst dieses Fenster schließen.'); $('#analyze').disabled = true; } catch (e) { stopping = false; message(e.message); }
 };
-installIntegration();
 await status();
+installIntegration(receiveEmbeddedFiles);
 render();
 

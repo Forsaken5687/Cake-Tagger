@@ -2,6 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chooseTarget, planTags } from '../extension/upload-adapter.mjs';
+import { isFileMessage } from '../extension/message-contract.mjs';
+test('embedded file transfer accepts only the expected parent origin and session', () => {
+  const source = {}, file = new File(['synthetic'], 'test.mp4');
+  const event = { source, origin: 'https://cake.ski', data: { type: 'cake-tagger:files', channel: 'session-a', files: [file] } };
+  assert.ok(isFileMessage(event, source, 'https://cake.ski', 'session-a', File));
+  assert.ok(!isFileMessage({ ...event, source: {} }, source, 'https://cake.ski', 'session-a', File));
+  assert.ok(!isFileMessage({ ...event, origin: 'https://example.com' }, source, 'https://cake.ski', 'session-a', File));
+  assert.ok(!isFileMessage(event, source, 'https://cake.ski', 'session-b', File));
+  assert.ok(!isFileMessage({ ...event, data: { ...event.data, files: [{ name: 'test.mp4' }] } }, source, 'https://cake.ski', 'session-a', File));
+});
 test('upload matching rejects missing and duplicate filenames without guessing', () => {
   const targets = [{ id: 'a', filename: 'one.m4v' }, { id: 'b', filename: 'two.m4v' }];
   assert.equal(chooseTarget(targets, 'one.m4v').id, 'a');

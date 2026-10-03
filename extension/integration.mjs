@@ -1,9 +1,26 @@
 export const isExtension = location.protocol === 'moz-extension:';
 let select, refresh, busy = false;
+let embeddedTab = Number(new URL(location.href).searchParams.get('target'));
+const embedded = new URL(location.href).searchParams.get('embedded') === '1';
+const channel = new URL(location.href).searchParams.get('channel');
+const CAKE_ORIGIN = 'https://cake.ski';
 
-export function installIntegration() {
+export function installIntegration(receiveFiles) {
   if (!isExtension) return;
   document.querySelector('#quit').hidden = true;
+  if (embedded && channel) {
+    document.body.classList.add('embedded');
+    document.querySelector('#upload-title').textContent = 'Analyse';
+    document.querySelector('.results-heading h2').textContent = 'Tag-Auswahl';
+    window.addEventListener('message', event => {
+      if (isFileMessage(event, parent, CAKE_ORIGIN, channel, File)) receiveFiles(event.data.files);
+    });
+    if (!Number.isInteger(embeddedTab) || embeddedTab <= 0) browser.runtime.sendMessage({ type: 'cake-tagger:tab-id' }).then(id => { embeddedTab = id; }).catch(() => {
+      document.querySelector('#message').textContent = 'Upload-Tab nicht erreichbar. Bitte cake.ski neu laden.';
+    });
+    parent.postMessage({ type: 'cake-tagger:ready', channel }, CAKE_ORIGIN);
+    return;
+  }
   const panel = document.createElement('section'); panel.className = 'panel integration-panel';
   const title = document.createElement('h2'); title.textContent = 'cake.ski verbinden';
   const label = document.createElement('label'); label.textContent = 'Upload-Tab';
@@ -36,7 +53,7 @@ export function integrationButton(entry, makeElement, showMessage) {
     if (busy) return;
     const tags = [...entry.selected].filter(([, enabled]) => enabled).map(([tag]) => tag);
     if (!tags.length) return showMessage('Bitte mindestens einen Tag auswählen.');
-    const tabId = Number(select.value);
+    const tabId = Number(embedded ? embeddedTab : select.value);
     if (!Number.isInteger(tabId) || tabId <= 0) return showMessage('Bitte einen cake.ski-Tab auswählen.');
     busy = true; button.disabled = true;
     try {
@@ -48,3 +65,4 @@ export function integrationButton(entry, makeElement, showMessage) {
   };
   return button;
 }
+import { isFileMessage } from './message-contract.mjs';

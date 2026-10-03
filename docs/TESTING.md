@@ -17,4 +17,6 @@ Automatisierte Tests messen keine Erkennungsgenauigkeit. Dafür ist eine separat
 Vorschaubild mit Maus und Tastatur öffnen, zum nächsten und vorherigen Bild wechseln, Escape und die Schließen-Schaltfläche prüfen. Die ursprüngliche Seite muss dabei unverändert bleiben und anschließend wieder bedienbar sein.
 ## Firefox-Integration
 
+Für die eingebettete Ansicht prüfen die automatisierten Tests den Nachrichtenvertrag einschließlich Ursprung, Elternfenster, Sitzung und File-Typ. Die lokale Browserprüfung verwendet getrennte Ursprünge für Upload-Kopie und Analysefenster und prüft Dateiauswahl, Analyse, Rückübernahme, Wechsel zu Bulk sowie Schließen/Wiederöffnen. Die WebExtension-Nachrichten werden in dieser Kopie nachgebildet; die echte Firefox-Einbettung ist zusätzlich zu prüfen.
+
 Die automatisierten Prüfungen decken eindeutige Dateizuordnung, Abweisung doppelter Namen, Tag-Deduplizierung, Erhalt gemeinsamer Tags und Ausschlüsse sowie die Manifest-Beschränkungen ab. Die Browserprüfung verwendet die originale Typeahead-Komponente mit lokalen API-Antworten und synthetischen Enter-Ereignissen. Die vollständige Firefox-Erweiterung einschließlich Berechtigungen, Content-Script und Modell-Worker ist zusätzlich direkt in Firefox zu prüfen. Dabei nur selbst ausgewählte Testdateien verwenden; cake.ski überträgt Bulk-Dateien bereits beim Auswählen als Entwürfe.

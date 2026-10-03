@@ -2,11 +2,11 @@
 
 Lokale Tag-Vorschläge für Videos, abgestimmt auf die mitgelieferte Tagliste von cake.ski. Die Anwendung analysiert einzelne Videobilder, lässt Vorschläge bearbeiten und speichert die Ergebnisse als JSON.
 
-Das Projekt befindet sich in Entwicklung. Die Erkennungsqualität ist noch nicht systematisch gemessen. Eine erste Firefox-Erweiterung ergänzt geprüfte Tags in Single- und Bulk-Uploadfeldern; sie veröffentlicht keine Beiträge. Die vollständige Firefox-Prüfung steht noch aus.
+Das Projekt befindet sich in Entwicklung. Die Erkennungsqualität ist noch nicht systematisch gemessen. Die Firefox-Erweiterung zeigt lokale Tag-Vorschläge direkt im Upload-Bereich und ergänzt geprüfte Tags in Single- und Bulk-Feldern; sie veröffentlicht keine Beiträge. Die vollständige Firefox-Prüfung steht noch aus.
 
 ## Firefox-Erweiterung
 
-Die Erweiterung arbeitet ohne lokalen Dienst. Einrichtung, vorläufiges Laden und Nutzung stehen unter [Firefox](docs/FIREFOX.md). Die eigenständige Anwendung bleibt als zusätzliche Oberfläche verfügbar.
+Die Erweiterung arbeitet ohne lokalen Dienst und übernimmt Videos aus der Dateiauswahl im Upload-Bereich. Eine separate Analyseansicht bleibt optional verfügbar. Einrichtung, vorläufiges Laden und Nutzung stehen unter [Firefox](docs/FIREFOX.md). Die eigenständige Anwendung bleibt als zusätzliche Oberfläche verfügbar.
 
 ## Start
 

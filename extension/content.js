@@ -2,6 +2,8 @@
   const { inspectUploads, appendTags } = await import(browser.runtime.getURL('extension/upload-adapter.mjs'));
   const text = await fetch(browser.runtime.getURL('tags.txt')).then(r => r.text());
   const allowed = new Set(text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean));
+  const { mountUploadPanel } = await import(browser.runtime.getURL('extension/embedded-upload.mjs'));
+  mountUploadPanel(document, browser.runtime);
   let busy = false;
   browser.runtime.onMessage.addListener((message, sender) => {
     if (sender.id !== browser.runtime.id || !sender.url?.startsWith(browser.runtime.getURL('index.html'))) return;

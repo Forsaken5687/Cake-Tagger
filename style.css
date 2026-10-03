@@ -145,3 +145,9 @@ input[type="checkbox"] { width: 14px; height: 14px; margin: 0; accent-color: var
 /* Extension connection controls reuse the standalone visual language. */
 .integration-panel label { display: inline-flex; flex-direction: column; gap: .5rem; margin-right: .75rem; }
 .integration-panel select { min-width: 16rem; max-width: 100%; }
+body.embedded { margin: 0; padding: 14px; }
+body.embedded .app-header, body.embedded .intro, body.embedded .drop,
+body.embedded .export-bar, body.embedded .page-footer { display: none; }
+body.embedded .upload-layout { display: block; }
+body.embedded .analysis-options { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+body.embedded .analysis-options label { margin: 0; }

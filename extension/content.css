@@ -1,0 +1,8 @@
+.cake-tagger-panel { margin: 16px 0; border: 1px solid #3e3541; border-radius: 14px; background: #1b1b20; color: #f4f2f3; overflow: hidden; font: 14px system-ui, sans-serif; }
+.cake-tagger-heading { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.cake-tagger-heading strong { font-size: 16px; }
+.cake-tagger-heading span { color: #b8adb9; flex: 1; }
+.cake-tagger-heading button { border: 1px solid #6c4658; border-radius: 8px; background: #3f2834; color: #ffc3d4; padding: 8px 15px; cursor: pointer; font: inherit; }
+.cake-tagger-frame { display: block; width: 100%; height: min(740px, 80vh); min-height: 400px; border: 0; border-top: 1px solid #3e3541; background: #111114; }
+.cake-tagger-frame[hidden] { display: none; }
+@media (max-width: 500px) { .cake-tagger-heading { flex-wrap: wrap; } .cake-tagger-heading span { flex-basis: 50%; } }
