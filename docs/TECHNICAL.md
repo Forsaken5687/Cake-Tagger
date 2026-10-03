@@ -56,10 +56,10 @@ Vorschaubilder sind als zugängliche Schaltflächen umgesetzt. Ein natives modal
 
 ## Logo
 
-Das eigenständige SVG-Zeichen liegt unter `assets/logo.svg`. Die Oberfläche bettet es direkt im Seitenkopf ein; dieselbe Grafik dient als SVG-Favicon. Es benötigt keine externen Schriftarten oder Bilddienste.
+Das eigenständige SVG-Zeichen liegt unter `assets/logo.svg`. Die Oberfläche bettet es direkt im Seitenkopf ein; das SVG-Favicon verweist auf dieselbe Asset-Datei. Es benötigt keine externen Schriftarten oder Bilddienste.
 ## Firefox-Integration
 
-Die eingebettete Ansicht verwendet neutrale dunkle Flächen und den cake.ski-Akzent `#fe2c55`. Ihre Farben sind auf `body.embedded` und die Erweiterungshülle begrenzt; die separate Analyseansicht behält ihre eigene Gestaltung.
+Die eingebettete Ansicht verwendet neutrale dunkle Flächen und den cake.ski-Akzent `#fe2c55`. Hauptseite, separate Analyseansicht, Einstellungen und eingebettete Ansicht verwenden gemeinsam dieses Farbschema. Primäre Schaltflächen haben weiße Schrift auf Pink, sekundäre Schaltflächen neutrale Grautöne; Fokus- und Auswahlzustände verwenden denselben Akzent.
 
 `embedded-upload.mjs` fügt eine Analyseansicht vor der Upload-Mount ein und beobachtet Single-/Bulk-Wechsel. Die Ansicht liegt als eingebettetes Erweiterungsdokument auf dem Erweiterungsursprung. Vertrauenswürdige Datei- und Drop-Ereignisse liefern lokale File-Objekte; nur Dateien mit sichtbaren Upload-Zielen werden per strukturiertem Klonen an das eingebettete Dokument übergeben. Der Empfang prüft Elternfenster, cake.ski-Ursprung, Nachrichtentyp, Sitzungskanal und File-Typ. Die ursprünglichen Datei-Ereignisse werden nicht unterbrochen. Es werden weder zusätzliche Uploads noch zusätzliche Dateiauswahldialoge ausgelöst.
 
