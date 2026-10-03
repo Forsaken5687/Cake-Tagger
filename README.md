@@ -73,6 +73,8 @@ Ergebnisse, Korrekturen und Analyse-Cache bleiben im Arbeitsspeicher der Seite. 
 
 `scripts/Package.ps1` erzeugt `outputs/Cake-Tagger.zip` aus versionierten Projektdateien und den geprüften Abhängigkeiten. Persönliche Daten, Videos, Testberichte und die Git-Historie werden nicht aufgenommen. Zum Teilen dieses Paket verwenden, statt den gesamten Arbeitsordner zu kopieren.
 
+Das Release enthält außerdem `extensions/Cake-Tagger-Firefox.zip` und den direkt ladbaren Ordner `extensions/chrome/`. Beide Erweiterungen werden beim Paketbau neu erstellt. Für Firefox das ZIP entpacken; Chrome lädt den enthaltenen Ordner über **Entpackte Erweiterung laden**.
+
 Der Quellcode liegt im Projektstamm. `docs/` enthält technische Dokumentation, `scripts/` wiederverwendbare Werkzeuge und `tests/` automatisierte Tests. `data/`, `outputs/` und `work/` sind lokale, nicht versionierte Ordner. Große Modelldateien und Laufzeit-Binärdateien bleiben ebenfalls außerhalb von Git.
 
 Weitere Informationen: [Browser-Integration](docs/INTEGRATION.md), [Technik](docs/TECHNICAL.md), [Prüfung](docs/TESTING.md), [Drittanbieter](THIRD_PARTY.md).
