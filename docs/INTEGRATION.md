@@ -22,7 +22,7 @@ Single wechselt bei mehreren ausgewählten Dateien mit mindestens einem Video au
 1. Lokale Analyse mit der vorhandenen Engine in einer eigenen Erweiterungsansicht.
 2. Vorschläge prüfen und auswählen.
 3. Ausgewählte Tags dem passenden Single-Feld oder der passenden Bulk-Karte zuordnen.
-4. Bestehende Tags erhalten und doppelte Einträge vermeiden. Gemeinsame Bulk-Tags bei jeder Karte berücksichtigen.
+4. Bestehende Tags erhalten und doppelte Einträge vermeiden. Gemeinsame Bulk-Tags bei jeder Karte berücksichtigen. Ausdrücklich für eine Karte entfernte gemeinsame Tags nicht automatisch wieder ergänzen.
 
 Die Erweiterung soll weder Dateien an die Website übergeben noch Upload-, Veröffentlichungs- oder Bestätigungsbuttons bedienen. Die Dateiauswahl auf cake.ski bleibt eine bewusste Handlung des Nutzers. Bei doppelten Dateinamen, fehlenden Karten oder unklarer Zuordnung ist eine Auswahl erforderlich; Tags dürfen nicht anhand der Reihenfolge geraten werden.
 
@@ -38,4 +38,8 @@ Referenzen: [Mozilla: Hintergrundskripte](https://developer.mozilla.org/en-US/do
 
 Eine lokale Prüfansicht verwendet die Upload-Renderer des ausgelieferten Seitencodes mit ersetzten API-Aufrufen und Hilfsfunktionen. Ihre CSP sperrt externe Verbindungen und Formularübermittlungen. Künstliche Dateien dienen ausschließlich der Prüfung von Single-/Bulk-Wechsel und getrennten Tag-Feldern. Seitencode und Versuchsdateien bleiben unter ignoriertem `work/`; sie werden nicht mit dem Projekt ausgeliefert.
 
-Geprüft: Eine Datei bleibt Single, eine zweite Videodatei erzeugt zwei Bulk-Karten. Ein gemeinsamer Tag erscheint bei beiden Karten; ein zusätzlicher Kartentag nur bei seiner Karte. Noch offen: echte Firefox-Erweiterung, die unveränderte Typeahead-Komponente mit verschiedenen Rollen, Zuordnung bei doppelten Dateinamen und Einbindung der Analyse-Engine.
+Geprüft: Eine Datei bleibt Single, eine zweite Videodatei erzeugt zwei Bulk-Karten. Ein gemeinsamer Tag erscheint bei beiden Karten; ein zusätzlicher Kartentag nur bei seiner Karte.
+
+Dies wurde zusätzlich im echten Upload-Formular mit der Maintainer-Rolle bestätigt: Enter übernimmt einen Tag in die Auswahl und aktualisiert den Zähler. Zwei Videodateien wechseln automatisch auf Bulk und werden bereits vor dem Veröffentlichen als Entwürfe übertragen. Ein gemeinsamer Tag lässt sich für eine einzelne Karte entfernen, ohne die zweite Karte zu ändern. Die Test-Entwürfe wurden über die Entfernen-Schaltflächen verworfen und die Ansicht anschließend in den leeren Single-Zustand zurückgesetzt. Es wurde nichts veröffentlicht.
+
+Noch offen: echte Firefox-Erweiterung, Typeahead-Verhalten mit der Mitgliederrolle, Zuordnung bei doppelten Dateinamen und Einbindung der Analyse-Engine. Manuelle Enter-Eingaben bestätigen noch nicht, dass Ereignisse aus einem Erweiterungs-Content-Script identisch verarbeitet werden.
