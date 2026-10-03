@@ -145,9 +145,48 @@ input[type="checkbox"] { width: 14px; height: 14px; margin: 0; accent-color: var
 /* Extension connection controls reuse the standalone visual language. */
 .integration-panel label { display: inline-flex; flex-direction: column; gap: .5rem; margin-right: .75rem; }
 .integration-panel select { min-width: 16rem; max-width: 100%; }
-body.embedded { margin: 0; padding: 14px; }
+body.embedded {
+  --bg: #0b0b0b;
+  --panel: #1c1c1c;
+  --line: #333;
+  --text: #fff;
+  --muted: #aaa;
+  --accent: #fe2c55;
+  margin: 0; padding: 14px; min-height: 100vh;
+  background: var(--bg); color: var(--text);
+}
 body.embedded .app-header, body.embedded .intro, body.embedded .drop,
 body.embedded .export-bar, body.embedded .page-footer { display: none; }
 body.embedded .upload-layout { display: block; }
 body.embedded .analysis-options { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 body.embedded .analysis-options label { margin: 0; }
+body.embedded button { color: #fff; }
+body.embedded button:hover { background: #e8274d; }
+body.embedded button:disabled { background: #333; color: #888; }
+body.embedded .quiet { background: #333; color: #fff; }
+body.embedded .quiet:hover { background: #404040; border-color: #555; }
+body.embedded select, body.embedded input[type="text"] { background: #141414; border-color: #3b3b3b; }
+body.embedded .analysis-options > label, body.embedded .status { color: #aaa; }
+body.embedded .video-number { background: #2a2a2a; color: #aaa; }
+body.embedded .previews { scrollbar-color: #555 #1c1c1c; }
+body.embedded .previews img { background: #090909; }
+body.embedded .preview-thumb, body.embedded .preview-thumb:hover { background: transparent; }
+body.embedded .chip { background: #321b22; border-color: #7e3141; }
+body.embedded .chip:hover { border-color: #fe2c55; }
+body.embedded .chip:has(input:not(:checked)) { background: #242424; border-color: #444; color: #bbb; }
+body.embedded .tag-origin { color: #bbb; border-color: #66404a; }
+body.embedded .tag-score { color: #ffb3c2; }
+body.embedded .chip:has(input:not(:checked)) .tag-score { color: #aaa; }
+body.embedded .chip.manual { background: #292929; border-color: #666; }
+body.embedded .chip.manual .tag-origin { color: #ccc; border-color: #666; }
+body.embedded .tag-heading h3, body.embedded .tag-heading > span { color: #aaa; }
+body.embedded #message { color: #ffb3c2; }
+body.embedded #message:not(:empty) { background: #30191f; border-color: #75303f; }
+body.embedded .error { color: #ff8198 !important; }
+body.embedded .empty-state { background: #1c1c1c; }
+body.embedded .empty-icon { color: #777; }
+body.embedded .empty-state h3 { color: #ddd; }
+body.embedded #preview-dialog { background: #1c1c1c; border-color: #444; }
+body.embedded #preview-dialog::backdrop { background: #000e; }
+body.embedded #preview-title { color: #ccc; }
+body.embedded #preview-image { background: #090909; }
