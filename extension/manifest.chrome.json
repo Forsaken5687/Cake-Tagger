@@ -3,17 +3,6 @@
   "name": "Cake Tagger",
   "version": "0.4.0",
   "description": "Lokale Tag-Vorschläge für Videos und Übernahme in cake.ski-Uploadfelder.",
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "cake-tagger@local.invalid",
-      "strict_min_version": "140.0",
-      "data_collection_permissions": {
-        "required": [
-          "websiteContent"
-        ]
-      }
-    }
-  },
   "host_permissions": [
     "https://cake.ski/*"
   ],
@@ -21,17 +10,21 @@
     "storage"
   ],
   "icons": {
-    "48": "assets/logo.svg",
-    "96": "assets/logo.svg"
+    "16": "assets/logo-16.png",
+    "32": "assets/logo-32.png",
+    "48": "assets/logo-48.png",
+    "128": "assets/logo-128.png"
   },
   "action": {
     "default_title": "Cake Tagger öffnen",
-    "default_icon": "assets/logo.svg"
+    "default_icon": {
+      "16": "assets/logo-16.png",
+      "32": "assets/logo-32.png"
+    }
   },
   "background": {
-    "scripts": [
-      "extension/background.js"
-    ]
+    "service_worker": "extension/chrome-worker.mjs",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -39,6 +32,7 @@
         "https://cake.ski/*"
       ],
       "js": [
+        "webext-api.js",
         "extension/content.js"
       ],
       "css": [
@@ -62,5 +56,6 @@
   ],
   "content_security_policy": {
     "extension_pages": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self'; connect-src 'self'; object-src 'none'"
-  }
+  },
+  "minimum_chrome_version": "120"
 }

@@ -1,6 +1,6 @@
 import { aggregate, ANALYSIS_VERSION } from './tagging.mjs';
 import { makeRecord, applyRecord, tagSource, exportItem } from './corrections.mjs';
-const { isExtension, installIntegration, integrationButton } = location.protocol === 'moz-extension:'
+const { isExtension, installIntegration, integrationButton } = ['moz-extension:', 'chrome-extension:'].includes(location.protocol)
   ? await import('./extension/integration.mjs')
   : { isExtension: false, installIntegration() {}, integrationButton() {} };
 import { samplingPlan } from './sampling.mjs';

@@ -1,5 +1,5 @@
 import { t } from '../i18n.mjs';
-export const isExtension = location.protocol === 'moz-extension:';
+export const isExtension = ['moz-extension:', 'chrome-extension:'].includes(location.protocol);
 let select, refresh, busy = false;
 let embeddedTab = Number(new URL(location.href).searchParams.get('target'));
 const embedded = new URL(location.href).searchParams.get('embedded') === '1';

@@ -6,7 +6,7 @@
   mountUploadPanel(document, browser.runtime);
   let busy = false;
   browser.runtime.onMessage.addListener((message, sender) => {
-    const trustedBackground = !sender.url || [browser.runtime.getURL('extension/background.js'), browser.runtime.getURL('_generated_background_page.html')].includes(sender.url);
+    const trustedBackground = !sender.url || [browser.runtime.getURL('extension/background.js'), browser.runtime.getURL('extension/chrome-worker.mjs'), browser.runtime.getURL('_generated_background_page.html')].includes(sender.url);
     if (sender.id !== browser.runtime.id || !trustedBackground) return;
     if (message?.type === 'cake-tagger:inspect') return Promise.resolve(inspectUploads(document).map(({ id, filename, tags }) => ({ id, filename, tags })));
     if (message?.type !== 'cake-tagger:append' || typeof message.filename !== 'string') return;

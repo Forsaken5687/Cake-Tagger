@@ -1,6 +1,6 @@
 # Browser-Integration
 
-Eine erste Firefox-Erweiterung ist implementiert. Einrichtung und Grenzen stehen unter [Firefox](FIREFOX.md). Die vollständige Prüfung in Firefox steht noch aus; Chrome folgt anschließend. Die eigenständige Oberfläche bleibt verfügbar.
+Eine erste Firefox-Erweiterung ist implementiert. Einrichtung und Grenzen stehen unter [Firefox](FIREFOX.md). Die vollständige Prüfung in Firefox steht noch aus; Eine Chrome-Fassung mit demselben Analysecode und einem Modul-Service-Worker ist verfügbar; Einrichtung und Prüfgrenzen stehen unter [Chrome](CHROME.md). Die eigenständige Oberfläche bleibt verfügbar.
 
 ## Upload-Ansichten
 

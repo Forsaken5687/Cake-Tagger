@@ -8,6 +8,10 @@ Das Projekt befindet sich in Entwicklung. Die Erkennungsqualität ist noch nicht
 
 Die Erweiterung arbeitet ohne lokalen Dienst und übernimmt Videos aus der Dateiauswahl im Upload-Bereich. Eine separate Analyseansicht bleibt optional verfügbar. Einrichtung, vorläufiges Laden und Nutzung stehen unter [Firefox](docs/FIREFOX.md). Die eigenständige Anwendung bleibt als zusätzliche Oberfläche verfügbar.
 
+## Chrome-Erweiterung
+
+Die Chrome-Fassung verwendet dieselbe Analyse und dieselben Einstellungen. Das Paket unter `outputs/Cake-Tagger-Chrome.zip` oder den entpackten Ordner `outputs/chrome/` über **Entpackte Erweiterung laden** auf `chrome://extensions` installieren. Einrichtung und Prüfgrenzen stehen unter [Chrome](docs/CHROME.md).
+
 ## Start
 
 Voraussetzungen: Windows 64 Bit und ein aktueller Chrome- oder Edge-Browser mit WebAssembly und OffscreenCanvas. Die Analyse läuft auf der CPU.
