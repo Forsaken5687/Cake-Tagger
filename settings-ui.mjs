@@ -5,33 +5,33 @@ export function settingsForm(store, tags, onSaved = () => {}) {
   const form = document.createElement('form'); form.className = 'settings-form';
   let draft = store.get();
   const field = (label, control) => {
-    control.setAttribute('aria-label', t(label));
+    control.setAttribute('aria-label', t(label)); control.setAttribute('data-i18n-aria-label', label);
     const row = document.createElement('label'); row.className = 'settings-field';
-    const text = document.createElement('span'); text.textContent = t(label); row.append(text, control); form.append(row); return control;
+    const text = document.createElement('span'); text.dataset.i18n = label; text.textContent = t(label); row.append(text, control); form.append(row); return control;
   };
   const select = options => {
     const control = document.createElement('select');
-    for (const [value, label] of options) { const option = document.createElement('option'); option.value = value; option.textContent = t(label); control.append(option); }
+    for (const [value, label] of options) { const option = document.createElement('option'); option.value = value; option.dataset.i18n = label; option.textContent = t(label); control.append(option); }
     return control;
   };
-  const language = field('Sprache', select([['auto', 'Browsersprache'], ['de', 'Deutsch'], ['en', 'English']])); language.value = draft.language;
+  const language = field('Sprache', select([['auto', 'Automatisch'], ['de', 'Deutsch'], ['en', 'English']])); language.value = draft.language;
   const frames = field('Bilder pro Video', select([['auto', 'Automatisch nach Videolänge'], ...[4,6,8,12,16,24,32,48].map(n => [String(n), `${n} Bilder`])])); frames.value = draft.frames;
   const check = (label, key) => { const input = document.createElement('input'); input.type = 'checkbox'; input.checked = draft[key]; field(label, input).classList.add('settings-check'); return input; };
   const scores = check('Scores anzeigen', 'showScores'), uncertain = check('Unsichere Vorschläge anzeigen', 'showUncertain');
   const exclusions = document.createElement('section'); exclusions.className = 'settings-exclusions';
-  const title = document.createElement('h3'); title.textContent = t('Ausgeschlossene Tags');
-  const hint = document.createElement('p'); hint.textContent = t('Gilt für neue automatische Vorschläge. Manuelle Tags und vorhandene Auswahlen bleiben erhalten.');
+  const title = document.createElement('h3'); title.dataset.i18n = 'Ausgeschlossene Tags'; title.textContent = t('Ausgeschlossene Tags');
+  const hint = document.createElement('p'); hint.dataset.i18n = 'Gilt für neue automatische Vorschläge. Manuelle Tags und vorhandene Auswahlen bleiben erhalten.'; hint.textContent = t('Gilt für neue automatische Vorschläge. Manuelle Tags und vorhandene Auswahlen bleiben erhalten.');
   const chips = document.createElement('div'); chips.className = 'settings-excluded-tags';
   const add = document.createElement('div'); add.className = 'tag-add';
-  const search = document.createElement('input'); search.type = 'text'; search.placeholder = t('Tag suchen …'); search.setAttribute('aria-label', t('Tag ausschließen'));
+  const search = document.createElement('input'); search.type = 'text'; search.dataset.i18nPlaceholder = 'Tag suchen …'; search.dataset.i18nAriaLabel = 'Tag ausschließen'; search.placeholder = t('Tag suchen …'); search.setAttribute('aria-label', t('Tag ausschließen'));
   const list = document.createElement('datalist'); list.id = 'settings-tag-list-' + Math.random().toString(36).slice(2); search.setAttribute('list', list.id);
   for (const tag of tags) { const option = document.createElement('option'); option.value = tag; list.append(option); }
-  const addButton = document.createElement('button'); addButton.type = 'button'; addButton.className = 'quiet'; addButton.textContent = t('Hinzufügen');
+  const addButton = document.createElement('button'); addButton.type = 'button'; addButton.className = 'quiet'; addButton.dataset.i18n = 'Hinzufügen'; addButton.textContent = t('Hinzufügen');
   const status = document.createElement('p'); status.className = 'settings-status'; status.setAttribute('role', 'status');
   function renderExclusions() {
     chips.replaceChildren();
     for (const tag of draft.excludedTags) {
-      const button = document.createElement('button'); button.type = 'button'; button.className = 'quiet small-button'; button.textContent = tag + ' ×'; button.setAttribute('aria-label', t('Ausschluss entfernen: ') + tag);
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'quiet small-button'; button.textContent = tag + ' ×'; button.dataset.i18nAriaLabel = 'Ausschluss entfernen: ' + tag; button.setAttribute('aria-label', t('Ausschluss entfernen: ') + tag);
       button.onclick = () => { draft.excludedTags = draft.excludedTags.filter(value => value !== tag); renderExclusions(); };
       chips.append(button);
     }
@@ -44,8 +44,8 @@ export function settingsForm(store, tags, onSaved = () => {}) {
   search.onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); addButton.click(); } };
   add.append(search, addButton, list); exclusions.append(title, hint, chips, add); form.append(exclusions);
   const actions = document.createElement('div'); actions.className = 'settings-actions';
-  const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'quiet'; reset.textContent = t('Standardwerte');
-  const save = document.createElement('button'); save.type = 'submit'; save.textContent = t('Speichern');
+  const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'quiet'; reset.dataset.i18n = 'Standardwerte'; reset.textContent = t('Standardwerte');
+  const save = document.createElement('button'); save.type = 'submit'; save.dataset.i18n = 'Speichern'; save.textContent = t('Speichern');
   reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; renderExclusions(); status.textContent = ''; };
   form.onsubmit = async event => {
     event.preventDefault(); save.disabled = reset.disabled = true;

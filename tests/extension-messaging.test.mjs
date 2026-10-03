@@ -59,3 +59,14 @@ test('embedded transfer works with runtime messaging and no browser.tabs API', a
     }
   }
 });
+
+test('theme requests stay on Cake and cannot switch an embedded view to another tab', async () => {
+  const { listener, calls } = await background();
+  const sender = { id: 'fixture', url: 'moz-extension://fixture/index.html?embedded=1', tab: { id: 42 } };
+  await listener({ type: 'cake-tagger:get-theme', tabId: 42 }, sender);
+  assert.equal(calls[0].message.type, 'cake-tagger:theme-request');
+  assert.equal(await listener({ type: 'cake-tagger:get-theme', tabId: 43 }, sender), null);
+  assert.equal(await listener({ type: 'cake-tagger:get-theme', tabId: 43 }, { ...sender, url: 'moz-extension://fixture/index.html' }), null);
+  assert.equal(listener({ type: 'cake-tagger:get-theme', tabId: 42 }, { ...sender, id: 'other' }), undefined);
+  assert.equal(calls.length, 1);
+});

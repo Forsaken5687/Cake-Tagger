@@ -1,4 +1,5 @@
 import { t } from '../i18n.mjs';
+import { applySiteTheme, isThemeMessage } from './site-theme.mjs';
 export const isExtension = ['moz-extension:', 'chrome-extension:'].includes(location.protocol);
 let select, refresh, busy = false;
 let embeddedTab = Number(new URL(location.href).searchParams.get('target'));
@@ -6,14 +7,34 @@ const embedded = new URL(location.href).searchParams.get('embedded') === '1';
 const channel = new URL(location.href).searchParams.get('channel');
 const CAKE_ORIGIN = 'https://cake.ski';
 
-export function installIntegration(receiveFiles) {
+export function installIntegration(receiveFiles, onTheme = () => {}) {
   if (!isExtension) return;
+  let lastTheme;
+  const applyTheme = value => {
+    if (JSON.stringify(value) === lastTheme) return;
+    const theme = applySiteTheme(document, value);
+    if (theme) { lastTheme = JSON.stringify(value); onTheme(theme); }
+  };
+  const requestTheme = async () => {
+    const tabId = Number(embedded ? embeddedTab : select?.value);
+    if (Number.isInteger(tabId) && tabId > 0) {
+      try {
+        const theme = await browser.runtime.sendMessage({ type: 'cake-tagger:get-theme', tabId });
+        if (tabId === Number(embedded ? embeddedTab : select?.value)) applyTheme(theme);
+      } catch {}
+    }
+  };
+  browser.runtime.onMessage.addListener((message, sender) => {
+    if (sender.id === browser.runtime.id && message?.type === 'cake-tagger:site-theme-updated' && message.tabId === Number(embedded ? embeddedTab : select?.value)) applyTheme(message.theme);
+  });
+  window.addEventListener('focus', requestTheme);
   document.querySelector('#quit').hidden = true;
   if (embedded && channel) {
     document.body.classList.add('embedded');
     document.querySelector('#upload-title').dataset.i18n = 'Analyse'; document.querySelector('#upload-title').textContent = t('Analyse');
-    document.querySelector('.results-heading h2').dataset.i18n = 'Tag-Auswahl'; document.querySelector('.results-heading h2').textContent = t('Tag-Auswahl');
+    document.querySelector('.results-heading h2').dataset.i18n = 'Vorschläge'; document.querySelector('.results-heading h2').textContent = t('Vorschläge');
     window.addEventListener('message', event => {
+      if (isThemeMessage(event, parent, CAKE_ORIGIN, channel)) applyTheme(event.data.theme);
       if (isFileMessage(event, parent, CAKE_ORIGIN, channel, File)) receiveFiles(event.data.files);
     });
     if (!Number.isInteger(embeddedTab) || embeddedTab <= 0) browser.runtime.sendMessage({ type: 'cake-tagger:tab-id' }).then(id => { embeddedTab = id; }).catch(() => {
@@ -30,8 +51,9 @@ export function installIntegration(receiveFiles) {
   const note = document.createElement('p'); note.dataset.i18n = 'Dieselben Videos auf cake.ski auswählen, dann die geprüften Tags pro Datei ergänzen.'; note.textContent = t('Dieselben Videos auf cake.ski auswählen, dann die geprüften Tags pro Datei ergänzen.');
   label.append(select); panel.append(title, label, refresh, note);
   document.querySelector('#message').before(panel);
-  refresh.onclick = refreshTabs;
-  refreshTabs();
+  select.onchange = requestTheme;
+  refresh.onclick = async () => { await refreshTabs(); await requestTheme(); };
+  refresh.onclick();
 }
 
 async function refreshTabs() {
@@ -49,7 +71,7 @@ async function refreshTabs() {
 
 export function integrationButton(entry, makeElement, showMessage) {
   if (!isExtension) return null;
-  const button = makeElement('button', 'Tags auf cake.ski ergänzen', 'quiet'); button.type = 'button';
+  const button = makeElement('button', 'Tags übernehmen', 'quiet'); button.type = 'button';
   button.onclick = async () => {
     if (busy) return;
     const tags = [...entry.selected].filter(([, enabled]) => enabled).map(([tag]) => tag);

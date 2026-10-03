@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Lokale Tag-Vorschläge für Videos und Übernahme in cake.ski-Uploadfelder.",
   "host_permissions": [
     "https://cake.ski/*"
@@ -47,7 +47,8 @@
         "index.html",
         "extension/upload-adapter.mjs",
         "extension/embedded-upload.mjs",
-        "tags.txt"
+        "tags.txt",
+        "extension/site-theme.mjs"
       ],
       "matches": [
         "https://cake.ski/*"

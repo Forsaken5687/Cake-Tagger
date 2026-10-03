@@ -1,4 +1,5 @@
 (async () => {
+  const { readSiteTheme } = await import(browser.runtime.getURL('extension/site-theme.mjs'));
   const { inspectUploads, appendTags } = await import(browser.runtime.getURL('extension/upload-adapter.mjs'));
   const text = await fetch(browser.runtime.getURL('tags.txt')).then(r => r.text());
   const allowed = new Set(text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean));
@@ -8,6 +9,7 @@
   browser.runtime.onMessage.addListener((message, sender) => {
     const trustedBackground = !sender.url || [browser.runtime.getURL('extension/background.js'), browser.runtime.getURL('extension/chrome-worker.mjs'), browser.runtime.getURL('_generated_background_page.html')].includes(sender.url);
     if (sender.id !== browser.runtime.id || !trustedBackground) return;
+    if (message?.type === 'cake-tagger:theme-request') return Promise.resolve(readSiteTheme(document));
     if (message?.type === 'cake-tagger:inspect') return Promise.resolve(inspectUploads(document).map(({ id, filename, tags }) => ({ id, filename, tags })));
     if (message?.type !== 'cake-tagger:append' || typeof message.filename !== 'string') return;
     if (busy) return Promise.resolve({ error: 'Eine Tag-Übernahme läuft bereits.' });

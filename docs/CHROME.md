@@ -32,3 +32,5 @@ Chrome verwendet einen Modul-Service-Worker mit statischen Imports. Eine kleine 
 Automatische Tests prüfen Nachrichten, Absendergrenzen, Einstellungen und Manifest. Eine lokale Browserprüfung ersetzt nicht das Laden der Erweiterung in Chrome mit der realen Website.
 
 Referenzen: [Chrome-Service-Worker](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics), [Nachrichtenübertragung](https://developer.chrome.com/docs/extensions/develop/concepts/messaging), [PNG-Icons](https://developer.chrome.com/docs/extensions/reference/manifest/icons).
+
+Die Erweiterungsansicht übernimmt die Farben des verbundenen cake.ski-Tabs. Änderungen der Akzentfarbe werden ohne Neuladen übernommen, auch in Einstellungen und Tag-Auswahl. Bei automatischer Sprache folgt die Erweiterung cake.ski; die eigenständige Anwendung verwendet die Browsersprache.

@@ -30,7 +30,7 @@ Bei einer Kopie aus Git fehlen drei große Abhängigkeiten. Einmalig `Setup.cmd`
 
 **Einstellungen** ist auf der Hauptseite und in der eingebetteten Analyse verfügbar. Ein Klick auf das Firefox-Erweiterungssymbol öffnet direkt die separate Analyseansicht.
 
-- Sprache: Browsersprache, Deutsch oder Englisch. Tagnamen bleiben unverändert.
+- Sprache: Automatisch, Deutsch oder Englisch. Tagnamen bleiben unverändert.
 - Bildanzahl: automatisch nach Videolänge oder 4 bis 48 Bilder.
 - Scores und unsichere Vorschläge ein- oder ausblenden.
 - Tags von neuen automatischen Vorschlägen ausschließen. `hairy` und `watermark` sind standardmäßig ausgeschlossen; diese Ausschlüsse lassen sich entfernen.
@@ -78,3 +78,5 @@ Das Release enthält außerdem `extensions/Cake-Tagger-Firefox.zip` und den dire
 Der Quellcode liegt im Projektstamm. `docs/` enthält technische Dokumentation, `scripts/` wiederverwendbare Werkzeuge und `tests/` automatisierte Tests. `data/`, `outputs/` und `work/` sind lokale, nicht versionierte Ordner. Große Modelldateien und Laufzeit-Binärdateien bleiben ebenfalls außerhalb von Git.
 
 Weitere Informationen: [Browser-Integration](docs/INTEGRATION.md), [Technik](docs/TECHNICAL.md), [Prüfung](docs/TESTING.md), [Drittanbieter](THIRD_PARTY.md).
+
+Die Erweiterungsansicht übernimmt die Farben des verbundenen cake.ski-Tabs. Änderungen der Akzentfarbe werden ohne Neuladen übernommen, auch in Einstellungen und Tag-Auswahl. Bei automatischer Sprache folgt die Erweiterung cake.ski; die eigenständige Anwendung verwendet die Browsersprache.

@@ -1,6 +1,8 @@
 import { resolvedLanguage } from './preferences.mjs';
 let language = 'de';
+let preference = 'auto', siteLanguage;
 const english = {
+  'Vorschläge': 'Suggestions', 'Tags übernehmen': 'Apply tags', 'Automatisch': 'Automatic',
   'Einstellungen': 'Settings', 'Schließen': 'Close', 'Sprache': 'Language', 'Browsersprache': 'Browser language', 'Deutsch': 'Deutsch', 'English': 'English',
   'Bilder pro Video': 'Images per video', 'Automatisch nach Videolänge': 'Automatic by video length',
   'Scores anzeigen': 'Show scores', 'Unsichere Vorschläge anzeigen': 'Show uncertain suggestions',
@@ -38,6 +40,7 @@ const english = {
   'Lokale Tag-Vorschläge': 'Local tag suggestions', 'Öffnen': 'Open', 'Cake Tagger Startseite': 'Cake Tagger home', 'Videoergebnisse': 'Video results'
 };
 const patterns = [
+  [/^Ausschluss entfernen: (.+)$/, (_, tag) => 'Remove exclusion: ' + tag],
   [/^(\d+) Bilder$/, (_, n) => `${n} images`],
   [/^(\d+) Videos · (\d+) analysiert$/, (_, n, done) => `${n} videos · ${done} analyzed`],
   [/^(\d+) ausgewählt$/, (_, n) => `${n} selected`],
@@ -55,8 +58,10 @@ const patterns = [
   [/^Export fehlgeschlagen: (.+)$/, (_, error) => 'Export failed: ' + t(error)]
 ];
 export function setLanguage(settings, browserLanguage = globalThis.navigator?.language || 'de') {
-  language = resolvedLanguage(settings, browserLanguage); return language;
+  preference = settings.language;
+  language = resolvedLanguage(settings, siteLanguage || browserLanguage); return language;
 }
+export function setSiteLanguage(value) { siteLanguage = value === 'de' ? 'de' : 'en'; return setLanguage({ language: preference }); }
 export function t(value) {
   if (language !== 'en' || typeof value !== 'string') return value;
   if (Object.hasOwn(english, value)) return english[value];

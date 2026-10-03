@@ -8,7 +8,7 @@ export function buildExtension(target) {
   const output = path.join(root, 'outputs', target);
   fs.mkdirSync(output, { recursive: true });
   const files = ['index.html', 'webext-api.js', 'app.js', 'style.css', 'engine-worker.js', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'corrections.mjs', 'sampling.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'tags.txt', 'THIRD_PARTY.md', 'scripts/assets.json', 'assets/logo.svg',
-    'extension/background.js', 'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/message-contract.mjs', 'extension/upload-adapter.mjs', 'extension/integration.mjs',
+    'extension/background.js', 'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/site-theme.mjs', 'extension/message-contract.mjs', 'extension/upload-adapter.mjs', 'extension/integration.mjs',
     'extension/settings-background.mjs',
     'model/LICENSE.txt', 'model/coverage.json', 'model/provenance.json', 'model/top_tags.txt',
     'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt', 'vendor/ort-wasm-simd-threaded.mjs', 'vendor/ort.wasm.min.js'];

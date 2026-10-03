@@ -7,7 +7,7 @@ import { samplingPlan } from './sampling.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analysis-settings.mjs';
 import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
 import { installSettings } from './settings-ui.mjs';
-import { setLanguage, t, translatePage } from './i18n.mjs';
+import { setLanguage, setSiteLanguage, t, translatePage } from './i18n.mjs';
 const $ = s => document.querySelector(s);
 const settingsStore = createSettingsStore(isExtension ? { runtime: browser.runtime } : { storage: localStorage, events: window });
 let settings;
@@ -337,7 +337,11 @@ $('#quit').onclick = async () => {
   try { await api('/api/stop', { method: 'POST' }); $('#status').textContent = t('Programm beendet'); message('Du kannst dieses Fenster schließen.'); $('#analyze').disabled = true; } catch (e) { stopping = false; message(e.message); }
 };
 await status();
-installIntegration(receiveEmbeddedFiles);
+installIntegration(receiveEmbeddedFiles, theme => {
+  setSiteLanguage(theme.language); translatePage();
+  if (!running && mapping) $('#status').textContent = t('Bereit');
+  render();
+});
 installSettings(settingsStore, allTags, document.body.classList.contains('embedded'));
 settingsStore.subscribe(next => {
   settings = next; setLanguage(settings); translatePage();

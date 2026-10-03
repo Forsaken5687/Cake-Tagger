@@ -1,13 +1,17 @@
 // Keep the analysis document on the extension origin, separate from the site.
+import { readSiteTheme } from './site-theme.mjs';
 export function mountUploadPanel(doc, runtime) {
   const selections = new WeakMap();
   let panel, frame, mount, ready = false, channel, lastSelection = '', timer;
   let english = false;
+  let preferences = { language: 'auto' }, lastTheme = '';
   const label = (de, en) => english ? en : de;
   function applyLanguage(settings) {
-    english = settings.language === 'en' || (settings.language === 'auto' && !doc.defaultView.navigator.language.toLowerCase().startsWith('de'));
+    preferences = settings;
+    english = settings.language === 'en' || (settings.language === 'auto' && readSiteTheme(doc).language !== 'de');
     if (panel) {
-      panel.querySelector('.cake-tagger-heading span').textContent = label('Lokale Tag-Vorschläge', 'Local tag suggestions');
+      if (frame) frame.title = label('Cake Tagger – Tag-Vorschläge', 'Cake Tagger – tag suggestions');
+      panel.querySelector('.cake-tagger-heading span').textContent = label('Tags vorschlagen', 'Suggest tags');
       panel.querySelector('button').textContent = frame && !frame.hidden ? label('Schließen', 'Close') : label('Öffnen', 'Open');
     }
   }
@@ -18,6 +22,13 @@ export function mountUploadPanel(doc, runtime) {
   const extensionOrigin = runtime.getURL('').replace(/\/$/, '');
   const visible = node => node?.isConnected && !node.closest('[hidden]') && node.getClientRects().length > 0;
   const fileKey = file => `${file.name}\u0000${file.size}\u0000${file.lastModified}`;
+  function syncTheme(force = false) {
+    const theme = readSiteTheme(doc), key = JSON.stringify(theme);
+    if (!force && key === lastTheme) return;
+    lastTheme = key; applyLanguage(preferences);
+    if (ready && frame) frame.contentWindow.postMessage({ type: 'cake-tagger:theme', channel, theme }, extensionOrigin);
+    runtime.sendMessage({ type: 'cake-tagger:site-theme', theme }).catch(() => {});
+  }
 
   function activeFiles() {
     if (!mount) return [];
@@ -39,7 +50,7 @@ export function mountUploadPanel(doc, runtime) {
     if (frame) { frame.hidden = !frame.hidden; panel.querySelector('button').textContent = frame.hidden ? label('Öffnen', 'Open') : label('Schließen', 'Close'); return; }
     channel = [...crypto.getRandomValues(new Uint8Array(16))].map(n => n.toString(16).padStart(2, '0')).join('');
     frame = doc.createElement('iframe');
-    frame.title = 'Cake Tagger – lokale Tag-Auswahl'; frame.className = 'cake-tagger-frame';
+    frame.title = label('Cake Tagger – Tag-Vorschläge', 'Cake Tagger – tag suggestions'); frame.className = 'cake-tagger-frame';
     const url = new URL(runtime.getURL('index.html')); url.searchParams.set('embedded', '1'); url.searchParams.set('channel', channel);
     const created = frame, owner = panel;
     try {
@@ -51,6 +62,7 @@ export function mountUploadPanel(doc, runtime) {
   }
 
   function refresh() {
+    syncTheme();
     const next = [...doc.querySelectorAll('.stok-up-mount')].find(visible);
     if (!next) {
       if (mount && !mount.isConnected) { panel?.remove(); panel = frame = mount = undefined; ready = false; lastSelection = ''; }
@@ -61,7 +73,7 @@ export function mountUploadPanel(doc, runtime) {
       panel = doc.createElement('section'); panel.className = 'cake-tagger-panel'; panel.setAttribute('aria-label', 'Cake Tagger');
       const head = doc.createElement('div'); head.className = 'cake-tagger-heading';
       const title = doc.createElement('strong'); title.textContent = 'Cake Tagger';
-      const note = doc.createElement('span'); note.textContent = label('Lokale Tag-Vorschläge', 'Local tag suggestions');
+      const note = doc.createElement('span'); note.textContent = label('Tags vorschlagen', 'Suggest tags');
       const button = doc.createElement('button'); button.type = 'button'; button.textContent = label('Öffnen', 'Open'); button.addEventListener('click', open);
       head.append(title, note, button); panel.append(head); mount.before(panel);
     }
@@ -83,9 +95,15 @@ export function mountUploadPanel(doc, runtime) {
   }, true);
   doc.defaultView.addEventListener('message', event => {
     if (!frame || event.source !== frame.contentWindow || event.origin !== extensionOrigin || event.data?.channel !== channel) return;
-    if (event.data.type === 'cake-tagger:ready') { ready = true; lastSelection = ''; syncFiles(); }
+    if (event.data.type === 'cake-tagger:ready') { ready = true; lastSelection = ''; syncTheme(true); syncFiles(); }
   });
   const observer = new MutationObserver(() => { clearTimeout(timer); timer = setTimeout(refresh, 100); });
   observer.observe(doc.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'class'] });
+  // Theme changes must not be delayed by frequently updated playback controls.
+  const themeObserver = new MutationObserver(() => syncTheme());
+  themeObserver.observe(doc.head, { subtree: true, childList: true, characterData: true });
+  for (const node of [doc.documentElement, doc.body, doc.querySelector('.stok-root')].filter(Boolean)) {
+    themeObserver.observe(node, { attributes: true, attributeFilter: ['style', 'class', 'lang'] });
+  }
   refresh();
 }
