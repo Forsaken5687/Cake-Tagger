@@ -275,7 +275,7 @@ $('#analyze').onclick = async () => {
   if (running || preparing) return;
   running = true; summary();
   try { settings = await settingsStore.load(); } catch (error) { running = false; summary(); message(error.message); return; }
-  running = true; controller = new AbortController(); $('#files').disabled = true; $('#frames').disabled = true; $('#cancel').hidden = false; message(''); summary();
+  running = true; controller = new AbortController(); $('#files').disabled = true; $('#cancel').hidden = false; message(''); summary();
   const setting = settings.frames;
   const threshold = DEFAULT_THRESHOLD;
   const analysisSettings = { ...settings, excludedTags: [...settings.excludedTags] };
@@ -314,7 +314,7 @@ $('#analyze').onclick = async () => {
       render();
     }
   } catch (e) { message(e.name === 'AbortError' ? 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.' : e.message); }
-  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#frames').value = settings.frames; $('#cancel').hidden = true; render(); $('#status').textContent = t('Bereit'); drainEmbeddedFiles(); }
+  finally { running = false; $('#files').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = t('Bereit'); drainEmbeddedFiles(); }
 };
 $('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
 $('#export').onclick = async () => {
@@ -338,14 +338,12 @@ $('#quit').onclick = async () => {
 };
 await status();
 installIntegration(receiveEmbeddedFiles);
-$('#frames').value = settings.frames;
 installSettings(settingsStore, allTags, document.body.classList.contains('embedded'));
 settingsStore.subscribe(next => {
   settings = next; setLanguage(settings); translatePage();
-  if (!running) { $('#frames').value = settings.frames; if (mapping) $('#status').textContent = t('Bereit'); }
+  if (!running && mapping) $('#status').textContent = t('Bereit');
   render();
 });
-$('#frames').onchange = async () => { try { await settingsStore.save({ ...settings, frames: $('#frames').value }); } catch (error) { message(error.message); } };
 window.addEventListener('focus', () => { void settingsStore.load().catch(() => {}); });
 render();
 
