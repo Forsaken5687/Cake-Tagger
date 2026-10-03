@@ -18,6 +18,7 @@ export function settingsForm(store, tags, onSaved = () => {}) {
   const frames = field('Bilder pro Video', select([['auto', 'Automatisch nach Videolänge'], ...[4,6,8,12,16,24,32,48].map(n => [String(n), `${n} Bilder`])])); frames.value = draft.frames;
   const check = (label, key) => { const input = document.createElement('input'); input.type = 'checkbox'; input.checked = draft[key]; field(label, input).classList.add('settings-check'); return input; };
   const scores = check('Scores anzeigen', 'showScores'), uncertain = check('Unsichere Vorschläge anzeigen', 'showUncertain');
+  const autoAnalyze = check('Upload-Videos automatisch analysieren', 'autoAnalyzeEmbed');
   const exclusions = document.createElement('section'); exclusions.className = 'settings-exclusions';
   const title = document.createElement('h3'); title.dataset.i18n = 'Ausgeschlossene Tags'; title.textContent = t('Ausgeschlossene Tags');
   const hint = document.createElement('p'); hint.dataset.i18n = 'Gilt für neue automatische Vorschläge. Manuelle Tags und vorhandene Auswahlen bleiben erhalten.'; hint.textContent = t('Gilt für neue automatische Vorschläge. Manuelle Tags und vorhandene Auswahlen bleiben erhalten.');
@@ -46,11 +47,11 @@ export function settingsForm(store, tags, onSaved = () => {}) {
   const actions = document.createElement('div'); actions.className = 'settings-actions';
   const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'quiet'; reset.dataset.i18n = 'Standardwerte'; reset.textContent = t('Standardwerte');
   const save = document.createElement('button'); save.type = 'submit'; save.dataset.i18n = 'Speichern'; save.textContent = t('Speichern');
-  reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; renderExclusions(); status.textContent = ''; };
+  reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; autoAnalyze.checked = draft.autoAnalyzeEmbed; renderExclusions(); status.textContent = ''; };
   form.onsubmit = async event => {
     event.preventDefault(); save.disabled = reset.disabled = true;
     try {
-      await store.save({ ...draft, language: language.value, frames: frames.value, showScores: scores.checked, showUncertain: uncertain.checked });
+      await store.save({ ...draft, language: language.value, frames: frames.value, showScores: scores.checked, showUncertain: uncertain.checked, autoAnalyzeEmbed: autoAnalyze.checked });
       onSaved();
     } catch (error) { status.textContent = t(error.message); }
     finally { save.disabled = reset.disabled = false; }

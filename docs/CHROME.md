@@ -34,3 +34,5 @@ Automatische Tests prüfen Nachrichten, Absendergrenzen, Einstellungen und Manif
 Referenzen: [Chrome-Service-Worker](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics), [Nachrichtenübertragung](https://developer.chrome.com/docs/extensions/develop/concepts/messaging), [PNG-Icons](https://developer.chrome.com/docs/extensions/reference/manifest/icons).
 
 Die Erweiterungsansicht übernimmt die Farben des verbundenen cake.ski-Tabs. Änderungen der Akzentfarbe werden ohne Neuladen übernommen, auch in Einstellungen und Tag-Auswahl. Bei automatischer Sprache folgt die Erweiterung cake.ski; die eigenständige Anwendung verwendet die Browsersprache.
+
+Neue Upload-Videos werden standardmäßig automatisch analysiert. Die eingebettete Ansicht öffnet sich bei der ersten Dateiauswahl. **Upload-Videos automatisch analysieren** in den Einstellungen schaltet diesen Ablauf aus. Bereits analysierte Videos und vorhandene Korrekturen bleiben erhalten; neue Dateien während einer laufenden Analyse werden anschließend verarbeitet. Tags werden weiterhin über **Tags übernehmen** eingetragen.

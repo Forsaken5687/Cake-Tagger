@@ -2,6 +2,7 @@ import { resolvedLanguage } from './preferences.mjs';
 let language = 'de';
 let preference = 'auto', siteLanguage;
 const english = {
+  'Upload-Videos automatisch analysieren': 'Automatically analyze upload videos',
   'Vorschläge': 'Suggestions', 'Tags übernehmen': 'Apply tags', 'Automatisch': 'Automatic',
   'Einstellungen': 'Settings', 'Schließen': 'Close', 'Sprache': 'Language', 'Browsersprache': 'Browser language', 'Deutsch': 'Deutsch', 'English': 'English',
   'Bilder pro Video': 'Images per video', 'Automatisch nach Videolänge': 'Automatic by video length',

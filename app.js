@@ -7,6 +7,7 @@ import { samplingPlan } from './sampling.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analysis-settings.mjs';
 import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
 import { installSettings } from './settings-ui.mjs';
+import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
 import { setLanguage, setSiteLanguage, t, translatePage } from './i18n.mjs';
 const $ = s => document.querySelector(s);
 const settingsStore = createSettingsStore(isExtension ? { runtime: browser.runtime } : { storage: localStorage, events: window });
@@ -20,16 +21,14 @@ let mapping, modelSignature, worker, workerSeq = 0, workerJobs = new Map();
 indexedDB.deleteDatabase('cake-tagger-browser-v1');
 const sessionRecords = new Map(), sessionCache = new Map();
 let preparing = false;
-let pendingEmbeddedFiles;
-async function receiveEmbeddedFiles(files) {
-  if (running || preparing) { pendingEmbeddedFiles = files; return; }
-  await setFiles(files);
-}
-function drainEmbeddedFiles() {
-  if (pendingEmbeddedFiles && !running && !preparing) {
-    const files = pendingEmbeddedFiles; pendingEmbeddedFiles = undefined; void receiveEmbeddedFiles(files);
-  }
-}
+const uploadAuto = createUploadAutoAnalysis({
+  busy: () => running || preparing,
+  enabled: () => document.body.classList.contains('embedded') && settings.autoAnalyzeEmbed,
+  prepare: setFiles,
+  analyze: targets => analyze(targets, true)
+});
+function receiveEmbeddedFiles(files) { return uploadAuto.receive(files); }
+function drainEmbeddedFiles() { void uploadAuto.drain(); }
 async function cached(key, value) {
   if (value) sessionCache.set(key, value);
   return sessionCache.get(key);
@@ -225,7 +224,8 @@ async function setFiles(files) {
     }
     entries = next;
     message('');
-  } finally { preparing = false; render(); drainEmbeddedFiles(); }
+  } finally { preparing = false; render(); }
+  return entries;
 }
 $('#files').onchange = e => setFiles(e.target.files);
 $('#drop').ondragover = e => { e.preventDefault(); $('#drop').classList.add('over'); };
@@ -271,17 +271,18 @@ async function sample(file, setting, signal, knownHash) {
     return { frames, inputs, sha256, sampledFrames: plan.count, samplingMode: plan.mode, durationSeconds: plan.durationSeconds };
   } finally { video.removeAttribute('src'); video.load(); URL.revokeObjectURL(url); }
 }
-$('#analyze').onclick = async () => {
-  if (running || preparing) return;
+async function analyze(targets = entries, automatic = false) {
+  if (running || preparing || !mapping) return;
   running = true; summary();
   try { settings = await settingsStore.load(); } catch (error) { running = false; summary(); message(error.message); return; }
+  if (automatic && !settings.autoAnalyzeEmbed) { running = false; summary(); return; }
   running = true; controller = new AbortController(); $('#files').disabled = true; $('#cancel').hidden = false; message(''); summary();
   const setting = settings.frames;
   const threshold = DEFAULT_THRESHOLD;
   const analysisSettings = { ...settings, excludedTags: [...settings.excludedTags] };
   const coverage = DEFAULT_COVERAGE, analysisPolicy = ANALYSIS_VERSION + ':' + coverage + ':' + suggestionPolicy(analysisSettings);
   try {
-    for (const entry of entries) {
+    for (const entry of targets) {
       if (!entry.hasFile) continue;
       const expectedCount = setting === 'auto' ? (entry.result?.durationSeconds ? samplingPlan(entry.result.durationSeconds).count : null) : Number(setting);
       if (entry.result && entry.frames && entry.result.sampledFrames === expectedCount && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy) continue;
@@ -315,7 +316,8 @@ $('#analyze').onclick = async () => {
     }
   } catch (e) { message(e.name === 'AbortError' ? 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.' : e.message); }
   finally { running = false; $('#files').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = t('Bereit'); drainEmbeddedFiles(); }
-};
+}
+$('#analyze').onclick = () => analyze();
 $('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
 $('#export').onclick = async () => {
   $('#export').disabled = true;

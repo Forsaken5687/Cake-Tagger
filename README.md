@@ -31,6 +31,7 @@ Bei einer Kopie aus Git fehlen drei große Abhängigkeiten. Einmalig `Setup.cmd`
 **Einstellungen** ist auf der Hauptseite und in der eingebetteten Analyse verfügbar. Ein Klick auf das Firefox-Erweiterungssymbol öffnet direkt die separate Analyseansicht.
 
 - Sprache: Automatisch, Deutsch oder Englisch. Tagnamen bleiben unverändert.
+- Upload-Videos automatisch analysieren: standardmäßig aktiv. Neue Videos starten die Analyse im eingebetteten Upload-Bereich; laufende Analysen werden nacheinander abgearbeitet.
 - Bildanzahl: automatisch nach Videolänge oder 4 bis 48 Bilder.
 - Scores und unsichere Vorschläge ein- oder ausblenden.
 - Tags von neuen automatischen Vorschlägen ausschließen. `hairy` und `watermark` sind standardmäßig ausgeschlossen; diese Ausschlüsse lassen sich entfernen.

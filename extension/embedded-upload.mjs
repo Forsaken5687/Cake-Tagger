@@ -4,7 +4,7 @@ export function mountUploadPanel(doc, runtime) {
   const selections = new WeakMap();
   let panel, frame, mount, ready = false, channel, lastSelection = '', timer;
   let english = false;
-  let preferences = { language: 'auto' }, lastTheme = '';
+  let preferences = { language: 'auto', autoAnalyzeEmbed: true }, lastTheme = '';
   const label = (de, en) => english ? en : de;
   function applyLanguage(settings) {
     preferences = settings;
@@ -15,9 +15,9 @@ export function mountUploadPanel(doc, runtime) {
       panel.querySelector('button').textContent = frame && !frame.hidden ? label('Schließen', 'Close') : label('Öffnen', 'Open');
     }
   }
-  runtime.sendMessage({ type: 'cake-tagger:settings-get' }).then(response => { if (response?.settings) applyLanguage(response.settings); }).catch(() => {});
+  runtime.sendMessage({ type: 'cake-tagger:settings-get' }).then(response => { if (response?.settings) { applyLanguage(response.settings); refresh(); } }).catch(() => {});
   runtime.onMessage?.addListener((message, sender) => {
-    if (sender.id === runtime.id && message?.type === 'cake-tagger:settings-updated') applyLanguage(message.settings);
+    if (sender.id === runtime.id && message?.type === 'cake-tagger:settings-updated') { applyLanguage(message.settings); refresh(); }
   });
   const extensionOrigin = runtime.getURL('').replace(/\/$/, '');
   const visible = node => node?.isConnected && !node.closest('[hidden]') && node.getClientRects().length > 0;
@@ -77,6 +77,7 @@ export function mountUploadPanel(doc, runtime) {
       const button = doc.createElement('button'); button.type = 'button'; button.textContent = label('Öffnen', 'Open'); button.addEventListener('click', open);
       head.append(title, note, button); panel.append(head); mount.before(panel);
     }
+    if (preferences.autoAnalyzeEmbed && !frame && activeFiles().length) void open();
     syncFiles();
   }
 

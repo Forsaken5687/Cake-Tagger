@@ -90,3 +90,7 @@ Die Manifest-Dateien begrenzen den Zugriff auf cake.ski und die Speicherberechti
 ## Seitendesign
 
 Das Content-Script liest die freigegebenen `--cake-*` Farbvariablen aus `.stok-root` und beobachtet Änderungen an Stil, Klassen und Seitensprache. Das eingebettete Dokument erhält die Palette über Nachrichten mit geprüftem Ursprung, Fenster und Sitzungskanal. Die separate Erweiterungsansicht fragt den ausgewählten Tab über den Hintergrundprozess ab und erhält dessen Änderungen. Nur bekannte Farbtokens werden übernommen; die Palette wird nicht gespeichert. Benutzerdefinierte Spracheinstellungen haben Vorrang vor der Seitensprache.
+
+## Automatische Upload-Analyse
+
+`autoAnalyzeEmbed` ist eine gespeicherte, standardmäßig aktive Einstellung und gilt ausschließlich für eingebettete Upload-Ansichten. Die Upload-Auswahl öffnet bei Bedarf das Analyse-Dokument. `extension/auto-analysis.mjs` bündelt Auswahländerungen während Vorbereitung und Analyse und verarbeitet nur neue Dateien ohne Ergebnis oder Vorbereitungsfehler. Die neueste Auswahl ersetzt ältere wartende Auswahlen. Bestehende Ergebnisse und Korrekturen werden weiterverwendet. Abbruch oder Fehler lösen keine automatischen Wiederholungen aus; der manuelle Analysestart bleibt verfügbar.
