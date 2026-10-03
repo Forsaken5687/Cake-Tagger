@@ -10,34 +10,37 @@ async function load() {
   postMessage({ type: 'state', state: 'Bereit' });
   return session;
 }
-async function tensorFor(url) {
-  const bitmap = await createImageBitmap(await (await fetch(url)).blob());
-  const size = 448, edge = Math.max(bitmap.width, bitmap.height), scale = size / edge;
-  const canvas = new OffscreenCanvas(size, size), ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(bitmap, Math.floor((edge - bitmap.width) / 2) * scale, Math.floor((edge - bitmap.height) / 2) * scale, bitmap.width * scale, bitmap.height * scale);
-  bitmap.close();
-  const rgba = ctx.getImageData(0, 0, size, size).data, n = size * size, data = new Float32Array(3 * n);
+function tensorFor(rgba) {
+  const size = 448, n = size * size, data = new Float32Array(3 * n);
+  if (!(rgba instanceof Uint8ClampedArray) || rgba.length !== 4 * n) throw new Error('Ungültiges Modellbild.');
   for (let i = 0; i < n; i++) for (let c = 0; c < 3; c++) data[c * n + i] = (rgba[i * 4 + c] / 255 - mean[c]) / std[c];
   return new ort.Tensor('float32', data, [1, 3, size, size]);
 }
 self.onmessage = async ({ data }) => {
   try {
     const started = performance.now();
+    const loadStarted = performance.now();
     const s = await load();
+    const timings = { modelLoadSeconds: (performance.now() - loadStarted) / 1000, preprocessSeconds: 0, inferenceSeconds: 0 };
     if (data.type === 'load') return postMessage({ id: data.id, type: 'done', seconds: (performance.now() - started) / 1000 });
     const all = [];
     for (let i = 0; i < data.frames.length; i++) {
       postMessage({ type: 'progress', current: i + 1, total: data.frames.length });
-      const input = await tensorFor(data.frames[i]);
-      const output = await s.run({ [s.inputNames[0]]: input });
+      const prepareStarted = performance.now();
+      const input = tensorFor(data.frames[i]);
+      timings.preprocessSeconds += (performance.now() - prepareStarted) / 1000;
+      let output;
+      const inferenceStarted = performance.now();
+      try { output = await s.run({ [s.inputNames[0]]: input }); }
+      finally { input.dispose(); }
+      timings.inferenceSeconds += (performance.now() - inferenceStarted) / 1000;
       const raw = output[s.outputNames[0]].data;
-      if (raw.length !== 5813) throw new Error('Modellausgabe passt nicht zur Tagliste.');
+      if (raw.length !== 5813) { Object.values(output).forEach(t => t.dispose()); throw new Error('Modellausgabe passt nicht zur Tagliste.'); }
       // Verified from the ONNX graph: its output is logits, so sigmoid is necessary.
       const scores = Float32Array.from(raw, x => 1 / (1 + Math.exp(-x)));
       all.push(scores);
-      input.dispose(); Object.values(output).forEach(t => t.dispose());
+      Object.values(output).forEach(t => t.dispose());
     }
-    postMessage({ id: data.id, type: 'done', scores: all, seconds: (performance.now() - started) / 1000 }, all.map(a => a.buffer));
+    postMessage({ id: data.id, type: 'done', scores: all, timings, seconds: (performance.now() - started) / 1000 }, all.map(a => a.buffer));
   } catch (e) { postMessage({ id: data.id, type: 'error', error: e.message }); }
 };

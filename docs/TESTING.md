@@ -28,3 +28,5 @@ Automatisierte Tests messen nicht die Erkennungsgenauigkeit. Dafür ist eine sep
 Die Sampling-Tests prüfen die Dauergrenzen bis 600 Sekunden, automatische und feste Bildanzahlen, ungültige Eingaben sowie Speicherung und Export von bis zu 48 Bildern. Weitere Tagging-Tests prüfen klare, wiederkehrende Details gegenüber schwachen oder isolierten Treffern.
 
 Die Zuordnungstests prüfen gültige Modellindizes und eine zur Ausschlusspolitik passende Abdeckungsdatei. Die Tagging-Tests prüfen außerdem den automatischen Ausschluss von `watermark` bei weiterhin möglicher manueller Speicherung sowie die höhere Erkennungsschwelle für `dance`.
+
+Neue Laufzeitmessungen werden auf endliche, nichtnegative Zeitangaben geprüft; Tests sichern die festen Standards und den Erhalt der Messungen beim Speichern und Exportieren ab. Änderungen an der Bildvorverarbeitung benötigen zusätzlich einen echten Browsertest und eine neue Cache-Version.

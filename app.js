@@ -1,6 +1,7 @@
 import { aggregate, ANALYSIS_VERSION } from './tagging.mjs';
 import { makeRecord, applyRecord, tagSource } from './corrections.mjs';
 import { samplingPlan } from './sampling.mjs';
+import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analysis-settings.mjs';
 const $ = s => document.querySelector(s);
 let token = location.hash.slice(1), allTags = [], entries = [], running = false, controller, stopping = false;
 let mapping, modelSignature, worker, workerSeq = 0, workerJobs = new Map();
@@ -43,7 +44,7 @@ function infer(frames) {
     };
   }
   return new Promise((resolve, reject) => {
-    const id = ++workerSeq; workerJobs.set(id, { resolve, reject }); worker.postMessage({ id, type: 'analyze', frames });
+    const id = ++workerSeq; workerJobs.set(id, { resolve, reject }); worker.postMessage({ id, type: 'analyze', frames }, frames.map(frame => frame.buffer));
   });
 }
 if (token) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', '/'); }
@@ -71,11 +72,11 @@ function changed(entry, resetReview = true) {
   if (resetReview) entry.reviewed = false;
   entry.updatedAt = new Date().toISOString(); persist(entry);
 }
-function analysisKey(sha256, count, threshold, policy = '') { return sha256 + '|' + count + '|' + threshold + '|' + modelSignature + '|preprocess-v1' + (policy ? '|' + policy : ''); }
+function analysisKey(sha256, count, threshold, policy = '', preprocess = PREPROCESS_VERSION) { return sha256 + '|' + count + '|' + threshold + '|' + modelSignature + '|' + preprocess + (policy ? '|' + policy : ''); }
 async function restore(entry, record) {
   let baseline = record.result;
   if (!record.originalSuggestionsKnown && baseline.threshold != null) {
-    const original = await cached(analysisKey(record.sha256, baseline.sampledFrames, baseline.threshold));
+    const original = await cached(analysisKey(record.sha256, baseline.sampledFrames, baseline.threshold, '', 'preprocess-v1'));
     if (original?.sha256 === record.sha256) { baseline = original; record = { ...record, result: original, originalSuggestionsKnown: true }; }
   }
   applyRecord(entry, record, baseline);
@@ -197,22 +198,28 @@ async function sample(file, setting, signal, knownHash) {
     const canvas = document.createElement('canvas');
     const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
     canvas.width = Math.max(1, Math.round(video.videoWidth * scale)); canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
-    const ctx = canvas.getContext('2d'), frames = [];
+    const ctx = canvas.getContext('2d'), frames = [], inputs = [];
+    const modelCanvas = document.createElement('canvas'); modelCanvas.width = modelCanvas.height = 448;
+    const modelCtx = modelCanvas.getContext('2d', { willReadFrequently: true });
+    modelCtx.imageSmoothingEnabled = true; modelCtx.imageSmoothingQuality = 'high';
+    const edge = Math.max(canvas.width, canvas.height), modelScale = 448 / edge;
     for (const time of plan.timestamps) {
       signal.throwIfAborted();
       await waitEvent(video, 'seeked', () => { video.currentTime = time; }, signal);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height); frames.push(canvas.toDataURL('image/jpeg', 0.82));
+      modelCtx.fillStyle = '#fff'; modelCtx.fillRect(0, 0, 448, 448);
+      modelCtx.drawImage(canvas, Math.floor((edge - canvas.width) / 2) * modelScale, Math.floor((edge - canvas.height) / 2) * modelScale, canvas.width * modelScale, canvas.height * modelScale);
+      inputs.push(modelCtx.getImageData(0, 0, 448, 448).data);
     }
     const sha256 = knownHash || await hashFile(file); signal.throwIfAborted();
-    return { frames, sha256, sampledFrames: plan.count, samplingMode: plan.mode, durationSeconds: plan.durationSeconds };
+    return { frames, inputs, sha256, sampledFrames: plan.count, samplingMode: plan.mode, durationSeconds: plan.durationSeconds };
   } finally { video.removeAttribute('src'); video.load(); URL.revokeObjectURL(url); }
 }
 $('#analyze').onclick = async () => {
-  running = true; controller = new AbortController(); $('#files').disabled = true; $('#frames').disabled = true; $('#threshold').disabled = true; $('#cancel').hidden = false; message(''); summary();
+  running = true; controller = new AbortController(); $('#files').disabled = true; $('#frames').disabled = true; $('#cancel').hidden = false; message(''); summary();
   const setting = $('#frames').value;
-  const threshold = Number($('#threshold').value);
-  const coverage = $('#coverage').value, analysisPolicy = ANALYSIS_VERSION + ':' + coverage;
-  $('#coverage').disabled = true;
+  const threshold = DEFAULT_THRESHOLD;
+  const coverage = DEFAULT_COVERAGE, analysisPolicy = ANALYSIS_VERSION + ':' + coverage;
   try {
     for (const entry of entries) {
       if (!entry.hasFile) continue;
@@ -220,16 +227,18 @@ $('#analyze').onclick = async () => {
       if (entry.result && entry.frames && entry.result.sampledFrames === expectedCount && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy) continue;
       controller.signal.throwIfAborted(); entry.state = 'Vorschaubilder werden gelesen …'; entry.error = ''; render();
       try {
+        const started = performance.now();
         const sampleData = await sample(entry.file, setting, controller.signal, entry.sha256);
+        const samplingSeconds = (performance.now() - started) / 1000;
         const count = sampleData.sampledFrames;
         entry.frames = sampleData.frames; entry.state = `${count} Vorschaubilder werden analysiert …`; render();
         const key = analysisKey(sampleData.sha256, count, threshold, analysisPolicy);
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
         else {
-          const inference = await infer(sampleData.frames);
+          const inference = await infer(sampleData.inputs);
           controller.signal.throwIfAborted();
-          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', seconds: Math.round(inference.seconds * 10) / 10, createdAt: new Date().toISOString() };
+          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
           await cached(key, result);
         }
         result = { ...result, sampledFrames: count, samplingMode: sampleData.samplingMode, durationSeconds: sampleData.durationSeconds };
@@ -245,7 +254,7 @@ $('#analyze').onclick = async () => {
       render();
     }
   } catch (e) { message(e.name === 'AbortError' ? 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.' : e.message); }
-  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#threshold').disabled = false; $('#coverage').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = 'Bereit'; }
+  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = 'Bereit'; }
 };
 $('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
 $('#export').onclick = async () => {
@@ -268,7 +277,6 @@ await status();
 try {
   const stored = await api('/api/corrections'); savedRecords = new Map(stored.items.map(record => [record.sha256, record]));
   for (const record of stored.items) { const entry = { file: { name: record.filename }, index: entries.length, hasFile: false }; await restore(entry, record); entries.push(entry); }
-  if (entries.length && entries[0].result.threshold != null) $('#threshold').value = String(entries[0].result.threshold);
   saveStatus();
 } catch (e) { message('Gespeicherte Korrekturen konnten nicht geladen werden: ' + e.message); }
 render();

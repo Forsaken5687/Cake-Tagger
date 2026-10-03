@@ -1,4 +1,5 @@
 import { MAX_FRAMES, MAX_DURATION } from './sampling.mjs';
+import { validateTimings } from './analysis-settings.mjs';
 
 export function tagSource(entry, tag) {
   return entry.tagSources?.[tag] || (entry.originalSuggestionsKnown === false ? 'unknown' : entry.result.tags.some(row => row.tag === tag) ? 'suggestion' : 'manual');
@@ -35,6 +36,7 @@ export function exportItem(entry) {
     deselectedTags: record.candidateTags.filter(tag => !selected.has(tag)), candidateTags: record.candidateTags,
     uncertain: entry.result.uncertain, sampledFrames: entry.result.sampledFrames,
     threshold: entry.result.threshold ?? null, analysisPolicy: entry.result.analysisPolicy ?? null, samplingMode: entry.result.samplingMode ?? null, durationSeconds: entry.result.durationSeconds ?? null, model: entry.result.model,
+    timings: entry.result.timings ?? null,
     analysisCreatedAt: entry.result.createdAt ?? null, editedAt: record.updatedAt };
 }
 export function validateRecord(input, tags) {
@@ -58,6 +60,6 @@ export function validateRecord(input, tags) {
   return { filename: input.filename, sha256: input.sha256, tags: list(input.tags), candidateTags: list(input.candidateTags),
     ...(input.tagSources != null ? { tagSources: Object.fromEntries(Object.entries(input.tagSources)) } : {}),
     reviewed: input.reviewed, originalSuggestionsKnown: input.originalSuggestionsKnown,
-    result: { filename: input.filename, sha256: input.sha256, tags: suggestions, uncertain: list(r.uncertain), sampledFrames: r.sampledFrames, threshold: r.threshold ?? null, analysisPolicy: r.analysisPolicy ?? null, samplingMode: r.samplingMode ?? null, durationSeconds: r.durationSeconds ?? null, model: r.model, createdAt: date(r.createdAt), reviewRequired: true },
+    result: { filename: input.filename, sha256: input.sha256, tags: suggestions, uncertain: list(r.uncertain), sampledFrames: r.sampledFrames, threshold: r.threshold ?? null, analysisPolicy: r.analysisPolicy ?? null, samplingMode: r.samplingMode ?? null, durationSeconds: r.durationSeconds ?? null, timings: validateTimings(r.timings), model: r.model, createdAt: date(r.createdAt), reviewRequired: true },
     updatedAt: date(input.updatedAt) || new Date().toISOString() };
 }
