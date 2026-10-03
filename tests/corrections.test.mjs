@@ -18,4 +18,11 @@ assert.equal(exportItem(legacy).originalSuggestions,null);assert.equal(exportIte
 assert.throws(()=>validateRecord({...stored,tags:['made up tag']},tags));
 assert.throws(()=>validateRecord({...stored,result:{...stored.result,sha256:'b'.repeat(64)}},tags));
 assert.throws(()=>validateRecord({...stored,result:{...stored.result,tags:[{tag:'solo',confidence:NaN}]}},tags));
+const nextBaseline = { ...raw, tags: [{tag:'tattoos',confidence:0.9,supportingFrames:4}] };
+const reanalyzed = applyRecord({file:{name:'same.m4v'}}, stored, nextBaseline);
+assert.equal(reanalyzed.tagSources.solo, 'suggestion');
+assert.equal(reanalyzed.tagSources.tattoos, 'manual');
+const savedAgain = validateRecord(makeRecord(reanalyzed), tags);
+assert.equal(exportItem(applyRecord({file:{name:'same.m4v'}},savedAgain)).tagSources.tattoos,'manual');
+assert.throws(()=>validateRecord({...stored,tagSources:{solo:'invented'}},tags));
 console.log('Correction persistence/export semantics passed.');

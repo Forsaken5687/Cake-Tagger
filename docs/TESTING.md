@@ -24,3 +24,5 @@ Bei Änderungen am jeweiligen Ablauf prüfen:
 Für die Weitergabe `scripts/Package.ps1` ausführen und das Paket in einen neuen Ordner entpacken. Dort müssen `Start.cmd` und die Analyse funktionieren, ohne lokale Ergebnisse oder Start-Tokens aus dem Arbeitsordner zu übernehmen.
 
 Automatisierte Tests messen nicht die Erkennungsgenauigkeit. Dafür ist eine separat bewertete Testmenge erforderlich. Persönliche Testberichte und echte Videodaten gehören nicht in das Repository.
+
+Die Sampling-Tests prüfen die Dauergrenzen bis 600 Sekunden, automatische und feste Bildanzahlen, ungültige Eingaben sowie Speicherung und Export von bis zu 48 Bildern. Weitere Tagging-Tests prüfen klare, wiederkehrende Details gegenüber schwachen oder isolierten Treffern.

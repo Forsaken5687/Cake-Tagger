@@ -1,5 +1,6 @@
 import { aggregate, ANALYSIS_VERSION } from './tagging.mjs';
-import { makeRecord, applyRecord } from './corrections.mjs';
+import { makeRecord, applyRecord, tagSource } from './corrections.mjs';
+import { samplingPlan } from './sampling.mjs';
 const $ = s => document.querySelector(s);
 let token = location.hash.slice(1), allTags = [], entries = [], running = false, controller, stopping = false;
 let mapping, modelSignature, worker, workerSeq = 0, workerJobs = new Map();
@@ -75,7 +76,7 @@ async function restore(entry, record) {
   let baseline = record.result;
   if (!record.originalSuggestionsKnown && baseline.threshold != null) {
     const original = await cached(analysisKey(record.sha256, baseline.sampledFrames, baseline.threshold));
-    if (original?.sha256 === record.sha256) { baseline = original; record = { ...record, originalSuggestionsKnown: true }; }
+    if (original?.sha256 === record.sha256) { baseline = original; record = { ...record, result: original, originalSuggestionsKnown: true }; }
   }
   applyRecord(entry, record, baseline);
   entry.state = 'Gespeicherte Korrekturen wiederhergestellt' + (entry.hasFile ? '' : ' · für Vorschaubilder Video erneut auswählen');
@@ -121,9 +122,12 @@ function render() {
         const label = textElement('label', '', 'chip'), box = document.createElement('input');
         box.type = 'checkbox'; box.checked = entry.selected.get(tag);
         const original = entry.result.tags.find(row => row.tag === tag);
-        if (original?.supportingFrames) label.title = `Ursprünglich erkannt in ${original.supportingFrames} von ${entry.result.sampledFrames} Vorschaubildern`;
+        const source = tagSource(entry, tag), origin = source === 'unknown' ? 'Unbekannt' : source === 'suggestion' ? 'Vorschlag' : 'Ergänzt';
+        label.classList.toggle('manual', origin === 'Ergänzt');
+        label.title = origin === 'Ergänzt' ? 'Manuell ergänzt' : origin === 'Unbekannt' ? 'Herkunft im alten Ergebnis nicht dokumentiert' : 'Ursprünglicher Modellvorschlag';
+        if (original?.supportingFrames) label.title += ` · erkannt in ${original.supportingFrames} von ${entry.result.sampledFrames} Vorschaubildern`;
         box.addEventListener('change', () => { entry.selected.set(tag, box.checked); changed(entry); render(); });
-        label.append(box, textElement('span', tag)); chips.append(label);
+        label.append(box, textElement('span', tag), textElement('span', origin, 'tag-origin')); chips.append(label);
       }
       card.append(chips);
       if (!entry.result.tags.length && entry.originalSuggestionsKnown !== false) card.append(textElement('p', 'Keine ausreichend klaren Tags gefunden. Bitte manuell prüfen.'));
@@ -137,6 +141,7 @@ function render() {
       const addTag = () => {
         const found = allTags.find(t => t.toLowerCase() === input.value.trim().toLowerCase());
         if (!found) return message('Bitte einen Tag aus deiner vorhandenen Liste wählen.');
+        if (!entry.selected.has(found)) { entry.tagSources ||= {}; entry.tagSources[found] = 'manual'; }
         entry.selected.set(found, true); changed(entry); message(''); render();
       };
       button.onclick = addTag; input.onkeydown = e => { if (e.key === 'Enter') addTag(); };
@@ -181,41 +186,43 @@ function waitEvent(target, name, action, signal, timeout = 20000) {
     try { action(); } catch(e) { cleanup(); reject(e); }
   });
 }
-async function sample(file, count, signal, knownHash) {
+async function sample(file, setting, signal, knownHash) {
   if (file.size > 250 * 1024 * 1024) throw new Error('Pro Video sind maximal 250 MB möglich.');
   const video = document.createElement('video'); video.muted = true; video.preload = 'auto'; video.playsInline = true;
   const url = URL.createObjectURL(file);
   try {
     await waitEvent(video, 'loadeddata', () => { video.src = url; video.load(); }, signal);
     if (!Number.isFinite(video.duration) || video.duration <= 0 || !video.videoWidth) throw new Error('Ungültige Videolänge oder Auflösung.');
+    const plan = samplingPlan(video.duration, setting);
     const canvas = document.createElement('canvas');
     const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
     canvas.width = Math.max(1, Math.round(video.videoWidth * scale)); canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
     const ctx = canvas.getContext('2d'), frames = [];
-    for (let i = 0; i < count; i++) {
+    for (const time of plan.timestamps) {
       signal.throwIfAborted();
-      const time = video.duration * (i + 0.5) / count;
       await waitEvent(video, 'seeked', () => { video.currentTime = time; }, signal);
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height); frames.push(canvas.toDataURL('image/jpeg', 0.82));
     }
     const sha256 = knownHash || await hashFile(file); signal.throwIfAborted();
-    return { frames, sha256 };
+    return { frames, sha256, sampledFrames: plan.count, samplingMode: plan.mode, durationSeconds: plan.durationSeconds };
   } finally { video.removeAttribute('src'); video.load(); URL.revokeObjectURL(url); }
 }
 $('#analyze').onclick = async () => {
   running = true; controller = new AbortController(); $('#files').disabled = true; $('#frames').disabled = true; $('#threshold').disabled = true; $('#cancel').hidden = false; message(''); summary();
-  const count = Number($('#frames').value);
+  const setting = $('#frames').value;
   const threshold = Number($('#threshold').value);
   const coverage = $('#coverage').value, analysisPolicy = ANALYSIS_VERSION + ':' + coverage;
   $('#coverage').disabled = true;
   try {
     for (const entry of entries) {
       if (!entry.hasFile) continue;
-      if (entry.result && entry.frames && entry.result.sampledFrames === count && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy) continue;
+      const expectedCount = setting === 'auto' ? (entry.result?.durationSeconds ? samplingPlan(entry.result.durationSeconds).count : null) : Number(setting);
+      if (entry.result && entry.frames && entry.result.sampledFrames === expectedCount && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy) continue;
       controller.signal.throwIfAborted(); entry.state = 'Vorschaubilder werden gelesen …'; entry.error = ''; render();
       try {
-        const sampleData = await sample(entry.file, count, controller.signal, entry.sha256);
-        entry.frames = sampleData.frames; entry.state = 'Tagging-Modell analysiert … Beim ersten Video wird das Modell geladen.'; render();
+        const sampleData = await sample(entry.file, setting, controller.signal, entry.sha256);
+        const count = sampleData.sampledFrames;
+        entry.frames = sampleData.frames; entry.state = `${count} Vorschaubilder werden analysiert …`; render();
         const key = analysisKey(sampleData.sha256, count, threshold, analysisPolicy);
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
@@ -225,11 +232,12 @@ $('#analyze').onclick = async () => {
           result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', seconds: Math.round(inference.seconds * 10) / 10, createdAt: new Date().toISOString() };
           await cached(key, result);
         }
+        result = { ...result, sampledFrames: count, samplingMode: sampleData.samplingMode, durationSeconds: sampleData.durationSeconds };
         const previous = savedRecords.get(result.sha256);
         if (previous) applyRecord(entry, { ...previous, originalSuggestionsKnown: true }, result);
         else { entry.result = result; entry.selected = new Map(result.tags.map(t => [t.tag, true])); entry.reviewed = false; entry.originalSuggestionsKnown = true; }
         entry.updatedAt = entry.updatedAt || new Date().toISOString(); await persist(entry);
-        entry.state = result.cached ? 'Gespeichertes Ergebnis geladen · bitte prüfen' : `Analyse abgeschlossen · ${result.seconds} s inklusive Modellstart · bitte prüfen`;
+        entry.state = result.cached ? `Gespeichertes Ergebnis geladen · ${count} Bilder · bitte prüfen` : `Analyse abgeschlossen · ${count} Bilder · ${result.seconds} s · bitte prüfen`;
       } catch (e) {
         if (e.name === 'AbortError') { entry.state = 'Abgebrochen'; throw e; }
         entry.error = e.message; entry.state = 'Analyse fehlgeschlagen';
@@ -260,7 +268,7 @@ await status();
 try {
   const stored = await api('/api/corrections'); savedRecords = new Map(stored.items.map(record => [record.sha256, record]));
   for (const record of stored.items) { const entry = { file: { name: record.filename }, index: entries.length, hasFile: false }; await restore(entry, record); entries.push(entry); }
-  if (entries.length) { $('#frames').value = String(entries[0].result.sampledFrames); if (entries[0].result.threshold != null) $('#threshold').value = String(entries[0].result.threshold); }
+  if (entries.length && entries[0].result.threshold != null) $('#threshold').value = String(entries[0].result.threshold);
   saveStatus();
 } catch (e) { message('Gespeicherte Korrekturen konnten nicht geladen werden: ' + e.message); }
 render();

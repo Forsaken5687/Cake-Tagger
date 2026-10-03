@@ -20,14 +20,16 @@ Bei einer Kopie aus Git fehlen drei große Abhängigkeiten. Einmalig `Setup.cmd`
 
 ## Funktionen
 
-- 4, 6 oder 8 gleichmäßig verteilte Vorschaubilder pro Video.
+- Automatische Bildanzahl nach Videolänge, gleichmäßig über den Clip verteilt. Eine feste Anzahl von 4 bis 48 Bildern bleibt auswählbar.
 - Einstellbare Erkennungsschwelle und zeitliche Abdeckung; Hinweise auf kurze oder unsichere Treffer.
-- Manuelle Tag-Auswahl und getrennte Prüfmarkierung.
+- Manuelle Tag-Auswahl und getrennte Prüfmarkierung. Tags zeigen ihre Herkunft als **Vorschlag** oder **Ergänzt**; Ergänzungen sind zusätzlich farblich markiert.
 - Automatische Speicherung der Korrekturen, auch über Programmneustarts hinweg.
 - Zuordnung anhand des Datei-Inhalts: Umbenennen eines Videos verliert dessen Korrekturen nicht.
 - JSON-Export mit Auswahl, Prüfstatus, ursprünglichen Vorschlägen, Scores sowie ergänzten und entfernten Tags.
 
 Gespeicherte Ergebnisse erscheinen beim Start automatisch. Für Vorschaubilder die Videos erneut auswählen und analysieren. Die bearbeitete Auswahl bleibt erhalten.
+
+Die automatische Auswahl verwendet 8 Bilder bis 15 Sekunden, 12 bis 30 Sekunden, 16 bis einer Minute, 24 bis zwei Minuten, 32 bis fünf Minuten und 48 bis zehn Minuten. Längere Videos benötigen dadurch mehr Rechenzeit, bleiben aber auf maximal 48 Bilder begrenzt.
 
 ## Daten und Datenschutz
 
@@ -37,8 +39,9 @@ Korrekturen liegen unter `data/corrections.json`; ursprüngliche Analyseergebnis
 
 ## Grenzen
 
-- Maximal 250 MiB pro Video. MP4/M4V mit H.264 sind geeignete Formate; weitere Formate hängen von der Unterstützung des Browsers ab.
-- Einzelbilder können kurze Ereignisse übersehen. Standardmäßig muss ein Tag in mehr als der Hälfte der Vorschaubilder erkannt werden (3/4, 4/6 oder 5/8). **Auch kurze Szenen** verwendet mindestens zwei Bilder. Die Bildabdeckung ist eine Stichprobe und keine genaue Messung der Videodauer. Der strengere Modus kann auch richtige Tags verlieren; sie bleiben manuell ergänzbar.
+- Maximal zehn Minuten und 250 MiB pro Video. MP4/M4V mit H.264 sind geeignete Formate; weitere Formate hängen von der Unterstützung des Browsers ab.
+- Einzelbilder können kurze Ereignisse übersehen. **Ausgewogen** benötigt für die meisten Tags Treffer in mehr als der Hälfte der Bilder. Ausgewählte Kleidungs-, Accessoire- und Objekttags benötigen mindestens ein Viertel der Bilder (mindestens zwei), dafür aber einen Score von mindestens 0,65 oder die höhere gewählte Schwelle. **Auch kurze Szenen** verwendet für alle automatischen Tags mindestens zwei Bilder an der gewählten Schwelle. Diese Regeln sind Heuristiken; ihre Wirkung auf die Erkennungsqualität muss mit neuen geprüften Videos bewertet werden.
+- Die Bildabdeckung ist eine Stichprobe und keine genaue Messung der Videodauer. Mehr Bilder ersetzen keine Bewegungsanalyse. Nicht vorgeschlagene Tags bleiben manuell ergänzbar.
 - `hairy` wird wegen häufiger Fehlzuordnungen nur manuell ergänzt. Vorhandene Auswahlen und Prüfmarkierungen werden durch neue Regeln nicht geändert.
 - JoyTag wurde überwiegend mit Zeichnungen und zusätzlich mit Fotos trainiert. Bei realen Videos sind Fehlzuordnungen möglich. Scores sind keine kalibrierten Wahrscheinlichkeiten.
 - Nicht alle Tags haben eine Modellzuordnung. Kontext- und Identitätsangaben sowie technische Tags der Upload-Seite werden nicht automatisch abgeleitet.

@@ -45,3 +45,19 @@ test('one available frame cannot satisfy the minimum support requirement', () =>
   assert.equal(aggregate([[0.9]], { solo: [0] }).tags.length, 0);
   assert.throws(() => aggregate([[0.9]], { solo: [0] }, 0.5, 'unknown'));
 });
+test('clear recurring clothing detail can be shorter than the action', () => {
+  const frames=Array.from({length:16},(_,i)=>[i<4?0.8:0.1,i<4?0.8:0.1]);
+  const result=aggregate(frames,{skirt:[0],solo:[1]},0.5);
+  assert.deepEqual(result.tags.map(x=>x.tag),['skirt']);
+  assert(result.uncertain.includes('solo'));
+  frames[3][0]=0.6;
+  assert.equal(aggregate(frames,{skirt:[0]},0.5).tags.length,0);
+  assert.equal(aggregate(frames,{skirt:[0]},0.85).tags.length,0);
+});
+test('weak or isolated detail remains unselected and optional brief mode is separate', () => {
+  const frames=Array.from({length:8},(_,i)=>[i<2?0.6:0.1]);
+  assert.equal(aggregate(frames,{glasses:[0]},0.5).tags.length,0);
+  assert.equal(aggregate(frames,{glasses:[0]},0.5,'brief').tags.length,1);
+  frames[0][0]=0.99;frames[1][0]=0.1;
+  assert.equal(aggregate(frames,{glasses:[0]},0.5).tags.length,0);
+});
