@@ -16,7 +16,7 @@ export function applyRecord(entry, record, baseline = record.result) {
   entry.result = { ...baseline, filename: entry.file.name };
   entry.originalSuggestionsKnown = record.originalSuggestionsKnown !== false;
   const enabled = new Set(record.tags);
-  const candidates = [...new Set([...baseline.tags.map(row => row.tag), ...record.candidateTags, ...record.tags])];
+  const candidates = [...new Set([...baseline.tags.map(row => row.tag), ...record.candidateTags, ...record.tags, ...baseline.uncertain])];
   entry.selected = new Map(candidates.map(tag => [tag, enabled.has(tag)]));
   // Preserve the actual source even if a later analysis changes the suggestions.
   entry.tagSources = Object.fromEntries(candidates.map(tag => [tag, record.tagSources?.[tag] || (record.candidateTags.includes(tag) || record.tags.includes(tag)
@@ -34,7 +34,7 @@ export function exportItem(entry) {
     addedTags: known ? record.tags.filter(tag => !original.has(tag)) : null,
     removedTags: known ? [...original].filter(tag => !selected.has(tag)) : null,
     deselectedTags: record.candidateTags.filter(tag => !selected.has(tag)), candidateTags: record.candidateTags,
-    uncertain: entry.result.uncertain, sampledFrames: entry.result.sampledFrames,
+    uncertain: entry.result.uncertain, uncertainScores: entry.result.uncertainScores ?? null, sampledFrames: entry.result.sampledFrames,
     threshold: entry.result.threshold ?? null, analysisPolicy: entry.result.analysisPolicy ?? null, samplingMode: entry.result.samplingMode ?? null, durationSeconds: entry.result.durationSeconds ?? null, model: entry.result.model,
     timings: entry.result.timings ?? null,
     analysisCreatedAt: entry.result.createdAt ?? null, editedAt: record.updatedAt };
@@ -47,7 +47,7 @@ export function validateRecord(input, tags) {
   };
   if (!input || typeof input.filename !== 'string' || !input.filename || input.filename.length > 240 || !/^[a-f0-9]{64}$/.test(input.sha256) || typeof input.reviewed !== 'boolean' || typeof input.originalSuggestionsKnown !== 'boolean') throw Error('Ungültige Dateizuordnung.');
   const r = input.result;
-  if (r?.analysisPolicy != null && !/^coverage-v[234]:(majority|brief)$/.test(r.analysisPolicy)) throw Error('Ungültige Analyse-Regel.');
+  if (r?.analysisPolicy != null && !/^coverage-v[2345]:(majority|brief)$/.test(r.analysisPolicy)) throw Error('Ungültige Analyse-Regel.');
   if (r?.samplingMode != null && !['auto', 'fixed'].includes(r.samplingMode)) throw Error('Ungültige Bildauswahl.');
   if (r?.durationSeconds != null && (!Number.isFinite(r.durationSeconds) || r.durationSeconds <= 0 || r.durationSeconds > MAX_DURATION)) throw Error('Ungültige Videolänge.');
   if (!r || r.sha256 !== input.sha256 || !Array.isArray(r.tags) || r.tags.length > tags.length || !Number.isInteger(r.sampledFrames) || r.sampledFrames < 1 || r.sampledFrames > MAX_FRAMES || (r.threshold != null && (!Number.isFinite(r.threshold) || r.threshold < 0 || r.threshold > 1)) || typeof r.model !== 'string' || r.model.length > 120) throw Error('Ungültige Analyseangaben.');
@@ -56,10 +56,16 @@ export function validateRecord(input, tags) {
     return { tag: row.tag, confidence: row.confidence, ...(row.supportingFrames != null ? { supportingFrames: row.supportingFrames } : {}) };
   });
   const date = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : null;
+  const uncertain = list(r.uncertain);
+  if (r.uncertainScores != null && (!Array.isArray(r.uncertainScores) || r.uncertainScores.length > uncertain.length)) throw Error('Ungültige unsichere Modell-Scores.');
+  const uncertainScores = r.uncertainScores == null ? null : r.uncertainScores.map(row => {
+    if (!row || !uncertain.includes(row.tag) || !Number.isFinite(row.confidence) || row.confidence < 0 || row.confidence > 1 || !Number.isInteger(row.supportingFrames) || row.supportingFrames < 0 || row.supportingFrames > r.sampledFrames) throw Error('Ungültige unsichere Modell-Scores.');
+    return { tag: row.tag, confidence: row.confidence, supportingFrames: row.supportingFrames };
+  });
   if (input.tagSources != null && (typeof input.tagSources !== 'object' || Array.isArray(input.tagSources) || Object.entries(input.tagSources).some(([tag, source]) => !allowed.has(tag) || !['suggestion', 'manual', 'unknown'].includes(source)))) throw Error('Ungültige Tag-Herkunft.');
   return { filename: input.filename, sha256: input.sha256, tags: list(input.tags), candidateTags: list(input.candidateTags),
     ...(input.tagSources != null ? { tagSources: Object.fromEntries(Object.entries(input.tagSources)) } : {}),
     reviewed: input.reviewed, originalSuggestionsKnown: input.originalSuggestionsKnown,
-    result: { filename: input.filename, sha256: input.sha256, tags: suggestions, uncertain: list(r.uncertain), sampledFrames: r.sampledFrames, threshold: r.threshold ?? null, analysisPolicy: r.analysisPolicy ?? null, samplingMode: r.samplingMode ?? null, durationSeconds: r.durationSeconds ?? null, timings: validateTimings(r.timings), model: r.model, createdAt: date(r.createdAt), reviewRequired: true },
+    result: { filename: input.filename, sha256: input.sha256, tags: suggestions, uncertain, uncertainScores, sampledFrames: r.sampledFrames, threshold: r.threshold ?? null, analysisPolicy: r.analysisPolicy ?? null, samplingMode: r.samplingMode ?? null, durationSeconds: r.durationSeconds ?? null, timings: validateTimings(r.timings), model: r.model, createdAt: date(r.createdAt), reviewRequired: true },
     updatedAt: date(input.updatedAt) || new Date().toISOString() };
 }

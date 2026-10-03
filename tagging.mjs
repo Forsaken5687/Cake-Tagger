@@ -1,5 +1,5 @@
 import { excluded } from './tag-policy.mjs';
-export const ANALYSIS_VERSION = 'coverage-v4';
+export const ANALYSIS_VERSION = 'coverage-v5';
 const details = new Set(['glasses', 'choker', 'collar', 'cat ears', 'bunny ears', 'maid outfit', 'skirt', 'underwear', 'lingerie', 'bikini', 'swimsuit', 'bra', 'panties', 'thigh highs', 'knee high socks', 'pantyhose', 'fishnet', 'high heels', 'hoodie', 'mask', 'earrings', 'piercings', 'hat', 'gag', 'blindfold', 'handcuffs', 'butt plug', 'dildo', 'vibrator', 'sex toy']);
 export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'majority') {
   if (!['majority', 'brief'].includes(coverage)) throw Error('Ungültige zeitliche Abdeckung.');
@@ -17,8 +17,9 @@ export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'maj
     const confidence = scores.length >= 2 ? (scores[0] + scores[1]) / 2 : scores[0];
     // Default: more than half of all sampled images, not just two isolated matches.
     if (support >= tagRequired) predicted.push({ tag, confidence, supportingFrames: support });
-    else if (scores[0] >= threshold) uncertain.push({ tag, confidence: scores[0] });
+    else if (scores[0] >= threshold) uncertain.push({ tag, confidence, supportingFrames: support });
   }
   predicted.sort((a, b) => b.confidence - a.confidence); uncertain.sort((a, b) => b.confidence - a.confidence);
-  return { tags: predicted.slice(0, 20), uncertain: uncertain.slice(0, 15).map(row => row.tag), reviewRequired: true };
+  const uncertainScores = uncertain.slice(0, 15);
+  return { tags: predicted.slice(0, 20), uncertain: uncertainScores.map(row => row.tag), uncertainScores, reviewRequired: true };
 }

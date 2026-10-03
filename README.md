@@ -12,22 +12,23 @@ Voraussetzungen: Windows 64 Bit und ein aktueller Chrome- oder Edge-Browser mit 
 2. `Start.cmd` doppelklicken. Die Oberfläche öffnet sich im Browser.
 3. Videos auswählen und **Tags vorschlagen** anklicken.
 4. Vorschläge prüfen, falsche Tags abwählen und fehlende Tags ergänzen.
-5. **Vorschläge geprüft** markieren und **JSON im Projektordner speichern** anklicken.
+5. **JSON herunterladen** anklicken.
 
-Der Export liegt unter `outputs/cake-tags.json`; es öffnet sich kein Speicherdialog. Nach dem Speichern erscheint zusätzlich **JSON herunterladen** für einen Browser-Download. Der Link ist fünf Minuten gültig; danach erneut speichern. Beim nächsten Export bleibt die vorherige Datei als `.bak` erhalten. **Programm beenden** schließt den lokalen Dienst; der Browser-Tab kann anschließend geschlossen werden.
+Der Export wird als `cake-tags.json` über den Browser heruntergeladen. Es gibt keine automatische Speicherung von Ergebnissen. Vor dem Neuladen oder Schließen der Seite die gewünschte Auswahl herunterladen. **Programm beenden** schließt den lokalen Dienst.
 
 Bei einer Kopie aus Git fehlen drei große Abhängigkeiten. Einmalig `Setup.cmd` ausführen, um die festgelegten Dateien herunterzuladen und ihre Prüfsummen zu kontrollieren. Danach funktioniert die Anwendung offline. Bereits mitgelieferte Dateien werden geprüft und nicht erneut heruntergeladen.
 
 ## Funktionen
 
+- Vergrößerbare Vorschaubilder mit Bildnavigation per Schaltfläche oder Pfeiltaste. Schließen über Escape, Schließen-Schaltfläche oder Klick außerhalb.
 - Automatische Bildanzahl nach Videolänge, gleichmäßig über den Clip verteilt. Eine feste Anzahl von 4 bis 48 Bildern bleibt auswählbar.
-- Feste Erkennungsschwelle von 0,4 und ausgewogene Tag-Auswahl; Hinweise auf unsichere Treffer.
-- Manuelle Tag-Auswahl und getrennte Prüfmarkierung. Tags zeigen ihre Herkunft als **Vorschlag** oder **Ergänzt**; Ergänzungen sind zusätzlich farblich markiert.
-- Automatische Speicherung der Korrekturen, auch über Programmneustarts hinweg.
-- Zuordnung anhand des Datei-Inhalts: Umbenennen eines Videos verliert dessen Korrekturen nicht.
-- JSON-Export mit Auswahl, Prüfstatus, ursprünglichen Vorschlägen, Scores sowie ergänzten und entfernten Tags.
+- Feste Erkennungsschwelle von 0,4 und ausgewogene Tag-Auswahl. Unsichere Kandidaten bleiben als zunächst nicht ausgewählte Tags sichtbar.
+- Manuelle Tag-Auswahl. Tags zeigen ihre Herkunft als **Vorschlag** oder **Ergänzt**; Ergänzungen sind zusätzlich farblich markiert. Modellvorschläge zeigen ihren Score als Prozentwert; dieser ist keine kalibrierte Wahrscheinlichkeit für einen richtigen Tag.
+- Sitzungsbasierte Bearbeitung ohne dauerhafte Ergebnisablage.
+- Zuordnung anhand des Datei-Inhalts innerhalb derselben Sitzung.
+- JSON-Export mit Auswahl, ursprünglichen Vorschlägen, Scores sowie ergänzten und entfernten Tags.
 
-Gespeicherte Ergebnisse erscheinen beim Start automatisch. Für Vorschaubilder die Videos erneut auswählen und analysieren. Die bearbeitete Auswahl bleibt erhalten.
+Die Oberfläche ist auch eigenständig nutzbar: Videos auswählen, Tags prüfen und JSON herunterladen. Beim Neuladen beginnt eine neue Sitzung.
 
 Die automatische Auswahl verwendet 8 Bilder bis 15 Sekunden, 12 bis 30 Sekunden, 16 bis einer Minute, 24 bis zwei Minuten, 32 bis fünf Minuten und 48 bis zehn Minuten. Längere Videos benötigen dadurch mehr Rechenzeit, bleiben aber auf maximal 48 Bilder begrenzt.
 
@@ -35,7 +36,7 @@ Die automatische Auswahl verwendet 8 Bilder bis 15 Sekunden, 12 bis 30 Sekunden,
 
 Die Analyse erfolgt im Browser. Der lokale Dienst hört ausschließlich auf `127.0.0.1:8765`. Im normalen Betrieb erfolgen keine Internetabfragen. Videos und Vorschaubilder werden nicht dauerhaft im Projekt gespeichert.
 
-Korrekturen liegen unter `data/corrections.json`; ursprüngliche Analyseergebnisse werden zusätzlich im Browser zwischengespeichert. Browserdaten zu löschen entfernt diesen Cache, aber nicht die Korrekturdatei. Exportdateien enthalten Dateinamen und Tags und sollten bewusst weitergegeben werden.
+Ergebnisse, Korrekturen und Analyse-Cache bleiben im Arbeitsspeicher der Seite. Alte Korrekturdateien werden nicht mehr geladen; der frühere IndexedDB-Ergebniscache wird beim Start entfernt. Der Dienst hält Download-Snapshots höchstens fünf Minuten im Arbeitsspeicher. Exportdateien enthalten Dateinamen und Tags und sollten bewusst weitergegeben werden.
 
 ## Grenzen
 
@@ -45,11 +46,11 @@ Korrekturen liegen unter `data/corrections.json`; ursprüngliche Analyseergebnis
 - `hairy` und `watermark` bleiben wegen häufiger Fehlzuordnungen auf die manuelle Auswahl beschränkt. Vorhandene Auswahlen und Prüfmarkierungen werden durch neue Regeln nicht geändert.
 - JoyTag wurde überwiegend mit Zeichnungen und zusätzlich mit Fotos trainiert. Bei realen Videos sind Fehlzuordnungen möglich. Scores sind keine kalibrierten Wahrscheinlichkeiten.
 - 159 von 258 Tags haben eine automatische Modellzuordnung. Die übrigen Tags stehen in der [Abdeckungsübersicht](docs/TAG_COVERAGE.md). Kontext- und Identitätsangaben sowie technische Tags der Upload-Seite werden nicht automatisch abgeleitet.
-- Manuelle Korrekturen ändern die gespeicherte Auswahl; sie trainieren das Modell nicht.
+- Manuelle Korrekturen ändern die Auswahl dieser Sitzung; sie trainieren das Modell nicht.
 
 ## Entwicklung und Weitergabe
 
-`scripts/Test.ps1` prüft Syntax und die Speicherung sowie den Export anhand künstlicher Testdaten.
+`scripts/Test.ps1` prüft Syntax, Ergebnisvalidierung und den Download-Export anhand künstlicher Testdaten.
 
 `scripts/Package.ps1` erzeugt `outputs/Cake-Tagger.zip` aus versionierten Projektdateien und den geprüften Abhängigkeiten. Persönliche Daten, Videos, Testberichte und die Git-Historie werden nicht aufgenommen. Zum Teilen dieses Paket verwenden, statt den gesamten Arbeitsordner zu kopieren.
 

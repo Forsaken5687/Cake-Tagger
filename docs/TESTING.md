@@ -1,32 +1,17 @@
 # Prüfung
 
-## Automatisiert
-
-Im Projektordner ausführen:
-
-```powershell
-.\scripts\Test.ps1
-```
-
-Das Skript verwendet die mitgelieferte Node.js-Laufzeit. Es prüft die JavaScript-Syntax und führt Tests mit künstlichen Daten aus: Korrekturen wiederherstellen, Umbenennen bei gleicher Prüfsumme, ergänzte/entfernte Tags exportieren, unbekannte Ausgangsvorschläge behandeln und ungültige Angaben zurückweisen. Die Tagging-Tests prüfen Mehrheitsgrenzen für 4/6/8 Bilder, kurze isolierte Treffer, den Modus für kurze Szenen, Erkennungsschwellen und die manuelle Ergänzung von `hairy`.
+`scripts/Test.ps1` prüft die JavaScript-Syntax und führt synthetische Tests für Tag-Aggregation, Zuordnung, Bildanzahl, Ergebnisvalidierung, Herkunft und Export aus. Der Download-Test startet einen isolierten Dienst unter `work/` auf einem freien Port: Export-Zugriffe ohne Token müssen abgewiesen werden, ein gültiger Snapshot muss als Anhang verfügbar sein, und es dürfen keine Ergebnisdateien entstehen. Alte Korrekturdateien dürfen nicht eingelesen oder verändert werden.
 
 ## Browser-Prüfung
 
-Bei Änderungen am jeweiligen Ablauf prüfen:
+1. Leere Startansicht, Upload-Bereich und automatische Bildanzahl prüfen.
+2. Videos auswählen und analysieren; Vorschläge, Scores und zunächst nicht ausgewählte unsichere Kandidaten prüfen.
+3. Tags ergänzen und abwählen; der Auswahlzähler muss folgen.
+4. Dieselbe Datei innerhalb der Sitzung erneut auswählen: Die Auswahl bleibt erhalten.
+5. JSON herunterladen; Auswahl, Modell-Scores und Laufzeitangaben prüfen. Im Projekt darf keine neue Ergebnisdatei entstehen.
+6. Seite neu laden: Ergebnisse dürfen nicht wiederhergestellt werden.
+7. Abbruch, ungültige Dateien und die Darstellung auf schmalen Bildschirmen prüfen.
 
-1. Oberfläche starten; Dateien auswählen und analysieren.
-2. Tag abwählen, einen ergänzen und Ergebnis als geprüft markieren.
-3. Seite neu laden und Programm neu starten: Auswahl und Prüfstatus bleiben erhalten.
-4. Dieselben Videos erneut auswählen: Korrekturen bleiben erhalten.
-5. JSON speichern, den Download-Link verwenden und Auswahl, Prüfstatus und Änderungen kontrollieren. Download und Projektdatei müssen denselben Inhalt haben.
-6. Bei Änderungen an der Analyse zusätzlich Abbruch und ungültige Videodateien prüfen.
+Automatisierte Tests messen keine Erkennungsgenauigkeit. Dafür ist eine separat bewertete Testmenge erforderlich. Persönliche Testberichte und Videodaten gehören nicht in Git oder das Weitergabepaket.
 
-Für die Weitergabe `scripts/Package.ps1` ausführen und das Paket in einen neuen Ordner entpacken. Dort müssen `Start.cmd` und die Analyse funktionieren, ohne lokale Ergebnisse oder Start-Tokens aus dem Arbeitsordner zu übernehmen.
-
-Automatisierte Tests messen nicht die Erkennungsgenauigkeit. Dafür ist eine separat bewertete Testmenge erforderlich. Persönliche Testberichte und echte Videodaten gehören nicht in das Repository.
-
-Die Sampling-Tests prüfen die Dauergrenzen bis 600 Sekunden, automatische und feste Bildanzahlen, ungültige Eingaben sowie Speicherung und Export von bis zu 48 Bildern. Weitere Tagging-Tests prüfen klare, wiederkehrende Details gegenüber schwachen oder isolierten Treffern.
-
-Die Zuordnungstests prüfen gültige Modellindizes und eine zur Ausschlusspolitik passende Abdeckungsdatei. Die Tagging-Tests prüfen außerdem den automatischen Ausschluss von `watermark` bei weiterhin möglicher manueller Speicherung sowie die höhere Erkennungsschwelle für `dance`.
-
-Neue Laufzeitmessungen werden auf endliche, nichtnegative Zeitangaben geprüft; Tests sichern die festen Standards und den Erhalt der Messungen beim Speichern und Exportieren ab. Änderungen an der Bildvorverarbeitung benötigen zusätzlich einen echten Browsertest und eine neue Cache-Version.
+Vorschaubild mit Maus und Tastatur öffnen, zum nächsten und vorherigen Bild wechseln, Escape und die Schließen-Schaltfläche prüfen. Die ursprüngliche Seite muss dabei unverändert bleiben und anschließend wieder bedienbar sein.

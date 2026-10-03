@@ -1,20 +1,59 @@
 <!doctype html>
 <html lang="de">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cake Tagger</title><link rel="stylesheet" href="style.css"><script type="module" src="app.js"></script></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111114">
+  <title>Cake Tagger</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%20role%3D%22img%22%20aria-labelledby%3D%22title%22%3E%3Ctitle%20id%3D%22title%22%3ECake%20Tagger%3C%2Ftitle%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2218%22%20fill%3D%22%2326232a%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M19%2012h17a6%206%200%200%201%204.24%201.76l12%2012a6%206%200%200%201%200%208.48L34.24%2051.24a6%206%200%200%201-8.48%200l-12-12A6%206%200%200%201%2012%2035V19a7%207%200%200%201%207-7Z%22%20fill%3D%22%23f4f2f3%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2222%22%20cy%3D%2222%22%20r%3D%224%22%20fill%3D%22%2326232a%22%2F%3E%0A%20%20%3Cpath%20d%3D%22m27%2034%206%206%2011-12%22%20fill%3D%22none%22%20stroke%3D%22%23f77598%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M48%2012h5v5%22%20fill%3D%22none%22%20stroke%3D%22%23a1d5be%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E%0A">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
 <body>
 <main>
-  <header><div><span class="eyebrow">CAKE TAGGER</span><h1>Tags für deine Videos</h1><p>Videos analysieren, Vorschläge prüfen und Ergebnisse speichern.</p></div><button id="quit" class="quiet">Programm beenden</button></header>
-  <section class="panel">
-    <div class="status"><span class="dot"></span><span id="status">Verbindung wird geprüft …</span></div>
-    <p class="subtle">Die Analyse erfolgt lokal. Deine Videos bleiben auf deinem Rechner.</p>
-    <label class="drop" id="drop"><strong>Videos auswählen</strong><span>oder hierher ziehen · MP4, M4V, WebM, MOV</span><input id="files" type="file" accept="video/*,.m4v" multiple></label>
-    <div class="controls"><label>Vorschaubilder pro Video <select id="frames"><option value="auto" selected>Automatisch nach Videolänge</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="12">12</option><option value="16">16</option><option value="24">24</option><option value="32">32</option><option value="48">48</option></select></label><button id="analyze" disabled>Tags vorschlagen</button><button id="cancel" class="quiet" hidden>Analyse abbrechen</button></div>
+  <header class="app-header">
+    <a class="brand" href="#" aria-label="Cake Tagger Startseite"><svg class="brand-mark" aria-hidden="true" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#26232a"/>
+  <path d="M19 12h17a6 6 0 0 1 4.24 1.76l12 12a6 6 0 0 1 0 8.48L34.24 51.24a6 6 0 0 1-8.48 0l-12-12A6 6 0 0 1 12 35V19a7 7 0 0 1 7-7Z" fill="#f4f2f3"/>
+  <circle cx="22" cy="22" r="4" fill="#26232a"/>
+  <path d="m27 34 6 6 11-12" fill="none" stroke="#f77598" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M48 12h5v5" fill="none" stroke="#a1d5be" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Cake<span class="brand-light">Tagger</span></span></a>
+    <button id="quit" class="quiet small-button">Programm beenden</button>
+  </header>
+  <section class="intro" aria-labelledby="page-title">
+    <h1 id="page-title">Videos taggen</h1>
+    <p>Tag-Vorschläge für deine Videos.</p>
+  </section>
+  <section class="panel" aria-labelledby="upload-title">
+    <div class="panel-heading"><h2 id="upload-title">Neue Videos</h2><div class="status"><span class="dot" aria-hidden="true"></span><span id="status" role="status" aria-live="polite">Verbindung wird geprüft …</span></div></div>
+    <div class="upload-layout">
+      <label class="drop" id="drop">
+        <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></span>
+        <strong>Videos hierher ziehen</strong><span>oder klicken und Dateien auswählen</span><span class="file-types">MP4 · M4V · WebM · MOV</span>
+        <input id="files" type="file" aria-label="Videos auswählen" accept="video/*,.m4v" multiple>
+      </label>
+      <div class="analysis-options">
+        <label for="frames">Bilder pro Video</label>
+        <select id="frames"><option value="auto" selected>Automatisch nach Videolänge</option><option value="4">4 Bilder</option><option value="6">6 Bilder</option><option value="8">8 Bilder</option><option value="12">12 Bilder</option><option value="16">16 Bilder</option><option value="24">24 Bilder</option><option value="32">32 Bilder</option><option value="48">48 Bilder</option></select>
+        <button id="analyze" disabled>Tags vorschlagen <span aria-hidden="true">↗</span></button>
+        <button id="cancel" class="quiet" hidden>Analyse abbrechen</button>
+      </div>
+    </div>
   </section>
   <div id="message" role="status" aria-live="polite"></div>
-  <p id="save-status" class="subtle small" role="status" aria-live="polite">Korrekturen werden automatisch lokal gespeichert.</p>
+  <div class="results-heading"><div><h2>Videos &amp; Tags</h2></div><span id="summary">Noch keine Videos ausgewählt.</span></div>
   <section id="results" aria-label="Videoergebnisse"></section>
-  <footer><span id="summary">Noch keine Videos ausgewählt.</span><button id="export" class="quiet" disabled>JSON im Projektordner speichern</button></footer>
-  <p class="subtle small">Die Datei wird unter outputs/cake-tags.json gespeichert. <a id="download" hidden download="cake-tags.json">JSON herunterladen</a></p>
-  <p class="subtle small">Der Export speichert deine Auswahl und den Prüfstatus. Eine automatische Übertragung auf cake.ski ist derzeit nicht verfügbar.</p>
+  <footer class="export-bar">
+    <div class="export-description"><strong>Export</strong><span class="export-hint">Ausgewählte Tags als JSON herunterladen.</span></div>
+    <div class="export-actions"><button id="export" disabled>JSON herunterladen <span aria-hidden="true">↓</span></button></div>
+  </footer>
+  <div class="page-footer"><span>Cake Tagger</span><span>Ergebnisse bleiben bis zum Neuladen in dieser Sitzung.</span></div>
 </main>
-</body></html>
+<dialog id="preview-dialog" aria-labelledby="preview-title">
+  <div class="preview-content">
+    <div class="preview-heading"><span id="preview-title"></span><button id="preview-close" class="quiet" aria-label="Vorschaubild schließen">Schließen</button></div>
+    <img id="preview-image" alt="">
+    <div class="preview-navigation"><button id="preview-prev" class="quiet" aria-label="Vorheriges Vorschaubild">Zurück</button><span id="preview-position"></span><button id="preview-next" class="quiet" aria-label="Nächstes Vorschaubild">Weiter</button></div>
+  </div>
+</dialog>
+</body>
+</html>
