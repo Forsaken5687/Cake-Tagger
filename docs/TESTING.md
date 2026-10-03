@@ -15,3 +15,6 @@
 Automatisierte Tests messen keine Erkennungsgenauigkeit. Dafür ist eine separat bewertete Testmenge erforderlich. Persönliche Testberichte und Videodaten gehören nicht in Git oder das Weitergabepaket.
 
 Vorschaubild mit Maus und Tastatur öffnen, zum nächsten und vorherigen Bild wechseln, Escape und die Schließen-Schaltfläche prüfen. Die ursprüngliche Seite muss dabei unverändert bleiben und anschließend wieder bedienbar sein.
+## Firefox-Integration
+
+Die automatisierten Prüfungen decken eindeutige Dateizuordnung, Abweisung doppelter Namen, Tag-Deduplizierung, Erhalt gemeinsamer Tags und Ausschlüsse sowie die Manifest-Beschränkungen ab. Die Browserprüfung verwendet die originale Typeahead-Komponente mit lokalen API-Antworten und synthetischen Enter-Ereignissen. Die vollständige Firefox-Erweiterung einschließlich Berechtigungen, Content-Script und Modell-Worker ist zusätzlich direkt in Firefox zu prüfen. Dabei nur selbst ausgewählte Testdateien verwenden; cake.ski überträgt Bulk-Dateien bereits beim Auswählen als Entwürfe.

@@ -1,6 +1,6 @@
 # Browser-Integration
 
-Die Browser-Erweiterung ist noch nicht implementiert. Erste Zielplattform ist Firefox; Chrome folgt anschließend. Die eigenständige Oberfläche bleibt verfügbar.
+Eine erste Firefox-Erweiterung ist implementiert. Einrichtung und Grenzen stehen unter [Firefox](FIREFOX.md). Die vollständige Prüfung in Firefox steht noch aus; Chrome folgt anschließend. Die eigenständige Oberfläche bleibt verfügbar.
 
 ## Upload-Ansichten
 
@@ -42,4 +42,4 @@ Geprüft: Eine Datei bleibt Single, eine zweite Videodatei erzeugt zwei Bulk-Kar
 
 Dies wurde zusätzlich im echten Upload-Formular mit der Maintainer-Rolle bestätigt: Enter übernimmt einen Tag in die Auswahl und aktualisiert den Zähler. Zwei Videodateien wechseln automatisch auf Bulk und werden bereits vor dem Veröffentlichen als Entwürfe übertragen. Ein gemeinsamer Tag lässt sich für eine einzelne Karte entfernen, ohne die zweite Karte zu ändern. Die Test-Entwürfe wurden über die Entfernen-Schaltflächen verworfen und die Ansicht anschließend in den leeren Single-Zustand zurückgesetzt. Es wurde nichts veröffentlicht.
 
-Noch offen: echte Firefox-Erweiterung, Typeahead-Verhalten mit der Mitgliederrolle, Zuordnung bei doppelten Dateinamen und Einbindung der Analyse-Engine. Manuelle Enter-Eingaben bestätigen noch nicht, dass Ereignisse aus einem Erweiterungs-Content-Script identisch verarbeitet werden.
+Der Adapter wurde zusätzlich mit synthetischen Enter-Ereignissen gegen die originale Typeahead-Komponente in einer lokalen Kopie geprüft. Single und Bulk übernehmen Tags; erneute Übernahme erzeugt keine Duplikate, und gemeinsame Tag-Ausschlüsse werden erhalten. Doppelte Dateinamen werden als unklare Zuordnung abgewiesen. Noch offen: die vollständige Firefox-Prüfung mit Content-Script, eingebundener Analyse-Engine und Mitgliederrolle.

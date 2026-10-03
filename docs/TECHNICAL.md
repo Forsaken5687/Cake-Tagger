@@ -57,3 +57,10 @@ Vorschaubilder sind als zugängliche Schaltflächen umgesetzt. Ein natives modal
 ## Logo
 
 Das eigenständige SVG-Zeichen liegt unter `assets/logo.svg`. Die Oberfläche bettet es direkt im Seitenkopf ein; dieselbe Grafik dient als SVG-Favicon. Es benötigt keine externen Schriftarten oder Bilddienste.
+## Firefox-Integration
+
+Die Erweiterung verwendet die gemeinsame Oberfläche, Engine und Tag-Regeln. `app.js` lädt die Erweiterungsanbindung nur unter `moz-extension:`; die eigenständige Anwendung bleibt unabhängig. Der Download in der Erweiterung verwendet einen Blob statt des lokalen Export-Endpunkts. `engine-worker.js` verwendet mehrere WASM-Threads nur in einem isolierten Kontext, ansonsten einen Thread. Die Erweiterungs-CSP erlaubt WebAssembly und beschränkt Verbindungen auf eigene Ressourcen.
+
+`extension/content.js` nimmt nur Nachrichten der eigenen Analyseansicht an. `upload-adapter.mjs` identifiziert sichtbare Upload-Felder, prüft Dateinamen und ergänzt erlaubte Tags über den Enter-Eingabeweg. Jede Übernahme wird anhand der sichtbaren Tag-Pills bestätigt. Bei Fehlern bleiben bereits ergänzte und bestehende Tags erhalten; es gibt keinen automatischen Rollback. Der Adapter schreibt weder Dateien noch Captions, Performer, Bestätigungen oder Veröffentlichungszustände.
+
+Das Firefox-Paket verwendet ein Manifest-V3-Hintergrundskript und enthält Modell, WASM-Runtime, Lizenzen und Herkunftsmetadaten. Der Paketbau nutzt eine feste Dateiliste und prüft die großen Assets vor dem Kopieren. Installation und Testgrenzen stehen unter [Firefox](FIREFOX.md).

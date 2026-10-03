@@ -5,7 +5,7 @@ async function load() {
   if (session) return session;
   postMessage({ type: 'state', state: 'Kleines Tagging-Modell wird geladen …' });
   ort.env.wasm.wasmPaths = '/vendor/';
-  ort.env.wasm.numThreads = Math.min(4, navigator.hardwareConcurrency || 1);
+  ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
   session = await ort.InferenceSession.create('/model/joytag-int8.onnx', { executionProviders: ['wasm'], graphOptimizationLevel: 'all', intraOpNumThreads: 4 });
   postMessage({ type: 'state', state: 'Bereit' });
   return session;

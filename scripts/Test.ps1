@@ -9,6 +9,10 @@ try {
         if ($LASTEXITCODE -ne 0) { throw ('Syntaxprüfung fehlgeschlagen: ' + $file) }
     }
     $testFiles = @(Get-ChildItem -LiteralPath tests -Filter '*.test.mjs' | ForEach-Object { $_.FullName })
+    foreach ($file in @(Get-ChildItem -LiteralPath extension -File | Where-Object { $_.Extension -in '.js', '.mjs' }) + @(Get-Item -LiteralPath scripts/Build-Firefox.mjs)) {
+        & $taggerNode --check $file.FullName
+        if ($LASTEXITCODE -ne 0) { throw ('Syntaxprüfung fehlgeschlagen: ' + $file.Name) }
+    }
     & $taggerNode --test @testFiles
     if ($LASTEXITCODE -ne 0) { throw 'Tests fehlgeschlagen.' }
     Write-Host 'Alle Prüfungen erfolgreich.'

@@ -1,5 +1,8 @@
 import { aggregate, ANALYSIS_VERSION } from './tagging.mjs';
-import { makeRecord, applyRecord, tagSource } from './corrections.mjs';
+import { makeRecord, applyRecord, tagSource, exportItem } from './corrections.mjs';
+const { isExtension, installIntegration, integrationButton } = location.protocol === 'moz-extension:'
+  ? await import('./extension/integration.mjs')
+  : { isExtension: false, installIntegration() {}, integrationButton() {} };
 import { samplingPlan } from './sampling.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analysis-settings.mjs';
 const $ = s => document.querySelector(s);
@@ -39,7 +42,7 @@ function infer(frames) {
     const id = ++workerSeq; workerJobs.set(id, { resolve, reject }); worker.postMessage({ id, type: 'analyze', frames }, frames.map(frame => frame.buffer));
   });
 }
-if (token) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', '/'); }
+if (!isExtension && token) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', '/'); }
 else token = sessionStorage.getItem('cake-token') || '';
 const api = async (url, options = {}) => {
   const r = await fetch(url, { ...options, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', ...options.headers } });
@@ -176,6 +179,8 @@ function render() {
       };
       button.onclick = addTag; input.onkeydown = e => { if (e.key === 'Enter') addTag(); };
       add.append(input, list, button); card.append(add);
+      const transfer = integrationButton(entry, textElement, message);
+      if (transfer) card.append(transfer);
     }
     if (entry.error) card.append(textElement('p', entry.error, 'error'));
     $('#results').append(card);
@@ -284,6 +289,12 @@ $('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
 $('#export').onclick = async () => {
   $('#export').disabled = true;
   try {
+    if (isExtension) {
+      const snapshot = { version: 2, source: 'cake-tagger-local', createdAt: new Date().toISOString(), items: entries.filter(e => e.result).map(exportItem) };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' }));
+      const link = document.createElement('a'); link.href = url; link.download = 'cake-tags.json'; document.body.append(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000); message(''); return;
+    }
     const output = await api('/api/export', { method: 'POST', body: JSON.stringify({ items: entries.filter(e => e.result).map(makeRecord) }) });
     message('');
     const link = document.createElement('a'); link.href = output.download; link.download = 'cake-tags.json'; document.body.append(link); link.click(); link.remove();
@@ -294,6 +305,7 @@ $('#quit').onclick = async () => {
   controller?.abort(); terminateWorker(); stopping = true;
   try { await api('/api/stop', { method: 'POST' }); $('#status').textContent = 'Programm beendet'; message('Du kannst dieses Fenster schließen.'); $('#analyze').disabled = true; } catch (e) { stopping = false; message(e.message); }
 };
+installIntegration();
 await status();
 render();
 

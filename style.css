@@ -142,3 +142,6 @@ input[type="checkbox"] { width: 14px; height: 14px; margin: 0; accent-color: var
 .preview-navigation{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:14px}
 #preview-position{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 @media(max-width:440px){.preview-content{padding:12px}#preview-image{height:60vh}.preview-heading{gap:8px}.preview-navigation button{padding:9px 12px}}
+/* Extension connection controls reuse the standalone visual language. */
+.integration-panel label { display: inline-flex; flex-direction: column; gap: .5rem; margin-right: .75rem; }
+.integration-panel select { min-width: 16rem; max-width: 100%; }
