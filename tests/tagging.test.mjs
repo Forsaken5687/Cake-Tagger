@@ -3,6 +3,28 @@ import assert from 'node:assert/strict';
 import { aggregate } from '../tagging.mjs';
 import { makeRecord, applyRecord, validateRecord, exportItem } from '../corrections.mjs';
 
+test('watermark is excluded in both modes but manual selections survive storage and export', () => {
+  for (const mode of ['majority', 'brief']) {
+    const result = aggregate([[0.99], [0.99], [0.99], [0.99]], { watermark: [0] }, 0.5, mode);
+    assert.deepEqual(result.tags, []);
+    assert.deepEqual(result.uncertain, []);
+    const entry = { file: { name: 'synthetic.mp4' }, selected: new Map([['watermark', true]]), reviewed: true,
+      result: { ...result, sha256: 'b'.repeat(64), sampledFrames: 4, model: 'JoyTag-INT8', analysisPolicy: `coverage-v4:${mode}` } };
+    const record = validateRecord(makeRecord(entry), ['watermark']);
+    const restored = applyRecord({ file: entry.file }, record);
+    assert.deepEqual(exportItem(restored).tags, ['watermark']);
+    assert.equal(restored.reviewed, true);
+  }
+});
+
+test('dance requires strong recurring image evidence in both modes', () => {
+  for (const mode of ['majority', 'brief']) {
+    assert.equal(aggregate([[0.6], [0.6], [0.6], [0.6]], { dance: [0] }, 0.5, mode).tags.length, 0);
+    assert.equal(aggregate([[0.8], [0.8], [0.8], [0.1]], { dance: [0] }, 0.5, mode).tags.length, 1);
+    assert.equal(aggregate([[0.8], [0.8], [0.8], [0.1]], { dance: [0] }, 0.85, mode).tags.length, 0);
+  }
+});
+
 test('an isolated high score does not select a tag, even in brief mode', () => {
   const frames = [[0.99], [0.1], [0.1], [0.1]];
   for (const mode of ['majority', 'brief']) {

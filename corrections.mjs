@@ -45,7 +45,7 @@ export function validateRecord(input, tags) {
   };
   if (!input || typeof input.filename !== 'string' || !input.filename || input.filename.length > 240 || !/^[a-f0-9]{64}$/.test(input.sha256) || typeof input.reviewed !== 'boolean' || typeof input.originalSuggestionsKnown !== 'boolean') throw Error('Ungültige Dateizuordnung.');
   const r = input.result;
-  if (r?.analysisPolicy != null && !['coverage-v2:majority', 'coverage-v2:brief', 'coverage-v3:majority', 'coverage-v3:brief'].includes(r.analysisPolicy)) throw Error('Ungültige Analyse-Regel.');
+  if (r?.analysisPolicy != null && !/^coverage-v[234]:(majority|brief)$/.test(r.analysisPolicy)) throw Error('Ungültige Analyse-Regel.');
   if (r?.samplingMode != null && !['auto', 'fixed'].includes(r.samplingMode)) throw Error('Ungültige Bildauswahl.');
   if (r?.durationSeconds != null && (!Number.isFinite(r.durationSeconds) || r.durationSeconds <= 0 || r.durationSeconds > MAX_DURATION)) throw Error('Ungültige Videolänge.');
   if (!r || r.sha256 !== input.sha256 || !Array.isArray(r.tags) || r.tags.length > tags.length || !Number.isInteger(r.sampledFrames) || r.sampledFrames < 1 || r.sampledFrames > MAX_FRAMES || (r.threshold != null && (!Number.isFinite(r.threshold) || r.threshold < 0 || r.threshold > 1)) || typeof r.model !== 'string' || r.model.length > 120) throw Error('Ungültige Analyseangaben.');
