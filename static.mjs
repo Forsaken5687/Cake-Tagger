@@ -14,6 +14,7 @@ fs.mkdirSync(path.join(root, 'data'), { recursive: true });
 const tagList = fs.readFileSync(path.join(root, 'tags.txt'), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
 const correctionsPath = path.join(root, 'data/corrections.json');
 const corrections = new Map();
+const downloads = new Map();
 if (fs.existsSync(correctionsPath)) {
   const stored = JSON.parse(fs.readFileSync(correctionsPath, 'utf8'));
   for (const item of stored.items) { const record = validateRecord(item, tagList); corrections.set(record.sha256, record); }
@@ -30,6 +31,12 @@ const server = http.createServer(async (req, res) => {
   if (req.headers.host !== ownHost || (req.headers.origin && req.headers.origin !== 'http://' + ownHost)) { res.writeHead(403); return res.end('Forbidden'); }
   let requested;
   try { requested = decodeURIComponent(new URL(req.url, 'http://' + ownHost).pathname); } catch { res.writeHead(400); return res.end(); }
+  if (req.method === 'GET' && requested.startsWith('/api/download/')) {
+    const id = requested.slice('/api/download/'.length), item = downloads.get(id);
+    if (!item || item.expires < Date.now()) { downloads.delete(id); return json(res, 404, { error: 'Download abgelaufen. Bitte JSON erneut speichern.' }); }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': 'attachment; filename="cake-tags.json"', 'Content-Length': item.data.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
+    return res.end(item.data);
+  }
   if (requested === '/api/export' && req.method === 'POST') {
     if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'Bitte die Oberfläche über Start.cmd öffnen.' });
     try {
@@ -44,7 +51,11 @@ const server = http.createServer(async (req, res) => {
       if (fs.existsSync(output)) fs.copyFileSync(output, output + '.bak');
       fs.writeFileSync(output + '.tmp', JSON.stringify({ version: 2, source: 'cake-tagger-local', createdAt: new Date().toISOString(), items }, null, 2), 'utf8');
       fs.renameSync(output + '.tmp', output);
-      return json(res, 200, { saved: true, path: output });
+      for (const [id, item] of downloads) if (item.expires < Date.now()) downloads.delete(id);
+      while (downloads.size >= 3) downloads.delete(downloads.keys().next().value);
+      const id = randomBytes(24).toString('hex');
+      downloads.set(id, { data: fs.readFileSync(output), expires: Date.now() + 5 * 60 * 1000 });
+      return json(res, 200, { saved: true, path: output, download: '/api/download/' + id });
     } catch (e) { return json(res, 400, { error: e.message }); }
   }
   if (requested === '/api/corrections') {

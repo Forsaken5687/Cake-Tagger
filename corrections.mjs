@@ -23,7 +23,7 @@ export function exportItem(entry) {
     removedTags: known ? [...original].filter(tag => !selected.has(tag)) : null,
     deselectedTags: record.candidateTags.filter(tag => !selected.has(tag)), candidateTags: record.candidateTags,
     uncertain: entry.result.uncertain, sampledFrames: entry.result.sampledFrames,
-    threshold: entry.result.threshold ?? null, model: entry.result.model,
+    threshold: entry.result.threshold ?? null, analysisPolicy: entry.result.analysisPolicy ?? null, model: entry.result.model,
     analysisCreatedAt: entry.result.createdAt ?? null, editedAt: record.updatedAt };
 }
 export function validateRecord(input, tags) {
@@ -34,6 +34,7 @@ export function validateRecord(input, tags) {
   };
   if (!input || typeof input.filename !== 'string' || !input.filename || input.filename.length > 240 || !/^[a-f0-9]{64}$/.test(input.sha256) || typeof input.reviewed !== 'boolean' || typeof input.originalSuggestionsKnown !== 'boolean') throw Error('Ungültige Dateizuordnung.');
   const r = input.result;
+  if (r?.analysisPolicy != null && !['coverage-v2:majority', 'coverage-v2:brief'].includes(r.analysisPolicy)) throw Error('Ungültige Analyse-Regel.');
   if (!r || r.sha256 !== input.sha256 || !Array.isArray(r.tags) || r.tags.length > tags.length || !Number.isInteger(r.sampledFrames) || r.sampledFrames < 1 || r.sampledFrames > 8 || (r.threshold != null && (!Number.isFinite(r.threshold) || r.threshold < 0 || r.threshold > 1)) || typeof r.model !== 'string' || r.model.length > 120) throw Error('Ungültige Analyseangaben.');
   const suggestions = r.tags.map(row => {
     if (!row || !allowed.has(row.tag) || !Number.isFinite(row.confidence) || row.confidence < 0 || row.confidence > 1 || (row.supportingFrames != null && (!Number.isInteger(row.supportingFrames) || row.supportingFrames < 1 || row.supportingFrames > r.sampledFrames))) throw Error('Ungültige Modell-Scores.');
@@ -42,6 +43,6 @@ export function validateRecord(input, tags) {
   const date = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : null;
   return { filename: input.filename, sha256: input.sha256, tags: list(input.tags), candidateTags: list(input.candidateTags),
     reviewed: input.reviewed, originalSuggestionsKnown: input.originalSuggestionsKnown,
-    result: { filename: input.filename, sha256: input.sha256, tags: suggestions, uncertain: list(r.uncertain), sampledFrames: r.sampledFrames, threshold: r.threshold ?? null, model: r.model, createdAt: date(r.createdAt), reviewRequired: true },
+    result: { filename: input.filename, sha256: input.sha256, tags: suggestions, uncertain: list(r.uncertain), sampledFrames: r.sampledFrames, threshold: r.threshold ?? null, analysisPolicy: r.analysisPolicy ?? null, model: r.model, createdAt: date(r.createdAt), reviewRequired: true },
     updatedAt: date(input.updatedAt) || new Date().toISOString() };
 }

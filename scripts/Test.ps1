@@ -8,7 +8,8 @@ try {
         & $taggerNode --check $file
         if ($LASTEXITCODE -ne 0) { throw ('Syntaxprüfung fehlgeschlagen: ' + $file) }
     }
-    & $taggerNode --test tests/corrections.test.mjs
+    $testFiles = @(Get-ChildItem -LiteralPath tests -Filter '*.test.mjs' | ForEach-Object { $_.FullName })
+    & $taggerNode --test @testFiles
     if ($LASTEXITCODE -ne 0) { throw 'Tests fehlgeschlagen.' }
     Write-Host 'Alle Prüfungen erfolgreich.'
 } finally { Pop-Location }

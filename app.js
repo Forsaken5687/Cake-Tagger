@@ -1,4 +1,4 @@
-import { aggregate } from './tagging.mjs';
+import { aggregate, ANALYSIS_VERSION } from './tagging.mjs';
 import { makeRecord, applyRecord } from './corrections.mjs';
 const $ = s => document.querySelector(s);
 let token = location.hash.slice(1), allTags = [], entries = [], running = false, controller, stopping = false;
@@ -70,7 +70,7 @@ function changed(entry, resetReview = true) {
   if (resetReview) entry.reviewed = false;
   entry.updatedAt = new Date().toISOString(); persist(entry);
 }
-function analysisKey(sha256, count, threshold) { return sha256 + '|' + count + '|' + threshold + '|' + modelSignature + '|preprocess-v1'; }
+function analysisKey(sha256, count, threshold, policy = '') { return sha256 + '|' + count + '|' + threshold + '|' + modelSignature + '|preprocess-v1' + (policy ? '|' + policy : ''); }
 async function restore(entry, record) {
   let baseline = record.result;
   if (!record.originalSuggestionsKnown && baseline.threshold != null) {
@@ -120,6 +120,8 @@ function render() {
       for (const tag of entry.selected.keys()) {
         const label = textElement('label', '', 'chip'), box = document.createElement('input');
         box.type = 'checkbox'; box.checked = entry.selected.get(tag);
+        const original = entry.result.tags.find(row => row.tag === tag);
+        if (original?.supportingFrames) label.title = `Ursprünglich erkannt in ${original.supportingFrames} von ${entry.result.sampledFrames} Vorschaubildern`;
         box.addEventListener('change', () => { entry.selected.set(tag, box.checked); changed(entry); render(); });
         label.append(box, textElement('span', tag)); chips.append(label);
       }
@@ -127,7 +129,7 @@ function render() {
       if (!entry.result.tags.length && entry.originalSuggestionsKnown !== false) card.append(textElement('p', 'Keine ausreichend klaren Tags gefunden. Bitte manuell prüfen.'));
       if (entry.originalSuggestionsKnown === false) card.append(textElement('p', 'Aus altem Export übernommen. Ursprüngliche Vorschläge und Scores sind hier nicht vollständig bekannt.'));
       const remainingUncertain = entry.result.uncertain.filter(tag => !entry.selected.get(tag));
-      if (remainingUncertain.length) card.append(textElement('p', 'Unsicher, nicht ausgewählt: ' + remainingUncertain.join(', ')));
+      if (remainingUncertain.length) card.append(textElement('p', 'Kurz oder unsicher, nicht ausgewählt: ' + remainingUncertain.join(', ')));
       const add = textElement('div', '', 'tag-add'), input = document.createElement('input'), list = document.createElement('datalist');
       list.id = 'tags-' + entry.index; allTags.forEach(t => { const o = document.createElement('option'); o.value = t; list.append(o); });
       input.type = 'text'; input.placeholder = 'Tag aus deiner Liste ergänzen'; input.setAttribute('list', list.id); input.setAttribute('aria-label', 'Tag ergänzen für ' + entry.file.name);
@@ -160,7 +162,7 @@ async function setFiles(files) {
       catch (e) { entry.error = e.message; }
     }
     entries = next;
-    message(entries.length > 5 ? 'Für den Qualitätstest reichen 2–5 Videos. Größere Listen werden nacheinander verarbeitet.' : '');
+    message('');
   } finally { preparing = false; render(); }
 }
 $('#files').onchange = e => setFiles(e.target.files);
@@ -204,21 +206,23 @@ $('#analyze').onclick = async () => {
   running = true; controller = new AbortController(); $('#files').disabled = true; $('#frames').disabled = true; $('#threshold').disabled = true; $('#cancel').hidden = false; message(''); summary();
   const count = Number($('#frames').value);
   const threshold = Number($('#threshold').value);
+  const coverage = $('#coverage').value, analysisPolicy = ANALYSIS_VERSION + ':' + coverage;
+  $('#coverage').disabled = true;
   try {
     for (const entry of entries) {
       if (!entry.hasFile) continue;
-      if (entry.result && entry.frames && entry.result.sampledFrames === count && entry.result.threshold === threshold) continue;
+      if (entry.result && entry.frames && entry.result.sampledFrames === count && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy) continue;
       controller.signal.throwIfAborted(); entry.state = 'Vorschaubilder werden gelesen …'; entry.error = ''; render();
       try {
         const sampleData = await sample(entry.file, count, controller.signal, entry.sha256);
         entry.frames = sampleData.frames; entry.state = 'Tagging-Modell analysiert … Beim ersten Video wird das Modell geladen.'; render();
-        const key = analysisKey(sampleData.sha256, count, threshold);
+        const key = analysisKey(sampleData.sha256, count, threshold, analysisPolicy);
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
         else {
           const inference = await infer(sampleData.frames);
           controller.signal.throwIfAborted();
-          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold), sampledFrames: count, threshold, model: 'JoyTag-INT8', seconds: Math.round(inference.seconds * 10) / 10, createdAt: new Date().toISOString() };
+          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', seconds: Math.round(inference.seconds * 10) / 10, createdAt: new Date().toISOString() };
           await cached(key, result);
         }
         const previous = savedRecords.get(result.sha256);
@@ -233,7 +237,7 @@ $('#analyze').onclick = async () => {
       render();
     }
   } catch (e) { message(e.name === 'AbortError' ? 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.' : e.message); }
-  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#threshold').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = 'Bereit'; }
+  finally { running = false; $('#files').disabled = false; $('#frames').disabled = false; $('#threshold').disabled = false; $('#coverage').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = 'Bereit'; }
 };
 $('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
 $('#export').onclick = async () => {
@@ -242,6 +246,7 @@ $('#export').onclick = async () => {
   try {
     const output = await api('/api/export', { method: 'POST', body: JSON.stringify({ items: entries.filter(e => e.result).map(makeRecord) }) });
     message('JSON gespeichert: ' + output.path);
+    const link = $('#download'); link.href = output.download; link.hidden = false;
   } catch (e) { message('Export fehlgeschlagen: ' + e.message); }
   finally { render(); }
 };

@@ -12,16 +12,16 @@ Voraussetzungen: Windows 64 Bit und ein aktueller Chrome- oder Edge-Browser mit 
 2. `Start.cmd` doppelklicken. Die Oberfläche öffnet sich im Browser.
 3. Videos auswählen und **Tags vorschlagen** anklicken.
 4. Vorschläge prüfen, falsche Tags abwählen und fehlende Tags ergänzen.
-5. **Vorschläge geprüft** markieren und **Ergebnisse als JSON speichern** anklicken.
+5. **Vorschläge geprüft** markieren und **JSON im Projektordner speichern** anklicken.
 
-Der Export liegt unter `outputs/cake-tags.json`. Beim nächsten Export bleibt die vorherige Datei als `.bak` erhalten. **Programm beenden** schließt den lokalen Dienst; der Browser-Tab kann anschließend geschlossen werden.
+Der Export liegt unter `outputs/cake-tags.json`; es öffnet sich kein Speicherdialog. Nach dem Speichern erscheint zusätzlich **JSON herunterladen** für einen Browser-Download. Der Link ist fünf Minuten gültig; danach erneut speichern. Beim nächsten Export bleibt die vorherige Datei als `.bak` erhalten. **Programm beenden** schließt den lokalen Dienst; der Browser-Tab kann anschließend geschlossen werden.
 
 Bei einer Kopie aus Git fehlen drei große Abhängigkeiten. Einmalig `Setup.cmd` ausführen, um die festgelegten Dateien herunterzuladen und ihre Prüfsummen zu kontrollieren. Danach funktioniert die Anwendung offline. Bereits mitgelieferte Dateien werden geprüft und nicht erneut heruntergeladen.
 
 ## Funktionen
 
 - 4, 6 oder 8 gleichmäßig verteilte Vorschaubilder pro Video.
-- Einstellbare Erkennungsschwelle und Hinweise auf unsichere Vorschläge.
+- Einstellbare Erkennungsschwelle und zeitliche Abdeckung; Hinweise auf kurze oder unsichere Treffer.
 - Manuelle Tag-Auswahl und getrennte Prüfmarkierung.
 - Automatische Speicherung der Korrekturen, auch über Programmneustarts hinweg.
 - Zuordnung anhand des Datei-Inhalts: Umbenennen eines Videos verliert dessen Korrekturen nicht.
@@ -38,7 +38,8 @@ Korrekturen liegen unter `data/corrections.json`; ursprüngliche Analyseergebnis
 ## Grenzen
 
 - Maximal 250 MiB pro Video. MP4/M4V mit H.264 sind geeignete Formate; weitere Formate hängen von der Unterstützung des Browsers ab.
-- Einzelbilder können kurze Ereignisse übersehen. Ein automatischer Vorschlag benötigt passende Erkennung in mindestens zwei Bildern.
+- Einzelbilder können kurze Ereignisse übersehen. Standardmäßig muss ein Tag in mehr als der Hälfte der Vorschaubilder erkannt werden (3/4, 4/6 oder 5/8). **Auch kurze Szenen** verwendet mindestens zwei Bilder. Die Bildabdeckung ist eine Stichprobe und keine genaue Messung der Videodauer. Der strengere Modus kann auch richtige Tags verlieren; sie bleiben manuell ergänzbar.
+- `hairy` wird wegen häufiger Fehlzuordnungen nur manuell ergänzt. Vorhandene Auswahlen und Prüfmarkierungen werden durch neue Regeln nicht geändert.
 - JoyTag wurde überwiegend mit Zeichnungen und zusätzlich mit Fotos trainiert. Bei realen Videos sind Fehlzuordnungen möglich. Scores sind keine kalibrierten Wahrscheinlichkeiten.
 - Nicht alle Tags haben eine Modellzuordnung. Kontext- und Identitätsangaben sowie technische Tags der Upload-Seite werden nicht automatisch abgeleitet.
 - Manuelle Korrekturen ändern die gespeicherte Auswahl; sie trainieren das Modell nicht.
