@@ -37,7 +37,7 @@ async function refreshTabs() {
   const previous = select.value || new URL(location.href).searchParams.get('target');
   select.replaceChildren();
   try {
-    const tabs = await browser.tabs.query({ url: 'https://cake.ski/*' });
+    const tabs = await browser.runtime.sendMessage({ type: 'cake-tagger:list-tabs' });
     for (const tab of tabs) {
       const option = document.createElement('option'); option.value = String(tab.id); option.textContent = tab.title || 'cake.ski'; select.append(option);
     }
@@ -57,7 +57,7 @@ export function integrationButton(entry, makeElement, showMessage) {
     if (!Number.isInteger(tabId) || tabId <= 0) return showMessage('Bitte einen cake.ski-Tab auswählen.');
     busy = true; button.disabled = true;
     try {
-      const response = await browser.tabs.sendMessage(tabId, { type: 'cake-tagger:append', filename: entry.file.name, tags });
+      const response = await browser.runtime.sendMessage({ type: 'cake-tagger:transfer', tabId, filename: entry.file.name, tags });
       if (!response) throw Error('Upload-Formular nicht erreichbar. cake.ski nach dem Laden der Erweiterung neu laden.');
       showMessage(response.error || `${response.added.length} Tags ergänzt · ${response.skipped.length} bereits vorhanden oder ausgeschlossen.`);
     } catch (e) { showMessage('Übernahme fehlgeschlagen: ' + e.message); }

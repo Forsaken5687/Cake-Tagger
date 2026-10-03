@@ -14,6 +14,8 @@ Voraussetzung: Firefox Desktop ab Version 140. Die Fassung ist noch unsigniert u
 
 Firefox entfernt vorläufig geladene Add-ons beim Neustart. Für eine dauerhaft installierbare Ausgabe ist später eine Signierung erforderlich. Das Projekt veröffentlicht oder übermittelt das Paket nicht automatisch.
 
+Nach einem Paket-Update bei `about:debugging#/runtime/this-firefox` die Erweiterung **Neu laden** und anschließend den cake.ski-Tab neu laden. Bei einer entpackten ZIP-Ausgabe zuvor die Dateien durch das neue Paket ersetzen.
+
 ## Verwenden
 
 1. Videos auf cake.ski im Upload-Bereich auswählen. Die Seite erstellt bei Bulk bereits dabei Upload-Entwürfe.
