@@ -17,6 +17,8 @@ Select videos in the cake.ski upload area. By default, the embedded panel opens 
 
 The extension follows the connected page's colors, including changes to its accent color. Clicking the toolbar icon opens a separate analysis view with JSON export.
 
+The description in the browser's extension manager and the toolbar tooltip follow the browser's UI language (German or English, with English as the fallback). These texts are independent of the language selected inside Cake Tagger.
+
 ## Standalone application
 
 Requires Windows x64 and a current Firefox or Chrome browser with WebAssembly, video decoding and Canvas support. Inference runs on the CPU.

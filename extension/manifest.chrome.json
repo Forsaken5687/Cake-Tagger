@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.4.4",
-  "description": "Local video tag suggestions and transfer to cake.ski upload fields.",
+  "version": "0.4.5",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "host_permissions": [
     "https://cake.ski/*"
   ],
@@ -16,7 +17,7 @@
     "128": "assets/logo-128.png"
   },
   "action": {
-    "default_title": "Open Cake Tagger",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": {
       "16": "assets/logo-16.png",
       "32": "assets/logo-32.png"

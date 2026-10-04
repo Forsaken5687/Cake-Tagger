@@ -1,0 +1,10 @@
+{
+  "extensionDescription": {
+    "message": "Local video tag suggestions and transfer to cake.ski upload fields.",
+    "description": "Description shown in the browser's extension manager."
+  },
+  "actionTitle": {
+    "message": "Open Cake Tagger",
+    "description": "Tooltip for the extension's toolbar button."
+  }
+}
