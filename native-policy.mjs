@@ -18,12 +18,3 @@ export function resolveThreads(value = 'auto', capabilities = computeCapabilitie
   if (!Number.isSafeInteger(requested) || requested > capabilities.testMaximum) throw Error('error.threadLimit');
   return requested;
 }
-
-// A second image keeps operator pools small. Four threads per session and at
-// least four images amortize the extra model session; this is an operating
-// heuristic, not an override ceiling. Single mode keeps one session active.
-export function executionPlan(totalThreads, frameCount, parallelImages=false) {
-  const workers = parallelImages && totalThreads >= 8 && frameCount >= 4 ? 2:1;
-  const threads = Array.from({length:workers},(_,index)=>Math.floor(totalThreads/workers)+(index<totalThreads%workers?1:0));
-  return {workers,threads,totalThreads};
-}

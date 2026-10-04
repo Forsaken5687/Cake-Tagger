@@ -7,7 +7,7 @@ import {buildExtension} from '../scripts/Build-Extension.mjs';
 test('both extension packages contain integration only and retain notices and provenance',()=>{
  for(const target of ['firefox','chrome']){
   buildExtension(target);
-  const root=new URL('../outputs/'+target+'/',import.meta.url);
+  const root=new URL((target === 'chrome' ? '../outputs/chrome/' : '../work/extension-build/firefox/'),import.meta.url);
   const manifest=JSON.parse(fs.readFileSync(new URL('manifest.json',root)));
   assert.equal(manifest.version,JSON.parse(fs.readFileSync(new URL('../extension/'+(target === 'chrome' ? 'manifest.chrome.json' : 'manifest.json'),import.meta.url))).version);
   assert(manifest.content_scripts.some(script=>script.js.includes('extension/local-bridge.js')));
@@ -26,4 +26,21 @@ test('both extension packages contain integration only and retain notices and pr
    }
   }
  }
+});
+
+test('release allowlist includes local module dependencies and excludes developer-only sources',()=>{
+ const release=JSON.parse(fs.readFileSync(new URL('../scripts/release-files.json',import.meta.url)));
+ const files=new Set(release.files);
+ for(const name of files){
+  assert(!/^(tests|work|data|outputs)\//.test(name));
+  assert(!/^extension\/(?:background|content|bridge|chrome-worker|manifest)/.test(name));
+  assert(fs.existsSync(new URL('../'+name,import.meta.url)),name);
+  if(!/\.(mjs|js)$/.test(name))continue;
+  const source=fs.readFileSync(new URL('../'+name,import.meta.url),'utf8');
+  for(const match of source.matchAll(/(?:from\s+|import\s*(?:\(\s*)?)['"](\.[^'"]+)['"]/g)){
+   const dependency=path.posix.normalize(path.posix.join(path.posix.dirname(name),match[1]));
+   assert(files.has(dependency),name+' -> '+dependency);
+  }
+ }
+ assert(!files.has('scripts/Test.ps1'));assert(!files.has('scripts/Package.ps1'));assert(!files.has('AGENTS.md'));
 });

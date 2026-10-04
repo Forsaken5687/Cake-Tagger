@@ -6,7 +6,7 @@ Requires Chrome Desktop 120 or later. The interface uses the local Cake Tagger s
 
 Run the local application's `Start.cmd` before analysis. Updating to the native backend requires loopback permission. Only port 8765 is used by the extension.
 
-1. Extract `outputs/Cake-Tagger-Chrome.zip`, use `outputs/chrome/` after a local build, or use `extensions/chrome/` from the full release.
+1. Use `outputs/chrome/` after a local build, or use `extensions/chrome/` from the full release.
 2. Open `chrome://extensions` and enable **Developer mode**.
 3. Click **Load unpacked** and select the folder containing `manifest.json`.
 4. Reload cake.ski and open its upload area.

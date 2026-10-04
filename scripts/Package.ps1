@@ -26,13 +26,17 @@ try {
     $stream = [IO.File]::Open($temporary, [IO.FileMode]::Create)
     $archive = New-Object IO.Compression.ZipArchive($stream, [IO.Compression.ZipArchiveMode]::Create)
     try {
-        $files = @($tracked + @($manifest.assets | ForEach-Object { $_.path }) | Sort-Object -Unique)
+        $release = Get-Content -Raw -LiteralPath 'scripts/release-files.json' | ConvertFrom-Json
+        foreach ($relative in $release.files) {
+            if ($relative -match $forbidden -or $relative -match '(^/|\\|(^|/)\.\.(/|$))' -or $relative -notin $tracked) { throw ('Invalid or untracked release file: ' + $relative) }
+        }
+        $files = @($release.files + @($manifest.assets | ForEach-Object { $_.path }) | Sort-Object -Unique)
         foreach ($relative in $files) {
             [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, (Join-Path $taggerRoot $relative), ('Cake-Tagger/' + $relative.Replace('\', '/')), [IO.Compression.CompressionLevel]::Optimal) | Out-Null
         }
         [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, (Join-Path $taggerRoot 'outputs/Cake-Tagger-Firefox.zip'), 'Cake-Tagger/extensions/Cake-Tagger-Firefox.zip', [IO.Compression.CompressionLevel]::Optimal) | Out-Null
         # Read the freshly built allowlisted Chrome archive instead of recursively copying outputs.
-        $chromeArchive = [IO.Compression.ZipFile]::OpenRead((Join-Path $taggerRoot 'outputs/Cake-Tagger-Chrome.zip'))
+        $chromeArchive = [IO.Compression.ZipFile]::OpenRead((Join-Path $taggerRoot 'work/extension-build/Cake-Tagger-Chrome.zip'))
         try {
             foreach ($chromeFile in $chromeArchive.Entries) {
                 if ($chromeFile.FullName -match '(^/|\\|(^|/)\.\.(/|$))') { throw 'Invalid Chrome package path.' }

@@ -9,7 +9,6 @@ export const messages = {
   'error.nativeModelChecksum': { en: 'Model checksum mismatch. Run Setup.cmd to restore the model.', de: 'Die Modell-Prüfsumme stimmt nicht. Stelle das Modell mit Setup.cmd wieder her.' },
   'settings.parallelism': { en: 'CPU parallelism', de: 'CPU-Parallelisierung' },
   'settings.parallelismCount': { en: 'Up to {count}', de: 'Bis zu {count}' },
-  'settings.parallelImages': { en: 'Adaptively process two images at once', de: 'Adaptiv zwei Bilder gleichzeitig verarbeiten' },
   'settings.parallelismHint': { en: 'Total CPU thread budget for the local server. Automatic uses half the available logical processors. Higher limits are not always faster.', de: 'Gesamtes CPU-Thread-Budget für den lokalen Server. Automatisch nutzt die Hälfte der verfügbaren logischen Prozessoren. Höhere Limits sind nicht immer schneller.' },
   // Runtime diagnostics.
   'diagnostics.title': { en: 'Runtime diagnostics', de: 'Laufzeit-Diagnose' },

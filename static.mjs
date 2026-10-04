@@ -70,7 +70,6 @@ const server = http.createServer(async (req, res) => {
     if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'error.openUsingStart' });
     const params = new URL(req.url, 'http://' + ownHost).searchParams;
     const parallelism = params.get('parallelism') || 'auto';
-    if (params.has('images') && !['auto','single'].includes(params.get('images'))) return json(res,400,{error:'error.invalidAnalysisRuntime'});
     let excludedTags = (savedSettings || normalizeSettings()).excludedTags;
     try {
       if (req.headers['x-cake-tagger-exclusions']) excludedTags = JSON.parse(req.headers['x-cake-tagger-exclusions']);
@@ -91,8 +90,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
       const send = data => { if (!res.destroyed) res.write(JSON.stringify(data) + '\n'); };
       send({ type: 'state', state: 'analysis.loadingModel' });
-      const mode = new URL(req.url, 'http://' + ownHost).searchParams.get('images');
-      const result = await engine.infer(frames, parallelism, controller.signal, data => send({ type: 'progress', current: data.current, total: data.total }), { parallelImages: mode === 'single' ? false : mode === 'auto' ? true : (savedSettings || normalizeSettings()).parallelImages });
+      const result = await engine.infer(frames, parallelism, controller.signal, data => send({ type: 'progress', current: data.current, total: data.total }));
       const memory = process.memoryUsage();
       send({ type: 'done', ...result, analysis: aggregate(result.scores, mapping, DEFAULT_THRESHOLD, DEFAULT_COVERAGE, { excludedTags }),
         scores: new URL(req.url, 'http://' + ownHost).searchParams.get('raw') === '1' ? result.scores.map(row => Array.from(row)) : undefined, runtime: { ...result.runtime, processPriority,

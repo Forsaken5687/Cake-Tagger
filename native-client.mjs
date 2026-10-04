@@ -6,14 +6,14 @@ export function createNativeClient({ token = '', onState = () => {}, onProgress 
   async function request(url, options = {}) {
     return fetcher(url, { ...options, headers: { Authorization: 'Bearer ' + token, ...options.headers } });
   }
-  async function infer(frames, parallelism = 'auto', { excludedTags, raw = true, parallelImages } = {}) {
+  async function infer(frames, parallelism = 'auto', { excludedTags, raw = true } = {}) {
     if (active) throw messageError('error.analysisStart');
     if (!Array.isArray(frames) || !frames.length || frames.length > 48 || frames.some(frame => !(frame instanceof Uint8ClampedArray) || frame.length !== 802816)) throw messageError('error.invalidModelInputImage');
     const controller = new AbortController(); active = controller;
     try {
       const payload = new Uint8Array(frames.length * 802816);
       frames.forEach((frame, index) => payload.set(frame, index * 802816));
-      const response = await request('/api/infer?parallelism=' + encodeURIComponent(parallelism) + (raw ? '&raw=1' : '') + (parallelImages == null ? '' : '&images=' + (parallelImages ? 'auto' : 'single')), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', ...(excludedTags ? { 'X-Cake-Tagger-Exclusions': JSON.stringify(excludedTags) } : {}) }, body: payload, signal: controller.signal });
+      const response = await request('/api/infer?parallelism=' + encodeURIComponent(parallelism) + (raw ? '&raw=1' : ''), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', ...(excludedTags ? { 'X-Cake-Tagger-Exclusions': JSON.stringify(excludedTags) } : {}) }, body: payload, signal: controller.signal });
       if (!response.ok) { const data = await response.json(); throw messageError(data.error || 'error.nativeInference'); }
       const reader = response.body.getReader(), decoder = new TextDecoder();
       let pending = '', result;

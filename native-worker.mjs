@@ -37,7 +37,7 @@ parentPort.on('message', async ({ id, frames, parallelism, type }) => {
       session = await ort.InferenceSession.create(fileURLToPath(model), {
         executionProviders: ['cpu'], graphOptimizationLevel: 'all', intraOpNumThreads: threads, interOpNumThreads: 1,
         // Blocking idle threads avoids wasting CPU between operators and competing
-        // with the neighbouring model session or foreground applications.
+        // with foreground applications.
         extra: { session: { intra_op: { allow_spinning: '0' }, inter_op: { allow_spinning: '0' } } }
       });
       configuredThreads = threads;

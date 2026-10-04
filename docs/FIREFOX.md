@@ -34,7 +34,7 @@ The panel follows the connected page's colors and, in Automatic language mode, i
 
 ## Development and validation
 
-Run `runtime/node.exe scripts/Build-Firefox.mjs` to build `outputs/firefox/` and the ZIP. The builder copies integration modules, the thin frame bridge, licenses and asset provenance from a fixed file list. Model and inference binaries stay with the local server. Licenses and provenance are included; private files and the Node executable are excluded.
+Run `runtime/node.exe scripts/Build-Firefox.mjs` to build `outputs/Cake-Tagger-Firefox.zip`. Unpacked build intermediates stay in ignored `work/extension-build/firefox/`. The builder copies integration modules, the thin frame bridge, licenses and asset provenance from a fixed file list. Model and inference binaries stay with the local server. Licenses and provenance are included; private files and the Node executable are excluded.
 
 Synthetic tests cover message boundaries, settings, filename matching, tag preservation and manifests. Local browser fixtures exercise the shared interface and upload adapter, but do not replace a complete Firefox test of installation, permissions, model inference and transfer. See [testing](TESTING.md).
 

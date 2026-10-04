@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export function buildExtension(target) {
   if (!['firefox', 'chrome'].includes(target)) throw Error('Unsupported browser.');
-  const output = path.join(root, 'outputs', target);
+  const output = target === 'chrome' ? path.join(root, 'outputs', target) : path.join(root, 'work', 'extension-build', target);
   fs.mkdirSync(output, { recursive: true });
   // Only the page bridge is executable here; model metadata and license notices stay intact.
   const files = ['webext-api.js', 'preferences.mjs', 'messages.mjs', 'tags.txt', 'assets/logo.svg',
@@ -39,7 +39,9 @@ export function buildExtension(target) {
   }
   const directory = Buffer.concat(central), end = Buffer.alloc(22);
   end.writeUInt32LE(0x06054b50); end.writeUInt16LE(entries.length, 8); end.writeUInt16LE(entries.length, 10); end.writeUInt32LE(directory.length, 12); end.writeUInt32LE(offset, 16);
-  fs.writeFileSync(path.join(root, `outputs/Cake-Tagger-${target === 'chrome' ? 'Chrome' : 'Firefox'}.zip`), Buffer.concat([...blocks, directory, end]));
-  console.log(`${target}-Package created: outputs/Cake-Tagger-${target === 'chrome' ? 'Chrome' : 'Firefox'}.zip`);
+  const zip = target === 'chrome' ? path.join(root, 'work', 'extension-build', 'Cake-Tagger-Chrome.zip') : path.join(root, 'outputs', 'Cake-Tagger-Firefox.zip');
+  fs.mkdirSync(path.dirname(zip), {recursive:true});
+  fs.writeFileSync(zip, Buffer.concat([...blocks, directory, end]));
+  console.log(`${target} extension created: ${target === 'chrome' ? 'outputs/chrome/' : 'outputs/Cake-Tagger-Firefox.zip'}`);
 
 }

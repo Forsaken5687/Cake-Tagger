@@ -41,7 +41,6 @@ A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned
 - Automatically analyze upload videos: enabled by default; applies only to the embedded upload workflow.
 - Images per video: automatic by duration, or a fixed count from 4 to 48.
 - CPU parallelism: leave the field empty for Automatic, or enter a positive thread count. The server recommends a third of its available logical processors and allows manual testing up to their full count. The dialog displays both values. Higher counts can reduce throughput. Changes apply to the next video.
-- Adaptive image parallelism: process up to two images at once when the image count and thread budget make this useful. Off by default; enable it to compare throughput on your hardware.
 - Show or hide model scores and uncertain suggestions.
 - Exclude tags from new automatic suggestions. `hairy` and `watermark` are excluded by default and can be enabled individually.
 
@@ -55,7 +54,7 @@ The base threshold is fixed at 0.4. Most suggested tags require support in more 
 
 The displayed score is the average of the two strongest frame matches. It is not the proportion of the video showing a tag or the probability that the tag is correct. The JSON export preserves selections, original suggestions, scores, tag origins and analysis timings.
 
-All views use one centrally managed native backend in Node. Automatic recommends a third of the available logical processors, with a minimum of one. Manual overrides can use all available logical processors. Adaptive mode divides that budget across up to two model sessions; returned scores preserve chronological order. Concurrent views share a bounded queue instead of loading additional model copies. Cancelling discards unfinished results while preserving other views and completed corrections. Native CPU scores can differ from earlier WASM results, so existing exports remain readable and cached browser results are not reused as native analyses.
+All views use one centrally managed native backend in Node. Automatic recommends a third of the available logical processors, with a minimum of one. Manual overrides can use all available logical processors. One model session processes images sequentially using that thread budget; returned scores preserve chronological order. Concurrent views share a bounded queue instead of loading additional model copies. Cancelling discards unfinished results while preserving other views and completed corrections. Native CPU scores can differ from earlier WASM results, so existing exports remain readable and cached browser results are not reused as native analyses.
 
 JSON runtime details include the native provider, configured thread count, ONNX Runtime version, model checksum and memory metrics. Diagnostics also include queue wait time, CPU time, available processors, the recommended thread count and manual test maximum. Optional page heap measurements exclude the native model; unavailable fields are `null`.
 
@@ -82,10 +81,10 @@ Settings are persisted; exports contain filenames and tags. Selecting files on c
 
 For unexpected slowdowns in the standalone application, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It uses the same native Node API and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
 
-Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Firefox.mjs` and `runtime/node.exe scripts/Build-Chrome.mjs`.
+Development tools and tests belong to the source checkout and are not included in runtime releases. Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Firefox.mjs` and `runtime/node.exe scripts/Build-Chrome.mjs`.
 
 
-`scripts/Package.ps1` builds `outputs/Cake-Tagger.zip` from tracked project files and checksum-verified assets. It includes `extensions/Cake-Tagger-Firefox.zip` and the unpacked `extensions/chrome/` directory. Private data, media, scratch files and Git history are excluded. Share this package rather than the working directory.
+`scripts/Package.ps1` builds `outputs/Cake-Tagger.zip` from an explicit runtime file list and checksum-verified assets. It includes `extensions/Cake-Tagger-Firefox.zip` and the unpacked `extensions/chrome/` directory. Tests, developer tooling, redundant extension sources, private data, media, scratch files and Git history are excluded. Share this package rather than the working directory.
 
 Source lives in the project root and `extension/`; documentation in `docs/`, tooling in `scripts/`, and synthetic tests in `tests/`. `work/`, `data/` and `outputs/` are ignored.
 

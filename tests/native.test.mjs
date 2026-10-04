@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { createNativeEngine } from '../native-engine.mjs';
 import { createNativeClient } from '../native-client.mjs';
-import { computeCapabilities, resolveThreads, executionPlan } from '../native-policy.mjs';
+import { computeCapabilities, resolveThreads } from '../native-policy.mjs';
 import { validateRuntime } from '../analysis-settings.mjs';
 
 const image = value => new Uint8ClampedArray(448 * 448 * 4).fill(value);
@@ -81,7 +81,7 @@ test('native exports retain overrides above eight and reject impossible thread c
   assert.throws(()=>validateRuntime({...runtime,modelSha256:'unknown'}));
 });
 
-test('adaptive sessions divide the budget, restore frame order and stop both workers', async () => {
+test('one session retains the full thread budget and frame order, ignoring retired options', async () => {
   const workers=[], progress=[];
   class Worker extends EventEmitter {
     messages=[];
@@ -91,16 +91,13 @@ test('adaptive sessions divide the budget, restore frame order and stop both wor
   }
   const engine=createNativeEngine({createWorker(){const worker=new Worker();workers.push(worker);return worker;}});
   const pending=engine.infer([image(0),image(1),image(2),image(3)],'16',undefined,data=>progress.push(data.current),{parallelImages:true});
-  assert.equal(workers.length,2);assert.deepEqual(workers.map(worker=>worker.messages[0].parallelism),['8','8']);
+  assert.equal(workers.length,1);assert.equal(workers[0].messages[0].parallelism,'16');
   workers[0].emit('message',{id:workers[0].messages[0].id,type:'progress',current:1});
-  workers[1].emit('message',{id:workers[1].messages[0].id,type:'progress',current:1});
-  workers[1].complete();workers[0].complete();
+  workers[0].complete();
   const output=await pending;
-  assert.deepEqual(output.scores.map(frame=>frame[0]),[0,1,2,3]);assert.deepEqual(progress,[1,2]);
-  assert.equal(output.runtime.configuredNativeThreads,16);assert.deepEqual(output.runtime.threadsPerSession,[8,8]);
-  assert.equal(output.runtime.inferenceWorkers,2);await engine.stop();assert(workers.every(worker=>worker.terminated));
-  assert.deepEqual(executionPlan(13,8,true),{workers:2,threads:[7,6],totalThreads:13});
-  assert.equal(executionPlan(24,1).workers,1);assert.equal(executionPlan(24,8,false).workers,1);
+  assert.deepEqual(output.scores.map(frame=>frame[0]),[0,1,2,3]);assert.deepEqual(progress,[1]);
+  assert.equal(output.runtime.configuredNativeThreads,16);assert.deepEqual(output.runtime.threadsPerSession,[16]);
+  assert.equal(output.runtime.inferenceWorkers,1);await engine.stop();assert(workers.every(worker=>worker.terminated));
 });
 
 test('shutdown never terminates a healthy native worker before session cleanup acknowledges', async () => {

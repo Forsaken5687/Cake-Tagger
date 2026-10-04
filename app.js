@@ -47,7 +47,7 @@ async function cached(key, value) {
 function cancelInference() {
   nativeClient?.stop();
 }
-function infer(frames, parallelism, excludedTags, parallelImages) {
+function infer(frames, parallelism, excludedTags) {
   // One transport per page. Session configuration belongs to the backend.
   if (!nativeClient) {
     nativeClient = createNativeClient({ token,
@@ -55,7 +55,7 @@ function infer(frames, parallelism, excludedTags, parallelImages) {
       onProgress: (current, total) => localizedText($('#status'), message('analysis.progress', { current, total }))
     });
   }
-  return nativeClient.infer(frames, parallelism, { excludedTags, raw: false, parallelImages }).then(result => {
+  return nativeClient.infer(frames, parallelism, { excludedTags, raw: false }).then(result => {
     return { ...result, runtime: { ...result.runtime, parallelismLimit: parallelism, memory: memorySnapshot() } };
   });
 }
@@ -293,7 +293,7 @@ async function analyze(targets = entries, automatic = false) {
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
         else {
-          const inference = await infer(sampleData.inputs, analysisSettings.parallelism, analysisSettings.excludedTags, analysisSettings.parallelImages);
+          const inference = await infer(sampleData.inputs, analysisSettings.parallelism, analysisSettings.excludedTags);
           controller.signal.throwIfAborted();
           result = { filename: entry.file.name, sha256: sampleData.sha256, ...inference.analysis, sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', runtime: inference.runtime, seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
           await cached(key, result);

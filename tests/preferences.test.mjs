@@ -14,6 +14,7 @@ test('preferences normalize corrupt storage and ignore unrelated private fields'
   assert.equal(normalizeSettings({ parallelism: 1000 }).parallelism, '1000');
   assert.deepEqual(settings.excludedTags, ['hairy']); assert.equal(settings.showScores, false);
   assert.equal(settings.token, undefined); assert.equal(settings.items, undefined);
+  assert.equal(normalizeSettings({parallelImages:true}).parallelImages, undefined);
   assert.equal(resolvedLanguage(settings, 'de-DE'), 'de'); assert.equal(resolvedLanguage(settings, 'en-US'), 'en');
   assert.equal(suggestionPolicy(normalizeSettings({ excludedTags: ['hairy', 'watermark'] })), suggestionPolicy(normalizeSettings({ excludedTags: ['watermark', 'hairy'] })));
 });
