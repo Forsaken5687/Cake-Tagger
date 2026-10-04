@@ -24,8 +24,8 @@ test('both languages define identical placeholders and every source message ID e
 });
 
 test('message parameters stay literal and nested errors survive serialization', () => {
-  const filename = 'Settings {count} <video>.mp4';
-  assert.equal(translate(message('tags.addForFile', { filename }), 'de'), 'Tag ergänzen für ' + filename);
+  const tag = 'Settings {count} <video>';
+  assert.equal(translate(message('error.tagRejected', { tag }), 'en'), '"' + tag + '" was not accepted by the site. Previously added tags are preserved.');
   const error = messageError('error.invalidVideoDuration');
   assert.equal(error.message, 'Invalid video duration.');
   const serialized = JSON.parse(JSON.stringify(message('error.transferFailed', { error: errorMessage(error) })));
@@ -35,7 +35,6 @@ test('message parameters stay literal and nested errors survive serialization', 
   assert.equal(translate(errorMessage(new Error('Library detail')), 'de'), 'Library detail');
   assert.equal(translate('tattoos', 'de'), 'tattoos');
   assert.equal(translate('action.add', 'de'), 'Hinzufügen');
-  assert.equal(translate('tags.add', 'de'), 'Ergänzen');
   assert.equal(translate('results.summarySingle', 'en', { count: 1, done: 0 }), '1 video · 0 analyzed');
 });
 

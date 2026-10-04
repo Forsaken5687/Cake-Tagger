@@ -282,11 +282,6 @@ window.addEventListener('cake-tagger:upload-message', async event=>{
   case 'export': if(entries.some(e=>e.result)) await $('#export').onclick();break;
   case 'quit': await $('#quit').onclick();break;
   case 'tag': if(entry?.result && entry.selected.has(data.tag) && typeof data.selected==='boolean'){entry.selected.set(data.tag,data.selected);changed(entry);render();}break;
-  case 'add': if(entry?.result && !allTags.includes(data.tag))showMessage('error.chooseTag');
-   if(entry?.result && allTags.includes(data.tag)){
-   if(!entry.selected.has(data.tag)){entry.tagSources ||= {};entry.tagSources[data.tag]='manual';}
-   entry.selected.set(data.tag,true);changed(entry);render();
-  }break;
   case 'apply': if(entry?.result) await integrationButton(entry,textElement,showMessage)?.onclick();break;
  }
  publishUploadView();

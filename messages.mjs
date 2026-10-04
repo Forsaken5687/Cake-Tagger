@@ -56,7 +56,6 @@ export const messages = {
   'error.analysisStart': { en: 'Browser analysis could not start.', de: 'Browser-Erkennung konnte nicht starten.' },
   'error.chooseExclusion': { en: 'Please choose a tag from the list.', de: 'Bitte einen Tag aus der Liste wählen.' },
   'error.chooseTab': { en: 'Please choose a cake.ski tab.', de: 'Bitte einen cake.ski-Tab auswählen.' },
-  'error.chooseTag': { en: 'Please choose a tag from the available list.', de: 'Bitte einen Tag aus deiner vorhandenen Liste wählen.' },
   'error.downloadExpired': { en: 'Download expired. Please create it again.', de: 'Download abgelaufen. Bitte den Download erneut erstellen.' },
   'error.duplicateFilename': {
     en: 'Multiple uploads have this filename. Apply tags individually.',
@@ -190,8 +189,6 @@ export const messages = {
   'settings.uncertain': { en: 'Show uncertain suggestions', de: 'Unsichere Vorschläge anzeigen' },
 
   // Tags messages.
-  'tags.add': { en: 'Add', de: 'Ergänzen' },
-  'tags.addForFile': { en: 'Add tag for {filename}', de: 'Tag ergänzen für {filename}' },
   'tags.added': { en: 'Added', de: 'Ergänzt' },
   'tags.frameSupport': { en: ' · detected in {count} of {total} preview images', de: ' · erkannt in {count} von {total} Vorschaubildern' },
   'tags.manualOrigin': { en: 'Added manually', de: 'Manuell ergänzt' },
@@ -201,7 +198,6 @@ export const messages = {
     en: 'Model score: average of the two strongest image matches. This is not a measured probability that the tag is correct.',
     de: 'Modellscore: Durchschnitt der zwei stärksten Bildtreffer. Keine gemessene Wahrscheinlichkeit für einen richtigen Tag.'
   },
-  'tags.search': { en: 'Search for another tag …', de: 'Weiteren Tag suchen …' },
   'tags.selectedCount': { en: '{count} selected', de: '{count} ausgewählt' },
   'tags.selection': { en: 'Tag selection', de: 'Tag-Auswahl' },
   'tags.suggested': { en: 'Suggested', de: 'Vorschlag' },

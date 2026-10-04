@@ -35,7 +35,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
   if(fromCake && message?.type==='cake-tagger:register-upload')return commandService().then(relay=>relay.register(sender.tab?.id,message.channel));
   if(fromCake && message?.type==='cake-tagger:ui-command' && /^[a-f0-9]{32}$/.test(message.channel || '') && Number.isInteger(sender.tab?.id)) {
     const command=message.command;
-    if(!command || !['analyze','cancel','export','quit','tag','add','apply'].includes(command.action) || JSON.stringify(command).length>2048)return;
+    if(!command || !['analyze','cancel','export','quit','tag','apply'].includes(command.action) || JSON.stringify(command).length>2048)return;
     return commandService().then(relay=>relay.send(sender.tab.id,message.channel,command)).catch(()=>({error:'error.uploadConnection'}));
   }
   if(popup && message?.type==='cake-tagger:quit')return serverService().then(service=>service.stop()).catch(()=>({error:'error.stopFailed'}));

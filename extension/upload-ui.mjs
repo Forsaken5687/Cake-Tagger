@@ -36,8 +36,6 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
  }
  function detachLayout(){for(const n of sections.values())n.remove();sections.clear();}
  function content(section,entry){
-  // Preserve an in-progress manual tag search while another video finishes.
-  if(section.contains(doc.activeElement) && doc.activeElement.tagName==='INPUT' && doc.activeElement.type==='text')return;
   section.replaceChildren();
   const head=el('div','','cake-tagger-result-heading');head.append(el('strong',t('embed.suggestions')),el('small',entry.state));section.append(head);
   if(entry.error)section.append(el('p',entry.error,'cake-tagger-message'));
@@ -54,12 +52,6 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
    chips.append(label);
   }
   area.append(chips);
-  const add=el('form','','cake-tagger-add'),input=el('input'),list=el('datalist');
-  input.placeholder=t('tags.search');input.setAttribute('aria-label',t('tags.addForFile',{filename:entry.filename}));
-  list.id='cake-tagger-search-'+Math.random().toString(36).slice(2);input.setAttribute('list',list.id);
-  for(const tag of view.allTags){const option=el('option');option.value=tag;list.append(option);}
-  const addButton=button('tags.add',()=>{});add.onsubmit=event=>{event.preventDefault();if(trusted(event))command('add',entry,{tag:input.value.trim().toLowerCase()});};addButton.type='submit';
-  add.append(input,list,addButton);section.append(add);
   const actions=el('div','','cake-tagger-result-actions');actions.append(el('small',t('tags.selectedCount',{count:entry.tags.filter(row=>row.selected).length})),button('transfer.apply',()=>command('apply',entry),'cake-tagger-primary'));
   section.append(actions);
  }
@@ -85,8 +77,7 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   exportButton.disabled=view.stopped||view.exporting||!view.entries.some(entry=>entry.complete);settings.disabled=quit.disabled=view.stopped;
   paint();
  }
- const onBlur=event=>{if(view && event.target.type==='text' && event.target.closest('.cake-tagger-suggestions'))setTimeout(()=>paint(true),0);};doc.addEventListener('focusout',onBlur);
- return {update,error(message){note.textContent=message;note.hidden=false;},refresh:()=>paint(),dispose(){doc.removeEventListener('focusout',onBlur);settingsDialog?.remove();detachLayout();}};
+ return {update,error(message){note.textContent=message;note.hidden=false;},refresh:()=>paint(),dispose(){settingsDialog?.remove();detachLayout();}};
 }
 export function validUploadView(value){
  return !!value && ['en','de'].includes(value.language) && value.settings && typeof value.settings.showUncertain==='boolean'

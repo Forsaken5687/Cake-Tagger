@@ -11,7 +11,7 @@ The Firefox and Chrome extensions provide the interface and upload integration. 
 - [Firefox installation and usage](docs/FIREFOX.md)
 - [Chrome installation and usage](docs/CHROME.md)
 
-Select videos in the cake.ski upload area. By default, new files are analyzed automatically. Suggestions appear directly on the upload cards. Review the suggestions, then use **Apply tags** for each video. Existing tags and per-card exclusions are preserved. The extension does not submit or publish posts.
+Select videos in the cake.ski upload area. By default, new files are analyzed automatically. Suggestions appear directly on the upload cards. Review the suggestions, then use **Apply tags** for each video. Add manual tags using the site's own tag field. Existing tags and per-card exclusions are preserved. The extension does not submit or publish posts.
 
 **Important:** cake.ski itself can upload Bulk files as drafts as soon as you select them. Local analysis does not change that behavior.
 
