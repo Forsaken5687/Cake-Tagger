@@ -91,7 +91,7 @@ export function createNativeEngine({ capabilities = computeCapabilities(), creat
       }
     } catch { void failed(); }
   }
-  function infer(input, parallelism='auto', signal, onProgress=()=>{}, {parallelImages=true}={}) {
+  function infer(input, parallelism='auto', signal, onProgress=()=>{}, {parallelImages=false}={}) {
     if (stopped) return Promise.reject(new Error('analysis.stopped'));
     if (signal?.aborted) return Promise.reject(new DOMException('analysis.cancelled','AbortError'));
     if (queue.length >= QUEUE_CAPACITY) return Promise.reject(new Error('error.nativeBusy'));

@@ -35,7 +35,10 @@ parentPort.on('message', async ({ id, frames, parallelism, type }) => {
       await session?.release();
       session = undefined;
       session = await ort.InferenceSession.create(fileURLToPath(model), {
-        executionProviders: ['cpu'], graphOptimizationLevel: 'all', intraOpNumThreads: threads, interOpNumThreads: 1
+        executionProviders: ['cpu'], graphOptimizationLevel: 'all', intraOpNumThreads: threads, interOpNumThreads: 1,
+        // Blocking idle threads avoids wasting CPU between operators and competing
+        // with the neighbouring model session or foreground applications.
+        extra: { session: { intra_op: { allow_spinning: '0' }, inter_op: { allow_spinning: '0' } } }
       });
       configuredThreads = threads;
     }
@@ -67,7 +70,7 @@ parentPort.on('message', async ({ id, frames, parallelism, type }) => {
     }
       parentPort.postMessage({ id, result: { scores: all, timings,
         runtime: { provider: 'native-cpu', configuredNativeThreads: threads, inferenceWorkers: 1,
-          hardwareConcurrency: cores, ...capabilities, runtimeVersion: ort.env.versions.node, modelSha256: expectedHash } } }, all.map(scores => scores.buffer));
+          hardwareConcurrency: cores, ...capabilities, threadSpinning: false, runtimeVersion: ort.env.versions.node, modelSha256: expectedHash } } }, all.map(scores => scores.buffer));
   } catch (error) {
     parentPort.postMessage({ id, error: error.message?.startsWith('error.') || error.message === 'analysis.cancelled' ? error.message : 'error.nativeInference' });
   } finally { cancelled.delete(id); activeId = undefined; if (shuttingDown) await shutdown(); }

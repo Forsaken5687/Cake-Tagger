@@ -1,5 +1,5 @@
 export const SETTINGS_KEY = 'cake-tagger-settings-v1';
-export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', frames: 'auto', parallelism: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, autoAnalyzeEmbed: true, parallelImages: true });
+export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', frames: 'auto', parallelism: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, autoAnalyzeEmbed: true, parallelImages: false });
 export function normalizeSettings(value = {}) {
   // This allowlist is also the persistence boundary: unrelated fields are discarded.
   if (!value || typeof value !== 'object' || Array.isArray(value)) value = {};
@@ -12,7 +12,7 @@ export function normalizeSettings(value = {}) {
     showScores: typeof value.showScores === 'boolean' ? value.showScores : true,
     showUncertain: typeof value.showUncertain === 'boolean' ? value.showUncertain : true,
     autoAnalyzeEmbed: typeof value.autoAnalyzeEmbed === 'boolean' ? value.autoAnalyzeEmbed : true,
-    parallelImages: typeof value.parallelImages === 'boolean' ? value.parallelImages : true
+    parallelImages: typeof value.parallelImages === 'boolean' ? value.parallelImages : false
   };
 }
 export function resolvedLanguage(settings, browserLanguage = 'de') {

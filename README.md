@@ -40,8 +40,8 @@ A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned
 - Language: Automatic, German or English. Automatic follows cake.ski in connected extension views and the browser language in standalone use. Tag names are unchanged.
 - Automatically analyze upload videos: enabled by default; applies only to the embedded upload workflow.
 - Images per video: automatic by duration, or a fixed count from 4 to 48.
-- CPU parallelism: leave the field empty for Automatic, or enter a positive thread count. The server recommends half its available logical processors and allows manual testing up to their full count. The dialog displays both values. RAM does not cap this setting; higher counts can reduce throughput. Changes apply to the next video.
-- Adaptive image parallelism: process up to two images at once when the image count and thread budget make this useful. Disable it to compare single-session processing or reduce model memory.
+- CPU parallelism: leave the field empty for Automatic, or enter a positive thread count. The server recommends a third of its available logical processors and allows manual testing up to their full count. The dialog displays both values. Higher counts can reduce throughput. Changes apply to the next video.
+- Adaptive image parallelism: process up to two images at once when the image count and thread budget make this useful. Off by default; enable it to compare throughput on your hardware.
 - Show or hide model scores and uncertain suggestions.
 - Exclude tags from new automatic suggestions. `hairy` and `watermark` are excluded by default and can be enabled individually.
 
@@ -55,7 +55,7 @@ The base threshold is fixed at 0.4. Most suggested tags require support in more 
 
 The displayed score is the average of the two strongest frame matches. It is not the proportion of the video showing a tag or the probability that the tag is correct. The JSON export preserves selections, original suggestions, scores, tag origins and analysis timings.
 
-All views use one centrally managed native backend in Node. Automatic recommends half the available logical processors, with a minimum of one. Manual overrides can use all available logical processors. Adaptive mode divides that budget across up to two model sessions; returned scores preserve chronological order. Concurrent views share a bounded queue instead of loading additional model copies. Cancelling discards unfinished results while preserving other views and completed corrections. Native CPU scores can differ from earlier WASM results, so existing exports remain readable and cached browser results are not reused as native analyses.
+All views use one centrally managed native backend in Node. Automatic recommends a third of the available logical processors, with a minimum of one. Manual overrides can use all available logical processors. Adaptive mode divides that budget across up to two model sessions; returned scores preserve chronological order. Concurrent views share a bounded queue instead of loading additional model copies. Cancelling discards unfinished results while preserving other views and completed corrections. Native CPU scores can differ from earlier WASM results, so existing exports remain readable and cached browser results are not reused as native analyses.
 
 JSON runtime details include the native provider, configured thread count, ONNX Runtime version, model checksum and memory metrics. Diagnostics also include queue wait time, CPU time, available processors, the recommended thread count and manual test maximum. Optional page heap measurements exclude the native model; unavailable fields are `null`.
 

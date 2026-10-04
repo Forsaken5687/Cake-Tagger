@@ -4,9 +4,11 @@ export const QUEUE_CAPACITY = 8;
 
 // Logical processors are the test ceiling: above this, CPU workers would
 // oversubscribe the same hardware. RAM does not limit native thread overrides.
+// Reserve CPU headroom for interactive applications; manual testing stays uncapped
+// up to the hardware ceiling. This recommendation is not a calibrated optimum.
 export function computeCapabilities(cores = os.availableParallelism()) {
   cores = Math.max(1, Math.floor(cores));
-  return { logicalProcessors: cores, recommendedThreads: Math.max(1, Math.floor(cores / 2)),
+  return { logicalProcessors: cores, recommendedThreads: Math.max(1, Math.floor(cores / 3)),
     testMaximum: cores, reason: 'logical-processors', queueCapacity: QUEUE_CAPACITY };
 }
 export function resolveThreads(value = 'auto', capabilities = computeCapabilities()) {
@@ -20,7 +22,7 @@ export function resolveThreads(value = 'auto', capabilities = computeCapabilitie
 // A second image keeps operator pools small. Four threads per session and at
 // least four images amortize the extra model session; this is an operating
 // heuristic, not an override ceiling. Single mode keeps one session active.
-export function executionPlan(totalThreads, frameCount, parallelImages=true) {
+export function executionPlan(totalThreads, frameCount, parallelImages=false) {
   const workers = parallelImages && totalThreads >= 8 && frameCount >= 4 ? 2:1;
   const threads = Array.from({length:workers},(_,index)=>Math.floor(totalThreads/workers)+(index<totalThreads%workers?1:0));
   return {workers,threads,totalThreads};

@@ -23,6 +23,13 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
 fs.mkdirSync(path.join(root, 'data'), { recursive: true });
 const tagList = fs.readFileSync(path.join(root, 'tags.txt'), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
 const downloads = new Map(), sockets = new Set();
+// Record the applied scheduling class without overriding OS or user choices.
+let processPriority = 'unknown';
+try {
+  const priority = os.getPriority();
+  processPriority = priority === os.constants.priority.PRIORITY_BELOW_NORMAL ? 'below-normal'
+    : priority === os.constants.priority.PRIORITY_NORMAL ? 'normal' : 'other';
+} catch { /* Some hosts do not expose process scheduling priority. */ }
 const engine = createNativeEngine();
 let stopping = false, closing = false;
 const settingsFile = path.join(root, 'data/preferences.json');
@@ -88,7 +95,7 @@ const server = http.createServer(async (req, res) => {
       const result = await engine.infer(frames, parallelism, controller.signal, data => send({ type: 'progress', current: data.current, total: data.total }), { parallelImages: mode === 'single' ? false : mode === 'auto' ? true : (savedSettings || normalizeSettings()).parallelImages });
       const memory = process.memoryUsage();
       send({ type: 'done', ...result, analysis: aggregate(result.scores, mapping, DEFAULT_THRESHOLD, DEFAULT_COVERAGE, { excludedTags }),
-        scores: new URL(req.url, 'http://' + ownHost).searchParams.get('raw') === '1' ? result.scores.map(row => Array.from(row)) : undefined, runtime: { ...result.runtime,
+        scores: new URL(req.url, 'http://' + ownHost).searchParams.get('raw') === '1' ? result.scores.map(row => Array.from(row)) : undefined, runtime: { ...result.runtime, processPriority,
         hostMemory: { totalBytes: os.totalmem(), freeBytes: os.freemem() },
         serverMemory: { rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, heapTotalBytes: memory.heapTotal, externalBytes: memory.external, arrayBuffersBytes: memory.arrayBuffers } } });
       return res.end();

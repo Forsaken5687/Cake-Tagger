@@ -43,6 +43,8 @@ export function validateRuntime(value) {
     || value.threadsPerSession.length !== value.inferenceWorkers || value.threadsPerSession.some(count => !Number.isSafeInteger(count) || count < 1)
     || value.threadsPerSession.reduce((sum,count)=>sum+count,0) !== value.configuredNativeThreads
     || !['auto','single'].includes(value.imageParallelism) || !Number.isInteger(value.residentSessions) || value.residentSessions < value.inferenceWorkers || value.residentSessions > 2)) throw messageError('error.invalidAnalysisRuntime');
+  if (native && ((value.threadSpinning != null && typeof value.threadSpinning !== 'boolean')
+    || (value.processPriority != null && !['below-normal', 'normal', 'other', 'unknown'].includes(value.processPriority)))) throw messageError('error.invalidAnalysisRuntime');
   let memory;
   if (value.memory != null) {
     const keys = ['reportedDeviceMemoryGB', 'pageJsHeapUsedBytes', 'pageJsHeapTotalBytes', 'pageJsHeapLimitBytes'];
@@ -65,6 +67,8 @@ export function validateRuntime(value) {
     ...(value.parallelismLimit != null ? { parallelismLimit: value.parallelismLimit } : {}),
     ...(native ? Object.fromEntries(['logicalProcessors', 'recommendedThreads', 'testMaximum', 'queueCapacity'].filter(key => Number.isSafeInteger(value[key]) && value[key] > 0).map(key => [key, value[key]])) : {}),
     ...(native && value.threadsPerSession != null ? { threadsPerSession: [...value.threadsPerSession], imageParallelism:value.imageParallelism, residentSessions:value.residentSessions } : {}),
+    ...(native && value.threadSpinning != null ? { threadSpinning: value.threadSpinning } : {}),
+    ...(native && value.processPriority != null ? { processPriority: value.processPriority } : {}),
     ...(memory ? { memory } : {}),
     ...(Object.hasOwn(value, 'hostMemory') ? { hostMemory } : {}),
     ...(Object.hasOwn(value, 'serverMemory') ? { serverMemory } : {}) };

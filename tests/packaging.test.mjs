@@ -9,7 +9,7 @@ test('both extension packages contain integration only and retain notices and pr
   buildExtension(target);
   const root=new URL('../outputs/'+target+'/',import.meta.url);
   const manifest=JSON.parse(fs.readFileSync(new URL('manifest.json',root)));
-  assert.equal(manifest.version,'0.6.0');
+  assert.equal(manifest.version,JSON.parse(fs.readFileSync(new URL('../extension/'+(target === 'chrome' ? 'manifest.chrome.json' : 'manifest.json'),import.meta.url))).version);
   assert(manifest.content_scripts.some(script=>script.js.includes('extension/local-bridge.js')));
   assert(manifest.web_accessible_resources[0].resources.includes('extension/bridge.html'));
   for(const file of ['index.html','app.js','native-client.mjs','sampling.mjs','tagging.mjs','extension/integration.mjs','extension/auto-analysis.mjs','extension/settings-background.mjs'])assert.equal(fs.existsSync(new URL(file,root)),false,file);

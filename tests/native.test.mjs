@@ -68,8 +68,8 @@ test('malformed streams and invalid outputs abort the server request', async () 
 });
 
 test('hardware sets the test maximum independently of RAM and recommended operating threads', () => {
-  const caps=computeCapabilities(24);assert.equal(caps.recommendedThreads,12);assert.equal(caps.testMaximum,24);
-  assert.equal(resolveThreads('auto',caps),12);assert.equal(resolveThreads('16',caps),16);assert.equal(resolveThreads('24',caps),24);
+  const caps=computeCapabilities(24);assert.equal(caps.recommendedThreads,8);assert.equal(caps.testMaximum,24);
+  assert.equal(resolveThreads('auto',caps),8);assert.equal(resolveThreads('16',caps),16);assert.equal(resolveThreads('24',caps),24);
   for(const value of ['25','0','-1','1.5','99999999999999999999'])assert.throws(()=>resolveThreads(value,caps),/threadLimit|invalidAnalysisRuntime/);
   assert.equal(computeCapabilities(1).testMaximum,1);
 });
@@ -90,7 +90,7 @@ test('adaptive sessions divide the budget, restore frame order and stop both wor
     complete(){const job=this.messages.findLast(message=>message.frames);this.emit('message',{id:job.id,result:{scores:job.frames.map(frame=>Float32Array.of(frame[0])),timings:{modelLoadSeconds:0,preprocessSeconds:.01,inferenceSeconds:.1},runtime:{configuredNativeThreads:Number(job.parallelism)}}});}
   }
   const engine=createNativeEngine({createWorker(){const worker=new Worker();workers.push(worker);return worker;}});
-  const pending=engine.infer([image(0),image(1),image(2),image(3)],'16',undefined,data=>progress.push(data.current));
+  const pending=engine.infer([image(0),image(1),image(2),image(3)],'16',undefined,data=>progress.push(data.current),{parallelImages:true});
   assert.equal(workers.length,2);assert.deepEqual(workers.map(worker=>worker.messages[0].parallelism),['8','8']);
   workers[0].emit('message',{id:workers[0].messages[0].id,type:'progress',current:1});
   workers[1].emit('message',{id:workers[1].messages[0].id,type:'progress',current:1});
@@ -99,7 +99,7 @@ test('adaptive sessions divide the budget, restore frame order and stop both wor
   assert.deepEqual(output.scores.map(frame=>frame[0]),[0,1,2,3]);assert.deepEqual(progress,[1,2]);
   assert.equal(output.runtime.configuredNativeThreads,16);assert.deepEqual(output.runtime.threadsPerSession,[8,8]);
   assert.equal(output.runtime.inferenceWorkers,2);await engine.stop();assert(workers.every(worker=>worker.terminated));
-  assert.deepEqual(executionPlan(13,8),{workers:2,threads:[7,6],totalThreads:13});
+  assert.deepEqual(executionPlan(13,8,true),{workers:2,threads:[7,6],totalThreads:13});
   assert.equal(executionPlan(24,1).workers,1);assert.equal(executionPlan(24,8,false).workers,1);
 });
 

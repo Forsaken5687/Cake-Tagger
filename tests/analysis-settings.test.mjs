@@ -24,3 +24,13 @@ test('runtime diagnostics survive correction export without retaining arbitrary 
   assert.equal(validateRuntime(undefined), null);
   for (const broken of [{}, { ...runtime, configuredWasmThreads: 0 }, { ...runtime, configuredWasmThreads: 1.5 }, { ...runtime, inferenceWorkers: 9 }, { ...runtime, hardwareConcurrency: '24' }, { ...runtime, crossOriginIsolated: 'true' }, { ...runtime, browser: 'unknown' }]) assert.throws(() => validateRuntime(broken));
 });
+
+test('native scheduling diagnostics survive export and reject malformed policy fields', () => {
+  const runtime = {provider: 'native-cpu', configuredNativeThreads: 8, hardwareConcurrency: 24,
+    runtimeVersion: '1.30.0', modelSha256: 'a'.repeat(64), threadSpinning: false, processPriority: 'normal'};
+  const entry = {file: {name: 'synthetic.mp4'}, selected: new Map(),
+    result: {sha256: 'e'.repeat(64), tags: [], uncertain: [], sampledFrames: 8, model: 'JoyTag-INT8', runtime}};
+  const record = validateRecord(makeRecord(entry), ['solo']);
+  assert.deepEqual(exportItem(applyRecord({file: entry.file}, record)).runtime, runtime);
+  for (const broken of [{...runtime, threadSpinning: 'false'}, {...runtime, processPriority: 'high'}]) assert.throws(() => validateRuntime(broken));
+});
