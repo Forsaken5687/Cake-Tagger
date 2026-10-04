@@ -8,7 +8,7 @@ async function background(downloadFailure = false, commandReply = {accepted:true
   const calls = [];
   const browser = {
     action: { onClicked: { addListener(fn) { click=fn; } } },
-    runtime: { id: 'fixture', getURL: path => 'moz-extension://fixture/' + path, onMessage: { addListener(fn) { listener = fn; } }, sendMessage: async message => { calls.push({ runtime: message }); return commandReply; } },
+    runtime: { id: 'fixture', getURL: path => 'moz-extension://fixture/' + path, onConnect:{addListener(){}}, onMessage: { addListener(fn) { listener = fn; } }, sendMessage: async message => { calls.push({ runtime: message }); return commandReply; } },
     downloads: {download:async options=>{if(downloadFailure)throw Error('Download denied');calls.push({download:options});return 7;}},
     tabs: {
       create: async options => { calls.push(options); },
@@ -18,7 +18,7 @@ async function background(downloadFailure = false, commandReply = {accepted:true
       sendMessage: async (id, message) => { calls.push({ id, message }); return { added: message.tags, skipped: [] }; }
     }
   };
-  vm.runInNewContext(await readFile(new URL('../extension/background.js', import.meta.url), 'utf8'), { browser, URL, crypto:globalThis.crypto, Uint8Array, cakeServer:{saveSettings:async (_browser,settings)=>{calls.push({saved:settings});return {settings};},getCapabilities:async()=>({testMaximum:24}),connect:async refresh=>{assert.equal(refresh,true);return {token:'a'.repeat(48)};}, stop: async () => { calls.push({stop:true}); return {stopped:true}; }} });
+  vm.runInNewContext(await readFile(new URL('../extension/background.js', import.meta.url), 'utf8'), { browser, cakeCommands:{register:()=>({registered:true}),attach(){},send:async(tabId,channel,command)=>{calls.push({delivered:command,tabId,channel});return commandReply || {error:'error.uploadConnection'};}}, URL, crypto:globalThis.crypto, Uint8Array, cakeServer:{saveSettings:async (_browser,settings)=>{calls.push({saved:settings});return {settings};},getCapabilities:async()=>({testMaximum:24}),connect:async refresh=>{assert.equal(refresh,true);return {token:'a'.repeat(48)};}, stop: async () => { calls.push({stop:true}); return {stopped:true}; }} });
   return { listener, calls, click };
 }
 
@@ -86,7 +86,7 @@ test('upload UI commands require the extension sender and bind the forwarded tab
  assert.equal(listener(command,{...source,id:'website'}),undefined);
  assert.equal(listener({...command,command:{action:'arbitrary'}},source),undefined);
  assert.equal(listener({type:'cake-tagger:quit'},source),undefined);
- await listener(command,source);assert.equal(calls[0].runtime.type,'cake-tagger:ui-command-forwarded');assert.equal(calls[0].runtime.tabId,42);assert.equal(calls[0].runtime.channel,command.channel);
+ await listener(command,source);assert.equal(calls[0].delivered.action,'quit');assert.equal(calls[0].tabId,42);assert.equal(calls[0].channel,command.channel);
 });
 
 test('popup Quit calls the local shutdown service and never closes a tab instead', async () => {
@@ -133,7 +133,7 @@ test('download manager rejection returns a visible export error',async()=>{
 test('upload command relay reports missing receivers instead of silently swallowing failure',async()=>{
  const {listener}=await background(false,undefined);
  const source={id:'fixture',url:'https://cake.ski/',tab:{id:42}};
- // A background broadcast must be acknowledged by the matching bridge.
+ // A command must be acknowledged over the matching bridge port.
  const missing=await background(false,null);
  const result=await missing.listener({type:'cake-tagger:ui-command',channel:'a'.repeat(32),command:{action:'export'}},source);
  assert.equal(result.error,'error.uploadConnection');
@@ -142,22 +142,21 @@ test('upload command relay reports missing receivers instead of silently swallow
 });
 
 
-test('processing bridge relays export RPCs and acknowledges only its own tab commands',async()=>{
+test('processing bridge relays export RPCs and acknowledges dedicated port commands',async()=>{
  const {listener,calls}=await background();
  const channel='a'.repeat(32),origin='moz-extension://fixture';
  const sender={id:'fixture',url:origin+'/extension/bridge.html?embedded=1&channel='+channel+'&target=42',tab:{id:42}};
  let messageListener,commandListener;
  const posted=[],frame={contentWindow:{postMessage:(message,target)=>posted.push({message,target})}},parent={postMessage(){}};
- const browser={runtime:{id:'fixture',getURL:path=>origin+'/'+path,sendMessage:message=>listener(message,sender),onMessage:{addListener:fn=>{commandListener=fn;}}}};
- const context={browser,parent,window:{addEventListener:(type,fn)=>{messageListener=fn;}},location:{href:sender.url,origin},document:{querySelector:()=>frame},URL,Set,Number,File:class{},isFileMessage:()=>false,translate:key=>key};
+ const acknowledgements=[];
+ const port={onMessage:{addListener:fn=>{commandListener=fn;}},onDisconnect:{addListener(){}},postMessage:message=>acknowledgements.push(message)};
+ const browser={runtime:{id:'fixture',getURL:path=>origin+'/'+path,sendMessage:message=>listener(message,sender),connect:options=>{assert.equal(options.name,'cake-tagger:upload:'+channel);return port;},onMessage:{addListener(){}}}};
+ const context={browser,parent,window:{addEventListener:(type,fn)=>{messageListener=fn;}},location:{href:sender.url,origin},document:{querySelector:()=>frame},URL,Set,Number,setInterval:()=>1,clearInterval(){},File:class{},isFileMessage:()=>false,translate:key=>key};
  const source=(await readFile(new URL('../extension/bridge.mjs',import.meta.url),'utf8')).replace(/^import .*\r?\n/gm,'');
  await vm.runInNewContext('(async()=>{'+source+'})()',context);
- const trustedSender={id:'fixture',url:origin+'/_generated_background_page.html'};
- const forwarded={type:'cake-tagger:ui-command-forwarded',channel,tabId:42,command:{action:'export'}};
- assert.equal((await commandListener(forwarded,trustedSender)).accepted,true);
- assert.equal(posted[0].message.action,'export');
- assert.equal(commandListener({...forwarded,tabId:43},trustedSender),undefined);
- assert.equal(commandListener(forwarded,{id:'fixture',url:'https://cake.ski/'}),undefined);
+ commandListener({type:'command',id:1,command:{action:'export'}});
+ assert.equal(acknowledgements[0].accepted,true);assert.equal(posted[0].message.action,'export');
+ commandListener({type:'unexpected',id:2});assert.equal(acknowledgements.length,1);
  const rpc={source:frame.contentWindow,origin:'http://127.0.0.1:8765',data:{type:'cake-tagger:rpc',channel,id:1,message:{type:'cake-tagger:download',path:'/api/download/'+'b'.repeat(48)}}};
  await messageListener(rpc);
  assert.equal(calls.at(-1).download.url,'http://127.0.0.1:8765'+rpc.data.message.path);

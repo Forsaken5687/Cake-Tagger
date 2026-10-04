@@ -1,3 +1,8 @@
+let relayPromise;
+function commandService() {
+ return globalThis.cakeCommands ? Promise.resolve(globalThis.cakeCommands) : (relayPromise ||= import(browser.runtime.getURL('extension/command-relay.mjs')).then(module=>module.createCommandRelay(browser.runtime)));
+}
+browser.runtime.onConnect.addListener(port=>{void commandService().then(relay=>relay.attach(port)).catch(()=>port.disconnect());});
 async function serverService() {
   return globalThis.cakeServer || import(browser.runtime.getURL('extension/server-connection.mjs'));
 }
@@ -27,11 +32,11 @@ browser.runtime.onMessage.addListener((message, sender) => {
   if (message?.type === 'cake-tagger:tab-id') {
     return Promise.resolve(sender.tab?.id ?? null);
   }
+  if(fromCake && message?.type==='cake-tagger:register-upload')return commandService().then(relay=>relay.register(sender.tab?.id,message.channel));
   if(fromCake && message?.type==='cake-tagger:ui-command' && /^[a-f0-9]{32}$/.test(message.channel || '') && Number.isInteger(sender.tab?.id)) {
     const command=message.command;
     if(!command || !['analyze','cancel','export','quit','tag','add','apply'].includes(command.action) || JSON.stringify(command).length>2048)return;
-    return browser.runtime.sendMessage({type:'cake-tagger:ui-command-forwarded',channel:message.channel,tabId:sender.tab.id,command})
-      .then(response=>response?.accepted ? {accepted:true} : {error:'error.uploadConnection'}).catch(()=>({error:'error.uploadConnection'}));
+    return commandService().then(relay=>relay.send(sender.tab.id,message.channel,command)).catch(()=>({error:'error.uploadConnection'}));
   }
   if(popup && message?.type==='cake-tagger:quit')return serverService().then(service=>service.stop()).catch(()=>({error:'error.stopFailed'}));
   if(popup && message?.type==='cake-tagger:open-upload')return (async()=>{

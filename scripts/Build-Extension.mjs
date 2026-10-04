@@ -10,7 +10,7 @@ export function buildExtension(target) {
   const files = ['trusted-event.mjs', 'webext-api.js', 'preferences.mjs', 'settings-ui.mjs', 'messages.mjs', 'tags.txt', 'assets/logo.svg',
     'THIRD_PARTY.md', 'scripts/assets.json', 'model/LICENSE.txt', 'model/coverage.json',
     'model/provenance.json', 'model/top_tags.txt', 'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt',
-    'extension/background.js', 'extension/popup.html', 'extension/popup.mjs', 'extension/popup.css', 'extension/server-connection.mjs',
+    'extension/background.js', 'extension/command-relay.mjs', 'extension/popup.html', 'extension/popup.mjs', 'extension/popup.css', 'extension/server-connection.mjs',
     'extension/bridge.html', 'extension/bridge.mjs', 'extension/bridge.css',
     'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/upload-ui.mjs',
     'extension/site-theme.mjs', 'extension/message-contract.mjs',

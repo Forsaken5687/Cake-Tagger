@@ -53,8 +53,11 @@ export function mountUploadPanel(doc, runtime) {
     const created = frame, owner = panel;
     try {
       const id = await runtime.sendMessage({ type: 'cake-tagger:tab-id' });
-      if (Number.isInteger(id) && id > 0) url.searchParams.set('target', String(id));
-    } catch { /* The embedded document can also request its tab ID. */ }
+      if (!Number.isInteger(id) || id <= 0) throw Error('error.uploadConnection');
+      const registration = await runtime.sendMessage({type:'cake-tagger:register-upload',channel});
+      if (!registration?.registered) throw Error('error.uploadConnection');
+      url.searchParams.set('target', String(id));
+    } catch { if(frame===created){ui?.error(label('error.uploadConnection'));frame=undefined;}return; }
     if (frame !== created || !owner.isConnected) return;
     frame.src = url.href; panel.append(frame);
   }
@@ -96,6 +99,7 @@ export function mountUploadPanel(doc, runtime) {
   }, true);
   doc.defaultView.addEventListener('message', event => {
     if (!frame || event.source !== frame.contentWindow || event.origin !== extensionOrigin || event.data?.channel !== channel) return;
+    if (event.data.type === 'cake-tagger:command-connection-error') ui?.error(label('error.uploadConnection'));
     if (event.data.type === 'cake-tagger:connection-error') ui?.error(label('error.nativeServer'));
     if (event.data.type === 'cake-tagger:view') ui?.update(event.data.view);
     if (event.data.type === 'cake-tagger:ready') { ready = true; lastSelection = ''; syncTheme(true); syncFiles(); }

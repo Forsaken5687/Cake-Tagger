@@ -40,7 +40,7 @@ test('Chrome service worker initializes the shared settings and tag transfer han
   const listeners = [], values = {}, transfers = [];
   globalThis.chrome = {
     action: { onClicked: { addListener() {} } },
-    runtime: { id: 'own', getURL: path => 'chrome-extension://own/' + path, sendMessage: async () => undefined, onMessage: { addListener: fn => listeners.push(fn) } },
+    runtime: { id: 'own', getURL: path => 'chrome-extension://own/' + path, sendMessage: async () => undefined, onConnect:{addListener(){}}, onMessage: { addListener: fn => listeners.push(fn) } },
     storage: { local: { get: async () => values, set: async data => Object.assign(values, data) } },
     tabs: { query: async () => [], get: async id => ({ id, url: 'https://cake.ski/' }), sendMessage: async (id, request) => { transfers.push(request); return { added: request.tags, skipped: [] }; } }
   };
@@ -55,5 +55,5 @@ test('Chrome service worker initializes the shared settings and tag transfer han
     const response = await call({ type: 'cake-tagger:transfer', tabId: 42, filename: 'test.m4v', tags: ['tattoos'] });
     assert.deepEqual(response.added, ['tattoos']); assert.equal(transfers[0].type, 'cake-tagger:append');
     assert.equal(listeners[0]({ type: 'cake-tagger:transfer' }, { ...sender, id: 'other' }, () => {}), false);
-  } finally { delete globalThis.chrome; delete globalThis.browser; delete globalThis.cakeServer; globalThis.fetch = previousFetch; }
+  } finally { delete globalThis.chrome; delete globalThis.browser; delete globalThis.cakeServer; delete globalThis.cakeCommands; globalThis.fetch = previousFetch; }
 });

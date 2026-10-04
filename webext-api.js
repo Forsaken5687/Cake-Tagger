@@ -4,6 +4,8 @@ if (!globalThis.browser && globalThis.chrome?.runtime?.id) {
   globalThis.browser = {
     runtime: {
       id: api.runtime.id,
+      connect: options => api.runtime.connect(options),
+      onConnect: api.runtime.onConnect,
       getURL: path => api.runtime.getURL(path),
       sendMessage: message => api.runtime.sendMessage(message),
       onMessage: {
