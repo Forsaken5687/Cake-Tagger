@@ -4,7 +4,7 @@ $taggerNode = Join-Path $taggerRoot 'runtime/node.exe'
 if (-not (Test-Path -LiteralPath $taggerNode)) { throw 'Node.js is missing. Run Setup.cmd first.' }
 Push-Location $taggerRoot
 try {
-    foreach ($file in @('webext-api.js', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'messages.mjs', 'session-url.mjs', 'app.js', 'engine-worker.js', 'static.mjs', 'tagging.mjs', 'sampling.mjs', 'tag-policy.mjs', 'corrections.mjs')) {
+    foreach ($file in @('webext-api.js', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'messages.mjs', 'session-url.mjs', 'app.js', 'diagnostics.mjs', 'engine-worker.js', 'static.mjs', 'tagging.mjs', 'sampling.mjs', 'tag-policy.mjs', 'corrections.mjs')) {
         & $taggerNode --check $file
         if ($LASTEXITCODE -ne 0) { throw ('Syntax check failed: ' + $file) }
     }

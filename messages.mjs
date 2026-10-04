@@ -1,5 +1,11 @@
 // Stable message IDs keep wording and runtime data independent of each other.
 export const messages = {
+  // Runtime diagnostics.
+  'diagnostics.title': { en: 'Runtime diagnostics', de: 'Laufzeit-Diagnose' },
+  'diagnostics.description': { en: 'Check CPU runtime settings and optionally measure one synthetic image. No videos are needed.', de: 'Prüfe die CPU-Laufzeit und miss optional ein künstliches Testbild. Dafür werden keine Videos benötigt.' },
+  'diagnostics.run': { en: 'Run performance test', de: 'Geschwindigkeit testen' },
+  'diagnostics.download': { en: 'Download diagnostics', de: 'Diagnose herunterladen' },
+  'diagnostics.running': { en: 'Measuring one image …', de: 'Messe ein Bild …' },
   // Action messages.
   'action.add': { en: 'Add', de: 'Hinzufügen' },
   'action.close': { en: 'Close', de: 'Schließen' },
@@ -52,6 +58,7 @@ export const messages = {
   'error.invalidAnalysisData': { en: 'Invalid analysis data.', de: 'Ungültige Analyseangaben.' },
   'error.invalidAnalysisPolicy': { en: 'Invalid analysis policy.', de: 'Ungültige Analyse-Regel.' },
   'error.invalidAnalysisTimings': { en: 'Invalid analysis timings.', de: 'Ungültige Analysezeiten.' },
+  'error.invalidAnalysisRuntime': { en: 'Invalid analysis runtime details.', de: 'Ungültige Angaben zur Analyse-Laufzeit.' },
   'error.invalidFileAssociation': { en: 'Invalid file association.', de: 'Ungültige Dateizuordnung.' },
   'error.invalidFrameCount': { en: 'Invalid frame count.', de: 'Ungültige Bildanzahl.' },
   'error.invalidFrameSelection': { en: 'Invalid frame selection.', de: 'Ungültige Bildauswahl.' },

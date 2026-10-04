@@ -1,5 +1,12 @@
 importScripts('/vendor/ort.wasm.min.js');
 let session;
+function runtimeInfo() {
+  return { provider: 'wasm', configuredWasmThreads: ort.env.wasm.numThreads,
+    crossOriginIsolated: !!self.crossOriginIsolated,
+    sharedArrayBufferAvailable: typeof SharedArrayBuffer !== 'undefined',
+    hardwareConcurrency: navigator.hardwareConcurrency || 1,
+    browser: /Firefox\//.test(navigator.userAgent) ? 'firefox' : /Chrome\//.test(navigator.userAgent) ? 'chromium' : 'other' };
+}
 const mean = [0.48145466, 0.4578275, 0.40821073], std = [0.26862954, 0.26130258, 0.27577711];
 async function load() {
   if (session) return session;
@@ -22,7 +29,7 @@ self.onmessage = async ({ data }) => {
     const loadStarted = performance.now();
     const s = await load();
     const timings = { modelLoadSeconds: (performance.now() - loadStarted) / 1000, preprocessSeconds: 0, inferenceSeconds: 0 };
-    if (data.type === 'load') return postMessage({ id: data.id, type: 'done', seconds: (performance.now() - started) / 1000 });
+    if (data.type === 'load') return postMessage({ id: data.id, type: 'done', runtime: runtimeInfo(), seconds: (performance.now() - started) / 1000 });
     const all = [];
     for (let i = 0; i < data.frames.length; i++) {
       postMessage({ type: 'progress', current: i + 1, total: data.frames.length });
@@ -41,6 +48,7 @@ self.onmessage = async ({ data }) => {
       all.push(scores);
       Object.values(output).forEach(t => t.dispose());
     }
-    postMessage({ id: data.id, type: 'done', scores: all, timings, seconds: (performance.now() - started) / 1000 }, all.map(a => a.buffer));
+    // Capture the setting after initialization: ONNX Runtime may fall back to one thread.
+    postMessage({ id: data.id, type: 'done', scores: all, timings, runtime: runtimeInfo(), seconds: (performance.now() - started) / 1000 }, all.map(a => a.buffer));
   } catch (e) { postMessage({ id: data.id, type: 'error', error: e.message }); }
 };

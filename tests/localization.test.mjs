@@ -15,7 +15,7 @@ test('both languages define identical placeholders and every source message ID e
     for (const name of fs.readdirSync(new URL('../' + dir + '/', import.meta.url))) {
       if (!/\.(mjs|js|html)$/.test(name) || name === 'messages.mjs') continue;
       const source = fs.readFileSync(new URL('../' + dir + '/' + name, import.meta.url), 'utf8');
-      for (const [, key] of source.matchAll(/["']((?:action|settings|language|page|upload|analysis|results|tags|export|preview|transfer|embed|error)\.[a-zA-Z]+)["']/g)) {
+      for (const [, key] of source.matchAll(/["']((?:action|settings|language|page|upload|analysis|results|tags|export|preview|transfer|embed|error|diagnostics)\.[a-zA-Z]+)["']/g)) {
         if (/\.(txt|json|mjs|js|html)$/.test(key)) continue;
         assert(Object.hasOwn(messages, key), `${name}: unknown message ${key}`);
       }

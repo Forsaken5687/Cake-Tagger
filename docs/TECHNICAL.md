@@ -34,6 +34,10 @@ The standalone server holds up to three download snapshots, each with a five-min
 
 `timings` includes `samplingSeconds`, `modelLoadSeconds`, `preprocessSeconds`, `inferenceSeconds` and `totalSeconds`. Transfer and administration overhead means components need not sum exactly to the total. Timings do not include export. Legacy results may lack timings.
 
+New results also include optional `runtime` metadata: WASM provider, configured thread count after session initialization, isolation and shared-memory capabilities, reported logical CPU count, and a coarse browser family. The export excludes full user agents and system identifiers. The setting is not proof of worker utilization or achieved speed. Legacy results remain valid without this metadata.
+
+The standalone `/diagnostics.html` page loads the same worker and model. Its optional benchmark times one constant synthetic RGBA image after model initialization, validates the normal 5,813-label output and offers a JSON report download. It does not access videos, account tokens or existing corrections. Timing depends on browser behavior, CPU scheduling and background load; synthetic runs do not predict video recognition quality.
+
 ## Local server
 
 `static.mjs` binds to `127.0.0.1`, default port 8765. Protected endpoints require a fresh random session token. The token initially travels in a URL fragment, is moved to session storage and removed from the address bar. Host/Origin validation, a static path allowlist and a restrictive CSP separate the service from unrelated websites and private project files.

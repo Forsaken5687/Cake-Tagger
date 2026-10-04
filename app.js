@@ -304,7 +304,7 @@ async function analyze(targets = entries, automatic = false) {
         else {
           const inference = await infer(sampleData.inputs);
           controller.signal.throwIfAborted();
-          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage, analysisSettings), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
+          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage, analysisSettings), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', runtime: inference.runtime, seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
           await cached(key, result);
         }
         result = { ...result, sampledFrames: count, samplingMode: sampleData.samplingMode, durationSeconds: sampleData.durationSeconds };

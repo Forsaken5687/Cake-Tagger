@@ -72,6 +72,8 @@ Settings are persisted; exports contain filenames and tags. Selecting files on c
 
 ## Development and sharing
 
+For unexpected slowdowns in the standalone application, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It initializes the same CPU worker and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
+
 Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Firefox.mjs` and `runtime/node.exe scripts/Build-Chrome.mjs`.
 
 `scripts/Package.ps1` builds `outputs/Cake-Tagger.zip` from tracked project files and checksum-verified assets. It includes `extensions/Cake-Tagger-Firefox.zip` and the unpacked `extensions/chrome/` directory. Private data, media, scratch files and Git history are excluded. Share this package rather than the working directory.

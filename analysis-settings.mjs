@@ -23,3 +23,14 @@ export function validateTimings(value) {
   if (typeof value !== 'object' || Array.isArray(value) || keys.some(key => !Number.isFinite(value[key]) || value[key] < 0 || value[key] > 86400)) throw messageError('error.invalidAnalysisTimings');
   return Object.fromEntries(keys.map(key => [key, value[key]]));
 }
+
+// Optional diagnostics contain capabilities, not full user agents or machine identifiers.
+export function validateRuntime(value) {
+  if (value == null) return null;
+  if (typeof value !== 'object' || Array.isArray(value) || value.provider !== 'wasm'
+    || !Number.isInteger(value.configuredWasmThreads) || value.configuredWasmThreads < 1 || value.configuredWasmThreads > 4
+    || !Number.isInteger(value.hardwareConcurrency) || value.hardwareConcurrency < 1 || value.hardwareConcurrency > 4096
+    || typeof value.crossOriginIsolated !== 'boolean' || typeof value.sharedArrayBufferAvailable !== 'boolean'
+    || !['firefox', 'chromium', 'other'].includes(value.browser)) throw messageError('error.invalidAnalysisRuntime');
+  return Object.fromEntries(['provider', 'configuredWasmThreads', 'crossOriginIsolated', 'sharedArrayBufferAvailable', 'hardwareConcurrency', 'browser'].map(key => [key, value[key]]));
+}

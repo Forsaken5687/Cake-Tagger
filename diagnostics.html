@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cake Tagger · Diagnostics</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/diagnostics.mjs"></script>
+</head>
+<body>
+  <main>
+    <header class="app-header"><h1 data-i18n="diagnostics.title"></h1></header>
+    <section class="panel">
+      <p data-i18n="diagnostics.description"></p>
+      <p id="status" role="status"></p>
+      <button id="run" disabled data-i18n="diagnostics.run"></button>
+      <button id="download" class="quiet" disabled data-i18n="diagnostics.download"></button>
+      <pre id="report"></pre>
+    </section>
+  </main>
+</body>
+</html>
