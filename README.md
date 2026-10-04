@@ -83,7 +83,6 @@ For unexpected slowdowns in the standalone application, open [runtime diagnostic
 
 Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Firefox.mjs` and `runtime/node.exe scripts/Build-Chrome.mjs`.
 
-To compare native CPU and browser WASM providers, run `runtime/node.exe scripts/Benchmark-Native.mjs` on Windows. It verifies pinned npm archives, keeps the optional native runtime in ignored `work/native-benchmark/`, times eight synthetic frames with eight CPU threads, and serves a browser comparison at `http://127.0.0.1:8793/`. Click **Run browser comparison** to measure four/eight WASM workers and compare every score and the resulting tag sets. `--native-only` skips the browser server. This is an evaluation tool; it does not change the application's backend or require videos. Reports describe the tested hardware and are not bundled in releases.
 
 `scripts/Package.ps1` builds `outputs/Cake-Tagger.zip` from tracked project files and checksum-verified assets. It includes `extensions/Cake-Tagger-Firefox.zip` and the unpacked `extensions/chrome/` directory. Private data, media, scratch files and Git history are excluded. Share this package rather than the working directory.
 

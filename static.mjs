@@ -112,7 +112,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   if (requested === '/') requested = '/index.html';
-  if (!(/^\/(index\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|native-client\.mjs|engine-worker\.js|compute-policy\.js|runtime-metrics\.mjs|inference-pool\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || requested === '/extension/auto-analysis.mjs' || /^\/assets\/logo\.svg$/.test(requested) || /^\/(vendor|model)\/[A-Za-z0-9._-]+$/.test(requested))) { res.writeHead(404); return res.end(); }
+  if (!(/^\/(index\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|native-client\.mjs|runtime-metrics\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || requested === '/extension/auto-analysis.mjs' || /^\/assets\/logo\.svg$/.test(requested) || /^\/(vendor|model)\/[A-Za-z0-9._-]+$/.test(requested))) { res.writeHead(404); return res.end(); }
   const file = path.join(root, requested.slice(1));
   let stat;
   try { stat = fs.statSync(file); if (!stat.isFile()) throw Error(); } catch { res.writeHead(404); return res.end(); }
