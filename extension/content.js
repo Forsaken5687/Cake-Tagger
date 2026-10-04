@@ -11,6 +11,12 @@
     // Website scripts cannot directly invoke this listener; also verify our sender.
     const trustedBackground = !sender.url || [browser.runtime.getURL('extension/background.js'), browser.runtime.getURL('extension/chrome-worker.mjs'), browser.runtime.getURL('_generated_background_page.html')].includes(sender.url);
     if (sender.id !== browser.runtime.id || !trustedBackground) return;
+    if (message?.type === 'cake-tagger:open') {
+      const button = [...document.querySelectorAll('button')].find(node => node.textContent.trim().replace(/^\+\s*/, '') === 'Upload');
+      if (!document.querySelector('.stok-up-mount')) button?.click();
+      document.querySelector('.cake-tagger-panel')?.scrollIntoView({ block: 'nearest' });
+      return Promise.resolve(true);
+    }
     if (message?.type === 'cake-tagger:theme-request') return Promise.resolve(readSiteTheme(document));
     if (message?.type === 'cake-tagger:inspect') return Promise.resolve(inspectUploads(document).map(({ id, filename, tags }) => ({ id, filename, tags })));
     if (message?.type !== 'cake-tagger:append' || typeof message.filename !== 'string') return;

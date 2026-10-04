@@ -15,7 +15,7 @@ export function installPageBridge() {
       pending.delete(event.data.id); clearTimeout(job.timer); job.resolve(event.data.response);
     }
     if (event.data.type === 'cake-tagger:site-theme-updated') for (const callback of listeners) callback(event.data, { id: 'local-bridge' });
-    if (['cake-tagger:files', 'cake-tagger:theme'].includes(event.data.type)) {
+    if (['cake-tagger:files', 'cake-tagger:theme', 'cake-tagger:command'].includes(event.data.type)) {
       window.dispatchEvent(new CustomEvent('cake-tagger:upload-message', { detail: event.data }));
     }
   });

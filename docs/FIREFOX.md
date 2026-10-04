@@ -19,18 +19,13 @@ To update, replace the extracted files, click **Reload** in `about:debugging`, a
 
 ## Use
 
-1. Select videos in the cake.ski upload area. Bulk selection may already create server-side upload drafts.
-2. By default, Cake Tagger opens and analyzes new videos automatically. Turn off **Automatically analyze upload videos** in Settings to start manually with **Open** and **Suggest tags**.
-3. Review and edit the suggested tags.
-4. Click **Apply tags** on each video's card.
+Select videos in cake.ski's upload area. Bulk selection can create server-side drafts immediately. New videos are analyzed automatically by default; disable **Automatically analyze upload videos** in Settings to use **Suggest tags** manually.
 
-Single and Bulk use the same panel. Closing it hides the analysis document without clearing its session. Selection changes during analysis are processed afterwards. Already analyzed files retain their results and corrections within the page session.
+In Settings, choose **Suggestions on upload cards** or **Side panel**. Both Single and Bulk uploads are supported. Review tags next to the existing video players, deselect incorrect tags and add missing ones. Expand **Other suggestions** to inspect uncertain candidates. Use **Apply tags** for each video; only selected tags are added, respecting existing tags, inherited Bulk tags and per-card exclusions.
 
-The toolbar icon opens the Localhost application with file selection, upload integration and JSON download. Choose the intended upload tab there before applying tags. Files selected before the extension was loaded must be selected again.
+The upload toolbar provides **Download JSON**, **Settings** and **Quit**. The extension menu provides **Open upload** and **Quit**. Quit shuts down the local program, including unfinished tasks; it does not merely close a tab. Download session results before quitting or reloading. The separate analysis window is removed; direct Localhost navigation provides service controls.
 
-Only selected tags are added. Existing tags, inherited Bulk tags and per-card exclusions are respected. Captions, performers, upload questions and publishing controls are untouched. Exact filenames must match uniquely; image sets are unsupported.
-
-The panel follows the connected page's colors and, in Automatic language mode, its language. Localhost and all extension views share server preferences. **Quit** is visible in the main page and embedded panel and shuts down the local program. JSON export is available in the separate view.
+All views share server preferences. The upload interface follows the site's accent color and Automatic language setting. Layout changes retain results and corrections. Selection changes during analysis are processed afterwards. Files chosen before the extension was loaded must be selected again. Transfers require a unique exact filename; image sets are unsupported. Captions, performers, questions and publishing controls are untouched. The extension never submits posts.
 
 ## Development and validation
 

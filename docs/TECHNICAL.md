@@ -2,7 +2,7 @@
 
 ## Processing pipeline
 
-`app.js` reads local files, computes SHA-256 content hashes and samples frames through Video and Canvas APIs. Previews are JPEG images with a maximum edge of 640 pixels. Model input is prepared as 448 x 448 RGBA buffers, padded white to a square, and sent together in one binary body per video to the authenticated `/api/infer` endpoint on loopback; JPEG previews are not decoded again for inference.
+`app.js` reads local files, computes SHA-256 content hashes and samples frames through Video and Canvas APIs. The upload integration uses the native site video players; no preview JPEGs are produced for it. Model input is prepared as 448 x 448 RGBA buffers, padded white to a square, and sent together in one binary body per video to the authenticated `/api/infer` endpoint on loopback; JPEG previews are not decoded again for inference.
 
 `native-worker.mjs` runs JoyTag INT8 through ONNX Runtime Node 1.30.0 on the CPU. RGB channels use CLIP mean/std normalization; sigmoid converts 5,813 logits to per-label scores. The model checksum is verified before creating a session. Browser resizing is not identical to Pillow bicubic resizing. Native CPU and WASM scores are not numerically equivalent for this quantized artifact; new cache signatures include `native-cpu-v1`. Browser model execution is removed.
 
@@ -28,7 +28,7 @@ The displayed `confidence` is the average of the two strongest frame scores. Tem
 
 ## Session state and exports
 
-Results, selections, corrections, previews and caches are held in page memory. Hashes match identical file content within a session. Cache keys include model provenance, mapping, sample count, threshold, coverage/exclusion policy and `preprocess-v2`. Cached results retain the original inference timings.
+Results, selections, corrections and caches are held in page memory. Hashes match identical file content within a session. Cache keys include model provenance, mapping, sample count, threshold, coverage/exclusion policy and `preprocess-v2`. Cached results retain the original inference timings.
 
 `corrections.mjs` preserves tag origins and manual selections when a new baseline is analyzed. JSON exports contain selected tags, original suggestions, added/removed/deselected tags, scores and timings. The legacy `reviewed` field remains for format compatibility and has no current UI control. Corrections do not train the model.
 
@@ -56,11 +56,13 @@ The extension background acquires a token with a custom-header POST to `/api/con
 
 ## Shutdown
 
-**Quit** is visible in the main application header and the embedded analysis heading. The authenticated `POST /api/stop` endpoint stops admission, rejects queued and active jobs, lets the current native calls finish, releases their sessions, awaits termination of every current or retiring native worker, reports success, then closes all HTTP connections and exits Node. Hard termination of a live ONNX call is avoided because native cleanup must complete before the worker exits. The UI stays open to show the result; closing a tab is not shutdown. Once shutdown has been requested, it completes even if the initiating tab disconnects. Preferences and existing data files are preserved. Unsaved results remain session-only, so download them before quitting. A shutdown failure is displayed and restores the button.
+**Quit** is visible on the service page, upload toolbar and extension popup. The authenticated `POST /api/stop` endpoint stops admission, rejects queued and active jobs, lets the current native calls finish, releases their sessions, awaits termination of every current or retiring native worker, reports success, then closes all HTTP connections and exits Node. Hard termination of a live ONNX call is avoided because native cleanup must complete before the worker exits. The UI stays open to show the result; closing a tab is not shutdown. Once shutdown has been requested, it completes even if the initiating tab disconnects. Preferences and existing data files are preserved. Unsaved results remain session-only, so download them before quitting. A shutdown failure is displayed and restores the button.
 
 ## Extension integration
 
-`extension/embedded-upload.mjs` mounts a thin extension-origin bridge outside the changing Single/Bulk renderer. `bridge.html` contains no analysis UI; its child iframe loads the same Localhost application used standalone. The toolbar opens that Localhost application directly. `local-bridge.js` relays only upload integration messages for that document. Closing hides it without destroying the session. File references are tied to their upload mount and captured from trusted file selection/drop events.
+`extension/embedded-upload.mjs` keeps an offscreen extension bridge outside the changing Single/Bulk renderer. Its child iframe loads the Localhost application solely for decoding and session state. `upload-ui.mjs` renders tag metadata beside uniquely matched native upload fields or in a sticky side panel. It never receives model buffers, files or session tokens. A shared upload toolbar owns analysis, export, settings and Quit actions. Changing layouts preserves the analysis document and selections. Settings temporarily presents that document's modal form. File references are tied to their upload mount and captured from trusted selection/drop events.
+
+UI commands travel through the isolated content script and background runtime, bound to their originating tab and channel, then into the local document. Website postMessage can deliver trusted file/theme events, but cannot issue Quit, export or tag commands. The extension popup uses the same local shutdown service and opens the site's upload area instead of a separate analysis window. The direct Localhost page is a minimal service controller.
 
 `message-contract.mjs` checks parent window, Cake origin, session channel and File objects. Extension pages communicate through the background relay, which verifies the sender and target host. Embedded views cannot address another tab. `content.js` accepts transfer commands only from the extension background. The adapter validates filename matching and tag membership and confirms additions against live pills.
 
@@ -68,13 +70,13 @@ Firefox uses background scripts; Chrome uses `chrome-worker.mjs` with static imp
 
 ## Preferences and automatic analysis
 
-`preferences.mjs` normalizes language, frame count, CPU parallelism, tag exclusions, display flags and `autoAnalyzeEmbed`. Every view loads/saves the same authenticated `/api/settings` API. Node persists preferences atomically in ignored `data/preferences.json`. Legacy localStorage and extension storage.local settings migrate only if no server configuration exists; originals are preserved. Unknown fields are discarded. Thread overrides are validated against the actual server hardware.
+`preferences.mjs` normalizes language, frame count, CPU parallelism, tag exclusions, display flags, `uploadLayout` and `autoAnalyzeEmbed`. Every view loads/saves the same authenticated `/api/settings` API. Node persists preferences atomically in ignored `data/preferences.json`. Legacy localStorage and extension storage.local settings migrate only if no server configuration exists; originals are preserved. Unknown fields are discarded. Thread overrides are validated against the actual server hardware.
 
 `settings-ui.mjs` renders a shared modal form. Save applies the draft; Defaults resets only the form. Exclusions affect subsequent analyses and form part of the cache key. An active batch uses an immutable settings snapshot. Display changes preserve selected tags and underlying scores.
 
-`extension/auto-analysis.mjs` serializes selection preparation and automatic batches. It keeps the latest pending selection, analyzes only new files without existing results or preparation errors, and does not automatically retry cancellation/failure. Standalone file selections use the same queue with automatic analysis disabled. New embedded videos open the panel automatically when enabled.
+`extension/auto-analysis.mjs` serializes selection preparation and automatic batches. It keeps the latest pending selection, analyzes only new files without existing results or preparation errors, and does not automatically retry cancellation/failure. New upload videos start analysis automatically when enabled.
 
-## Language, theme and previews
+## Language and theme
 
 `i18n.mjs` supports German and English. The shared `messages.mjs` catalog stores explicit English and German values under stable IDs. Named placeholders carry counts and filenames; descriptors preserve nested errors across worker/runtime messaging. No reverse dictionary or sentence matching is used. `i18n.mjs` retains IDs and parameters for visible text and attributes so language changes refresh them without changing selections. Unrecognized browser/library errors remain readable in their original wording. Automatic uses the connected site's language or the standalone browser language. Explicit preferences take priority and tag names remain unchanged.
 
@@ -84,7 +86,7 @@ Browser-managed metadata uses native WebExtensions localization: both manifests 
 
 `site-theme.mjs` reads known `--cake-*` variables from `.stok-root`. Only validated color values cross the frame boundary. Style/class/language changes update the palette without persistence; separate views receive updates from their selected tab. Playback control updates do not delay root theme synchronization.
 
-Native modal dialogs provide focus containment for settings and enlarged previews. Previews use existing images, not a second full-resolution extraction. Escape and arrow-key navigation are supported. The inline logo follows theme tokens; browser icons retain their packaged artwork.
+Native modal dialogs provide focus containment for settings. The inline logo follows theme tokens; browser icons retain their packaged artwork.
 
 ## Dependencies and packaging
 

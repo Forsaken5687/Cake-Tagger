@@ -15,13 +15,13 @@ To update, replace the package files, reload the extension on `chrome://extensio
 
 ## Use
 
-Select videos in the upload area. New files automatically open the embedded analysis panel and start analysis by default. Settings includes **Automatically analyze upload videos** to disable this behavior. When disabled, use **Open** and **Suggest tags** manually.
+Select videos in cake.ski's upload area. Bulk selection can create server-side drafts immediately. New videos are analyzed automatically by default; disable **Automatically analyze upload videos** in Settings to use **Suggest tags** manually.
 
-Review the results, then click **Apply tags** on each video's card. Single and Bulk are supported. Existing tags and per-card exclusions are preserved. The extension does not submit posts, answer upload questions, change performers or transfer video files to the site. cake.ski itself may upload Bulk drafts immediately when files are selected.
+In Settings, choose **Suggestions on upload cards** or **Side panel**. Both Single and Bulk uploads are supported. Review tags next to the existing video players, deselect incorrect tags and add missing ones. Expand **Other suggestions** to inspect uncertain candidates. Use **Apply tags** for each video; only selected tags are added, respecting existing tags, inherited Bulk tags and per-card exclusions.
 
-The toolbar icon opens the same Localhost application with JSON export. All browsers and embedded views share server settings. **Quit** is available in the main page and embedded panel and shuts down the local program. Both connected views follow the selected cake.ski tab's colors and optional Automatic language setting.
+The upload toolbar provides **Download JSON**, **Settings** and **Quit**. The extension menu provides **Open upload** and **Quit**. Quit shuts down the local program, including unfinished tasks; it does not merely close a tab. Download session results before quitting or reloading. The separate analysis window is removed; direct Localhost navigation provides service controls.
 
-Reselect files that were chosen before the extension was loaded. Transfers require a unique exact filename. Image sets are unsupported.
+All views share server preferences. The upload interface follows the site's accent color and Automatic language setting. Layout changes retain results and corrections. Selection changes during analysis are processed afterwards. Files chosen before the extension was loaded must be selected again. Transfers require a unique exact filename; image sets are unsupported. Captions, performers, questions and publishing controls are untouched. The extension never submits posts.
 
 ## Development and validation
 

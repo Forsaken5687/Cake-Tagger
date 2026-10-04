@@ -2,18 +2,16 @@ async function serverService() {
   return globalThis.cakeServer || import(browser.runtime.getURL('extension/server-connection.mjs'));
 }
 browser.action.onClicked.addListener(async tab => {
-  const url = new URL('http://127.0.0.1:8765/');
-  try { url.hash = (await (await serverService()).connect(true)).token; } catch {}
-  url.searchParams.set('integration', '1');
-  url.searchParams.set('channel', [...crypto.getRandomValues(new Uint8Array(16))].map(byte => byte.toString(16).padStart(2, '0')).join(''));
-  if (tab?.url?.startsWith('https://cake.ski/') && Number.isInteger(tab.id)) url.searchParams.set('target', String(tab.id));
-  await browser.tabs.create({ url: url.href });
+ if(tab?.url?.startsWith('https://cake.ski/') && Number.isInteger(tab.id)) {
+  await browser.tabs.sendMessage(tab.id,{type:'cake-tagger:open'}).catch(()=>{});
+ } else await browser.tabs.create({url:'https://cake.ski/'});
 });
 browser.runtime.onMessage.addListener((message, sender) => {
   // Only our analysis document and our content script may use the background relay.
   const analysisUrl = browser.runtime.getURL('extension/bridge.html');
   const local = /^http:\/\/127\.0\.0\.1:8765\/(?:index\.html)?(?:\?|$)/.test(sender.url || '');
-  const fromAnalysis = local || sender.url === analysisUrl || sender.url?.startsWith(analysisUrl + '?');
+  const popup = sender.url === browser.runtime.getURL('extension/popup.html');
+  const fromAnalysis = popup || local || sender.url === analysisUrl || sender.url?.startsWith(analysisUrl + '?');
   const fromCake = sender.url?.startsWith('https://cake.ski/');
   if (sender.id !== browser.runtime.id || (!fromAnalysis && !fromCake)) return;
   if (fromCake && message?.type === 'cake-tagger:site-theme' && Number.isInteger(sender.tab?.id) && message.theme && JSON.stringify(message.theme).length <= 4096) {
@@ -26,6 +24,17 @@ browser.runtime.onMessage.addListener((message, sender) => {
   if (message?.type === 'cake-tagger:tab-id') {
     return Promise.resolve(sender.tab?.id ?? null);
   }
+  if(fromCake && message?.type==='cake-tagger:ui-command' && /^[a-f0-9]{32}$/.test(message.channel || '') && Number.isInteger(sender.tab?.id)) {
+    const command=message.command;
+    if(!command || !['analyze','cancel','export','quit','settings','tag','add','apply'].includes(command.action) || JSON.stringify(command).length>2048)return;
+    return browser.runtime.sendMessage({type:'cake-tagger:ui-command-forwarded',channel:message.channel,tabId:sender.tab.id,command}).catch(()=>null);
+  }
+  if(popup && message?.type==='cake-tagger:quit')return serverService().then(service=>service.stop()).catch(()=>({error:'error.stopFailed'}));
+  if(popup && message?.type==='cake-tagger:open-upload')return (async()=>{
+    const tabs=await browser.tabs.query({url:'https://cake.ski/*'});
+    if(tabs.length){await browser.tabs.update(tabs[0].id,{active:true});await browser.tabs.sendMessage(tabs[0].id,{type:'cake-tagger:open'}).catch(()=>{});}
+    else await browser.tabs.create({url:'https://cake.ski/'});return true;
+  })();
   if (!fromAnalysis) return;
   if (message?.type === 'cake-tagger:get-theme' && Number.isInteger(message.tabId) && message.tabId > 0) {
     if (new URL(sender.url).searchParams.get('embedded') === '1' && sender.tab?.id !== message.tabId) return Promise.resolve(null);

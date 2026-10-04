@@ -194,3 +194,9 @@ body.embedded .empty-state { padding: 24px 16px; }
 body.embedded #quit { margin-left:auto; white-space:nowrap; }
 
 .settings-compute-hint { margin:0; color:var(--muted); font-size:12px; line-height:1.6; }
+
+body.embedded:not(.settings-only) main,body.embedded:not(.settings-only) #preview-dialog{display:none}
+body.embedded.settings-only main{display:none}
+body.embedded.settings-only #settings-dialog{width:min(560px,96vw);max-height:95vh;margin:auto;padding:20px}
+
+body.service-home .panel,body.service-home .results-heading,body.service-home #results,body.service-home .export-bar,body.service-home .page-footer{display:none}

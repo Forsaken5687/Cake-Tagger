@@ -8,15 +8,16 @@ async function background() {
   const calls = [];
   const browser = {
     action: { onClicked: { addListener(fn) { click=fn; } } },
-    runtime: { id: 'fixture', getURL: path => 'moz-extension://fixture/' + path, onMessage: { addListener(fn) { listener = fn; } } },
+    runtime: { id: 'fixture', getURL: path => 'moz-extension://fixture/' + path, onMessage: { addListener(fn) { listener = fn; } }, sendMessage: async message => { calls.push({ runtime: message }); return true; } },
     tabs: {
       create: async options => { calls.push(options); },
       query: async () => [{ id: 42, title: 'Cake', url: 'https://cake.ski/' }],
+      update: async (id, options) => { calls.push({ id, options }); },
       get: async id => ({ id, url: id === 42 ? 'https://cake.ski/' : 'https://example.com/' }),
       sendMessage: async (id, message) => { calls.push({ id, message }); return { added: message.tags, skipped: [] }; }
     }
   };
-  vm.runInNewContext(await readFile(new URL('../extension/background.js', import.meta.url), 'utf8'), { browser, URL, crypto:globalThis.crypto, Uint8Array, cakeServer:{connect:async refresh=>{assert.equal(refresh,true);return {token:'a'.repeat(48)};}} });
+  vm.runInNewContext(await readFile(new URL('../extension/background.js', import.meta.url), 'utf8'), { browser, URL, crypto:globalThis.crypto, Uint8Array, cakeServer:{connect:async refresh=>{assert.equal(refresh,true);return {token:'a'.repeat(48)};}, stop: async () => { calls.push({stop:true}); return {stopped:true}; }} });
   return { listener, calls, click };
 }
 
@@ -72,9 +73,25 @@ test('theme requests stay on Cake and cannot switch an embedded view to another 
   assert.equal(calls.length, 1);
 });
 
-test('toolbar opens the authenticated Localhost application instead of an extension analysis page',async()=>{
+test('toolbar focuses the Cake upload instead of opening a separate analysis window',async()=>{
  const {click,calls}=await background();await click({id:42,url:'https://cake.ski/#/upload'});
- const url=new URL(calls[0].url);assert.equal(url.origin,'http://127.0.0.1:8765');assert.equal(url.pathname,'/');
- assert.equal(url.searchParams.get('integration'),'1');assert.equal(url.searchParams.get('target'),'42');
- assert.match(url.searchParams.get('channel'),/^[a-f0-9]{32}$/);assert.equal(url.hash,'#'+'a'.repeat(48));
+ assert.equal(calls.length,1);assert.equal(calls[0].id,42);assert.equal(calls[0].message.type,'cake-tagger:open');
+});
+
+test('upload UI commands require the extension sender and bind the forwarded tab',async()=>{
+ const {listener,calls}=await background();
+ const source={id:'fixture',url:'https://cake.ski/',tab:{id:42}};
+ const command={type:'cake-tagger:ui-command',channel:'a'.repeat(32),command:{action:'quit'}};
+ assert.equal(listener(command,{...source,id:'website'}),undefined);
+ assert.equal(listener({...command,command:{action:'arbitrary'}},source),undefined);
+ assert.equal(listener({type:'cake-tagger:quit'},source),undefined);
+ await listener(command,source);assert.equal(calls[0].runtime.type,'cake-tagger:ui-command-forwarded');assert.equal(calls[0].runtime.tabId,42);assert.equal(calls[0].runtime.channel,command.channel);
+});
+
+test('popup Quit calls the local shutdown service and never closes a tab instead', async () => {
+ const {listener,calls}=await background();
+ const sender={id:'fixture',url:'moz-extension://fixture/extension/popup.html'};
+ assert.equal((await listener({type:'cake-tagger:quit'},sender)).stopped,true);
+ assert.equal(calls.length,1);assert.equal(calls[0].stop,true);
+ assert.equal(listener({type:'cake-tagger:quit'},{...sender,id:'other'}),undefined);
 });

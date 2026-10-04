@@ -1,6 +1,6 @@
 # Browser integration
 
-Firefox and Chrome connect to one Localhost UI and native backend, using the same upload adapter. All analysis views use the local Node inference server; the standalone interface remains optional. Start the server before analyzing videos.
+Firefox and Chrome connect to one Localhost UI and native backend, using the same upload adapter. All analysis views use the local Node inference server; the separate standalone analysis window has been removed. Start the server before analyzing videos.
 
 ## Upload contract
 
@@ -22,7 +22,7 @@ The site changes from Single to Bulk when multiple selected files include a vide
 1. The content script captures user-selected video File references in the active upload mount.
 2. A thin extension-origin bridge receives files through a checked parent/origin/session channel and forwards them to the shared Localhost application inside it. The extension performs no inference, aggregation or job scheduling.
 3. New files are analyzed automatically when enabled. Busy selection changes are queued; existing content hashes retain results and corrections.
-4. The user reviews the suggestions and explicitly applies selected tags.
+4. The user reviews suggestions on native upload cards or in the sticky side panel and explicitly applies selected tags. The common toolbar provides JSON export and Quit.
 5. The background relay checks the sender and target tab. Embedded views can address only their own Cake tab.
 6. The adapter requires a unique filename, validates tags against the bundled list, and rechecks the live target for each addition.
 

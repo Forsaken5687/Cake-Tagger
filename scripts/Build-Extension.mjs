@@ -10,9 +10,9 @@ export function buildExtension(target) {
   const files = ['webext-api.js', 'preferences.mjs', 'messages.mjs', 'tags.txt', 'assets/logo.svg',
     'THIRD_PARTY.md', 'scripts/assets.json', 'model/LICENSE.txt', 'model/coverage.json',
     'model/provenance.json', 'model/top_tags.txt', 'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt',
-    'extension/background.js', 'extension/server-connection.mjs', 'extension/local-bridge.js',
+    'extension/background.js', 'extension/popup.html', 'extension/popup.mjs', 'extension/popup.css', 'extension/server-connection.mjs', 'extension/local-bridge.js',
     'extension/bridge.html', 'extension/bridge.mjs', 'extension/bridge.css',
-    'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs',
+    'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/upload-ui.mjs',
     'extension/site-theme.mjs', 'extension/message-contract.mjs',
     'extension/upload-adapter.mjs', '_locales/en/messages.json', '_locales/de/messages.json'];
   if (target === 'chrome') files.push('extension/chrome-worker.mjs', ...[16,32,48,128].map(size => `assets/logo-${size}.png`));

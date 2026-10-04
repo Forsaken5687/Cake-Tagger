@@ -10,7 +10,7 @@ window.addEventListener('message', async event => {
     frame.contentWindow.postMessage(event.data, localOrigin); return;
   }
   if (event.source !== frame.contentWindow || event.origin !== localOrigin) return;
-  if (event.data.type === 'cake-tagger:ready') parent.postMessage(event.data, cakeOrigin);
+  if (['cake-tagger:ready','cake-tagger:view','cake-tagger:settings-closed'].includes(event.data.type)) parent.postMessage(event.data, cakeOrigin);
   if (event.data.type === 'cake-tagger:rpc' && allowed.has(event.data.message?.type)) {
     let response;
     try { response = await browser.runtime.sendMessage(event.data.message); } catch { response = { error: 'error.sitePermission' }; }
@@ -25,4 +25,16 @@ try {
   url.searchParams.set('channel', channel); url.searchParams.set('bridgeOrigin', location.origin);
   const target = new URL(location.href).searchParams.get('target'); if (target) url.searchParams.set('target', target);
   url.hash = connection.token; frame.src = url.href; frame.hidden = false;
-} catch { document.querySelector('#status').textContent = translate('error.nativeServer', navigator.language.startsWith('de') ? 'de' : 'en'); }
+} catch {
+  document.querySelector('#status').textContent = translate('error.nativeServer', navigator.language.startsWith('de') ? 'de' : 'en');
+  parent.postMessage({ type: 'cake-tagger:connection-error', channel }, cakeOrigin);
+}
+
+// Commands use the isolated extension runtime, not page postMessage. The site
+// may read its visible tags but cannot trigger exports or stop the local server.
+browser.runtime.onMessage.addListener((message,sender)=>{
+ const target=Number(new URL(location.href).searchParams.get('target'));
+ const trusted=!sender.url || [browser.runtime.getURL('extension/background.js'),browser.runtime.getURL('extension/chrome-worker.mjs'),browser.runtime.getURL('_generated_background_page.html')].includes(sender.url);
+ if(sender.id!==browser.runtime.id || !trusted || message?.type!=='cake-tagger:ui-command-forwarded' || message.channel!==channel || message.tabId!==target)return;
+ frame.contentWindow.postMessage({type:'cake-tagger:command',channel,...message.command},localOrigin);
+});

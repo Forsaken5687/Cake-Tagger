@@ -16,6 +16,7 @@ export function settingsForm(store, tags, onSaved = () => {}) {
     return control;
   };
   const language = field('settings.language', select([['auto', 'settings.automatic'], ['de', 'language.de'], ['en', 'language.en']])); language.value = draft.language;
+  const uploadLayout = field('settings.uploadLayout', select([['cards','settings.layoutCards'],['sidebar','settings.layoutSidebar']])); uploadLayout.value = draft.uploadLayout;
   const frames = field('settings.frames', select([['auto', 'settings.autoFrames'], ...[4,6,8,12,16,24,32,48].map(n => [String(n), message('settings.frameCount', { count: n })])])); frames.value = draft.frames;
   const parallelism = document.createElement('input'); parallelism.type = 'number'; parallelism.min = '1'; parallelism.step = '1';
   parallelism.value = draft.parallelism === 'auto' ? '' : draft.parallelism;
@@ -58,11 +59,11 @@ export function settingsForm(store, tags, onSaved = () => {}) {
   const actions = document.createElement('div'); actions.className = 'settings-actions';
   const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'quiet'; localizedText(reset, 'action.defaults');
   const save = document.createElement('button'); save.type = 'submit'; localizedText(save, 'action.save');
-  reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; parallelism.value = ''; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; autoAnalyze.checked = draft.autoAnalyzeEmbed; renderExclusions(); localizedText(status, ''); };
+  reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; uploadLayout.value = draft.uploadLayout; frames.value = draft.frames; parallelism.value = ''; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; autoAnalyze.checked = draft.autoAnalyzeEmbed; renderExclusions(); localizedText(status, ''); };
   form.onsubmit = async event => {
     event.preventDefault(); save.disabled = reset.disabled = true;
     try {
-      await store.save({ ...draft, language: language.value, frames: frames.value, parallelism: parallelism.value || 'auto', showScores: scores.checked, showUncertain: uncertain.checked, autoAnalyzeEmbed: autoAnalyze.checked });
+      await store.save({ ...draft, language: language.value, uploadLayout: uploadLayout.value, frames: frames.value, parallelism: parallelism.value || 'auto', showScores: scores.checked, showUncertain: uncertain.checked, autoAnalyzeEmbed: autoAnalyze.checked });
       onSaved();
     } catch (error) { localizedText(status, errorMessage(error)); }
     finally { save.disabled = reset.disabled = false; }

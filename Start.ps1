@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $taggerRoot = $PSScriptRoot
 $taggerNode = Join-Path $taggerRoot 'runtime\node.exe'
+$env:CAKE_TAGGER_NO_BROWSER = '1'
 $taggerServer = Join-Path $taggerRoot 'static.mjs'
 if (-not (Test-Path -LiteralPath $taggerNode)) { throw 'The bundled runtime is missing.' }
 & $taggerNode (Join-Path $taggerRoot 'scripts/Setup-Native.mjs')

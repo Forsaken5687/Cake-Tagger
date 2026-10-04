@@ -59,7 +59,7 @@ function infer(frames, parallelism, excludedTags) {
     return { ...result, runtime: { ...result.runtime, parallelismLimit: parallelism, memory: memorySnapshot() } };
   });
 }
-function showMessage(text) { localizedText($('#message'), text); }
+function showMessage(text) { localizedText($('#message'), text); publishUploadView(); }
 function remember(entry) {
   sessionRecords.set(entry.result.sha256, makeRecord(entry));
 }
@@ -99,109 +99,7 @@ function textElement(name, text, cls, localize = true) {
   if (localize && text) localizedText(e, text); else e.textContent = text;
   if (cls) e.className = cls; return e;
 }
-const previewDialog = $('#preview-dialog');
-let enlargedPreview;
-function showPreview() {
-  const { frames, index, filename } = enlargedPreview;
-  $('#preview-title').textContent = filename;
-  $('#preview-image').src = frames[index];
-  localizedAttribute($('#preview-image'), 'alt', 'preview.position', { current: index + 1, total: frames.length });
-  $('#preview-position').textContent = `${index + 1} / ${frames.length}`;
-  $('#preview-prev').disabled = index === 0;
-  $('#preview-next').disabled = index === frames.length - 1;
-}
-function openPreview(frames, index, filename) {
-  enlargedPreview = { frames, index, filename }; showPreview();
-  document.body.classList.add('preview-open'); previewDialog.showModal();
-}
-function movePreview(offset) {
-  if (!enlargedPreview) return;
-  enlargedPreview.index = Math.max(0, Math.min(enlargedPreview.frames.length - 1, enlargedPreview.index + offset));
-  showPreview();
-}
-$('#preview-close').onclick = () => previewDialog.close();
-$('#preview-prev').onclick = () => movePreview(-1);
-$('#preview-next').onclick = () => movePreview(1);
-previewDialog.addEventListener('click', e => { if (e.target === previewDialog) previewDialog.close(); });
-previewDialog.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); movePreview(e.key === 'ArrowLeft' ? -1 : 1); }
-});
-previewDialog.addEventListener('close', () => {
-  document.body.classList.remove('preview-open'); $('#preview-image').removeAttribute('src'); enlargedPreview = undefined;
-});
-function render() {
-  $('#results').replaceChildren();
-  if (!entries.length) {
-    const empty = textElement('div', '', 'empty-state');
-    const hint = document.body.classList.contains('embedded') ? 'results.emptyEmbed' : 'results.emptyStandalone';
-    empty.append(textElement('span', '▤', 'empty-icon'), textElement('h3', 'results.emptyTitle'), textElement('p', hint));
-    $('#results').append(empty);
-  }
-  for (const entry of entries) {
-    const card = textElement('article', '', 'card');
-    const heading = textElement('div', '', 'card-heading'), identity = textElement('div', '', 'card-identity');
-    const filename = textElement('h2', entry.file.name, '', false); filename.title = entry.file.name;
-    identity.append(textElement('span', String(entry.index + 1).padStart(2, '0'), 'video-number'), filename);
-    heading.append(identity);
-    card.append(heading, textElement('p', entry.state, 'card-state'));
-    if (entry.frames) {
-      const previews = textElement('div', '', 'previews');
-      entry.frames.forEach((src, i) => {
-        const button = textElement('button', '', 'preview-thumb'), img = document.createElement('img');
-        button.type = 'button'; button.setAttribute('aria-label', t('preview.enlarge', { number: i + 1 }));
-        img.src = src; img.alt = t('preview.image', { number: i + 1 });
-        button.append(img); button.onclick = () => openPreview(entry.frames, i, entry.file.name); previews.append(button);
-      });
-      card.append(previews);
-    }
-    if (entry.result) {
-      const tagHeading = textElement('div', '', 'tag-heading');
-      tagHeading.append(textElement('h3', 'tags.selection'), textElement('span', message('tags.selectedCount', { count: [...entry.selected.values()].filter(Boolean).length })));
-      card.append(tagHeading);
-      const chips = textElement('div', '', 'tags');
-      for (const tag of entry.selected.keys()) {
-        if (!settings.showUncertain && entry.result.uncertain.includes(tag) && !entry.selected.get(tag) && tagSource(entry, tag) === 'suggestion') continue;
-        const label = textElement('label', '', 'chip'), box = document.createElement('input');
-        box.type = 'checkbox'; box.checked = entry.selected.get(tag);
-        const original = entry.result.tags.find(row => row.tag === tag) || entry.result.uncertainScores?.find(row => row.tag === tag);
-        const source = tagSource(entry, tag), isUncertain = source === 'suggestion' && entry.result.uncertain.includes(tag);
-        const origin = source === 'unknown' ? 'tags.unknown' : source === 'suggestion' ? isUncertain ? 'tags.uncertain' : 'tags.suggested' : 'tags.added';
-        label.classList.toggle('uncertain', isUncertain);
-        label.classList.toggle('manual', source === 'manual');
-        label.title = t(origin === 'tags.added' ? 'tags.manualOrigin' : origin === 'tags.unknown' ? 'tags.unknownOrigin' : 'tags.modelOrigin');
-        if (original?.supportingFrames) label.title += t('tags.frameSupport', { count: original.supportingFrames, total: entry.result.sampledFrames });
-        box.addEventListener('change', () => { entry.selected.set(tag, box.checked); changed(entry); render(); });
-        label.append(box, textElement('span', tag, '', false), textElement('span', origin, 'tag-origin')); chips.append(label);
-        if (settings.showScores && source === 'suggestion' && entry.originalSuggestionsKnown !== false && Number.isFinite(original?.confidence)) {
-          const score = textElement('span', message('tags.score', { score: Math.round(original.confidence * 100) }), 'tag-score');
-          score.title = 'tags.scoreHint';
-          score.title = t(score.title);
-          label.append(score);
-        }
-      }
-      card.append(chips);
-      if (!entry.result.tags.length && entry.originalSuggestionsKnown !== false) card.append(textElement('p', 'results.noClearTags'));
-      if (entry.originalSuggestionsKnown === false) card.append(textElement('p', 'results.legacyHint'));
-      const add = textElement('div', '', 'tag-add'), input = document.createElement('input'), list = document.createElement('datalist');
-      list.id = 'tags-' + entry.index; allTags.forEach(t => { const o = document.createElement('option'); o.value = t; list.append(o); });
-      input.type = 'text'; input.placeholder = t('tags.search'); input.setAttribute('list', list.id); input.setAttribute('aria-label', t('tags.addForFile', { filename: entry.file.name }));
-      const button = textElement('button', 'tags.add', 'quiet');
-      const addTag = () => {
-        const found = allTags.find(t => t.toLowerCase() === input.value.trim().toLowerCase());
-        if (!found) return showMessage('error.chooseTag');
-        if (!entry.selected.has(found)) { entry.tagSources ||= {}; entry.tagSources[found] = 'manual'; }
-        entry.selected.set(found, true); changed(entry); showMessage(''); render();
-      };
-      button.onclick = addTag; input.onkeydown = e => { if (e.key === 'Enter') addTag(); };
-      add.append(input, list, button); card.append(add);
-      const transfer = integrationButton(entry, textElement, showMessage);
-      if (transfer) card.append(transfer);
-    }
-    if (entry.error) card.append(textElement('p', entry.error, 'error'));
-    $('#results').append(card);
-  }
-  summary();
-}
+function render() { summary(); publishUploadView(); }
 async function setFiles(files) {
   if (running || preparing) return;
   preparing = true; summary(); showMessage('analysis.preparing');
@@ -257,7 +155,7 @@ async function sample(file, setting, signal, knownHash) {
     for (const time of plan.timestamps) {
       signal.throwIfAborted();
       await waitEvent(video, 'seeked', () => { video.currentTime = time; }, signal);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height); frames.push(canvas.toDataURL('image/jpeg', 0.82));
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height); if (!document.body.classList.contains('embedded')) frames.push(canvas.toDataURL('image/jpeg', 0.82));
       modelCtx.fillStyle = '#fff'; modelCtx.fillRect(0, 0, 448, 448);
       modelCtx.drawImage(canvas, Math.floor((edge - canvas.width) / 2) * modelScale, Math.floor((edge - canvas.height) / 2) * modelScale, canvas.width * modelScale, canvas.height * modelScale);
       inputs.push(modelCtx.getImageData(0, 0, 448, 448).data);
@@ -346,3 +244,48 @@ settingsStore.subscribe(next => {
 window.addEventListener('focus', () => { void settingsStore.load().catch(() => {}); });
 render();
 
+
+function publishUploadView() {
+ if (!connected || !document.body.classList.contains('embedded')) return;
+ const url=new URL(location.href);
+ parent.postMessage({type:'cake-tagger:view',channel:url.searchParams.get('channel'),view:{
+  settings, language:document.documentElement.lang === 'de' ? 'de' : 'en', status:$('#status').textContent,
+  message:$('#message').textContent, running:running || preparing, stopped:stopping, allTags,
+  entries:entries.map(entry=>({filename:entry.file.name,sha256:entry.sha256,state:t(entry.state),error:entry.error ? t(entry.error) : '',
+   complete:!!entry.result,tags:[...entry.selected].map(([tag,selected])=>{
+    const original=entry.result?.tags.find(row=>row.tag===tag)||entry.result?.uncertainScores?.find(row=>row.tag===tag);
+    return {tag,selected,source:tagSource(entry,tag),uncertain:!!entry.result?.uncertain.includes(tag),confidence:original?.confidence};
+   })}))}},url.searchParams.get('bridgeOrigin'));
+}
+window.addEventListener('cake-tagger:upload-message', async event=>{
+ const data=event.detail;if(data?.type!=='cake-tagger:command')return;
+ const entry=entries.find(e=>e.file.name===data.filename && e.sha256===data.sha256);
+ switch(data.action){
+  case 'analyze': if(!stopping) await analyze();break;
+  case 'cancel': controller?.abort();cancelInference();break;
+  case 'export': if(entries.some(e=>e.result)) await $('#export').onclick();break;
+  case 'quit': await $('#quit').onclick();break;
+  case 'settings': document.body.classList.add('settings-only');document.querySelector('.settings-open')?.click();break;
+  case 'tag': if(entry?.result && entry.selected.has(data.tag) && typeof data.selected==='boolean'){entry.selected.set(data.tag,data.selected);changed(entry);render();}break;
+  case 'add': if(entry?.result && !allTags.includes(data.tag))showMessage('error.chooseTag');
+   if(entry?.result && allTags.includes(data.tag)){
+   if(!entry.selected.has(data.tag)){entry.tagSources ||= {};entry.tagSources[data.tag]='manual';}
+   entry.selected.set(data.tag,true);changed(entry);render();
+  }break;
+  case 'apply': if(entry?.result) await integrationButton(entry,textElement,showMessage)?.onclick();break;
+ }
+ publishUploadView();
+});
+document.querySelector('#settings-dialog')?.addEventListener('close',()=>{
+ document.body.classList.remove('settings-only');const url=new URL(location.href);
+ if(connected) parent.postMessage({type:'cake-tagger:settings-closed',channel:url.searchParams.get('channel')},url.searchParams.get('bridgeOrigin'));
+});
+new MutationObserver(()=>publishUploadView()).observe($('#status'),{childList:true,subtree:true,characterData:true});
+publishUploadView();
+
+if(!connected){
+ document.body.classList.add('service-home');
+ const title=document.querySelector('#page-title');delete title.dataset.i18n;title.textContent='Cake Tagger';
+ const description=document.querySelector('.intro p');localizedText(description,'embed.openUpload');
+ const link=document.createElement('a');link.href='https://cake.ski/';link.textContent='cake.ski';description.after(link);
+}

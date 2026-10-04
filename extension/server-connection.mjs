@@ -12,7 +12,7 @@ export async function connect(refresh = false) {
 }
 async function request(path, options = {}, retry = true) {
   const connection = await connect();
-  const response = await fetch(base + path, { ...options, headers: { Authorization: 'Bearer ' + connection.token, 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(3000) });
+  const response = await fetch(base + path, { ...options, headers: { Authorization: 'Bearer ' + connection.token, 'Content-Type': 'application/json' }, signal: options.signal || AbortSignal.timeout(3000) });
   if (response.status === 401 && retry) { token = undefined; return request(path, options, false); }
   if (!response.ok) throw Error('error.nativeServer');
   return response.json();
@@ -33,4 +33,9 @@ export async function notifySettings(browser) {
   const tabs = await browser.tabs.query({ url: 'https://cake.ski/*' });
   await Promise.all(tabs.map(tab => browser.tabs.sendMessage(tab.id, message).catch(() => {})));
   return result;
+}
+
+// Native shutdown waits for the active inference call to release its session.
+export async function stop() {
+  return request('/api/stop', { method: 'POST', signal: AbortSignal.timeout(60000) });
 }

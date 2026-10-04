@@ -11,32 +11,32 @@ The Firefox and Chrome extensions provide the interface and upload integration. 
 - [Firefox installation and usage](docs/FIREFOX.md)
 - [Chrome installation and usage](docs/CHROME.md)
 
-Select videos in the cake.ski upload area. By default, the embedded panel opens and starts analyzing new files automatically. Review the suggestions, then use **Apply tags** for each video. Existing tags and per-card exclusions are preserved. The extension does not submit or publish posts.
+Select videos in the cake.ski upload area. By default, new files are analyzed automatically. Suggestions appear directly on the upload cards or in a sticky side panel, selected in Settings. Review the suggestions, then use **Apply tags** for each video. Existing tags and per-card exclusions are preserved. The extension does not submit or publish posts.
 
 **Important:** cake.ski itself can upload Bulk files as drafts as soon as you select them. Local analysis does not change that behavior.
 
-The extension follows the connected page's colors, including changes to its accent color. Clicking the toolbar icon opens the same Localhost application with upload integration and JSON export. The extension bundles no analysis application or model runner.
+The extension follows the connected page's colors, including changes to its accent color. The toolbar menu provides **Open upload** and **Quit**. The upload toolbar contains analysis controls, **Download JSON**, **Settings** and **Quit**. The extension bundles no analysis application or model runner.
 
 The description in the browser's extension manager and the toolbar tooltip follow the browser's UI language (German or English, with English as the fallback). These texts are independent of the language selected inside Cake Tagger.
 
-## Standalone application
+## Local service
 
-Requires Windows x64 and a current Firefox or Chrome browser with video decoding and Canvas support. Node runs native ONNX Runtime on the CPU; the browser handles video decoding, previews and tag review.
+Requires Windows x64 and a current Firefox or Chrome browser with video decoding and Canvas support. Node runs native ONNX Runtime on the CPU; the browser handles video decoding and tag review.
 
 1. Extract the complete release into a writable folder.
-2. Run `Start.cmd`.
-3. Select videos and click **Suggest tags**.
-4. Review the suggestions, deselect incorrect tags and add missing ones.
-5. Click **Download JSON** to save `cake-tags.json`.
+2. Run `Start.cmd` to start the local server.
+3. Open cake.ski's upload area with the extension installed and select videos.
+4. Review suggestions on the cards or in the side panel, then apply them or download JSON.
 
-Results are kept only for the current page session. Download anything you want to retain before closing or reloading the page. **Quit** is available in the main page and embedded upload panel. It cancels unfinished work, waits for the native worker to stop, and then shuts down the local server. Download session results before quitting.
+The separate analysis window has been removed. Direct Localhost navigation opens a small service page with Settings and Quit. Results are kept only for the current upload-page session. Download anything you want to retain before closing or reloading it. **Quit** cancels unfinished work, waits for the native worker to stop, and shuts down the local server. It is available on the service page, upload toolbar and extension menu.
 
 A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned artifacts and verify SHA-256 checksums. Complete releases include the archives; `Start.cmd` verifies and extracts the native runtime on first use. Analysis works offline afterward.
 
 ## Settings
 
-**Settings** is available in the main page and embedded upload panel. Both use one configuration on the local server.
+**Settings** is available on the service page and upload toolbar. Both use one configuration on the local server.
 
+- Upload layout: suggestions directly on each upload card (default), or a sticky side panel with a video selector and Next video control. Layout changes retain selections.
 - Language: Automatic, German or English. Automatic follows cake.ski in connected extension views and the browser language in standalone use. Tag names are unchanged.
 - Automatically analyze upload videos: enabled by default; applies only to the embedded upload workflow.
 - Images per video: automatic by duration, or a fixed count from 4 to 48.
@@ -48,9 +48,9 @@ A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned
 
 ## Analysis and results
 
-Automatic sampling uses 8/12/16/24/32/48 frames for videos up to 15/30/60/120/300/600 seconds. Click previews to enlarge them and navigate with buttons or arrow keys.
+Automatic sampling uses 8/12/16/24/32/48 frames for videos up to 15/30/60/120/300/600 seconds. The integration uses the website's existing video players instead of duplicating preview images.
 
-The base threshold is fixed at 0.4. Most suggested tags require support in more than half of the sampled frames. Selected clothing, accessory and object tags require at least a quarter of the frames, with a minimum of two and a score of at least 0.65. `dance` also requires a threshold of at least 0.65. Uncertain candidates remain visible but unchecked by default.
+The base threshold is fixed at 0.4. Most suggested tags require support in more than half of the sampled frames. Selected clothing, accessory and object tags require at least a quarter of the frames, with a minimum of two and a score of at least 0.65. `dance` also requires a threshold of at least 0.65. Uncertain candidates are unchecked and grouped under **Other suggestions** by default.
 
 The displayed score is the average of the two strongest frame matches. It is not the proportion of the video showing a tag or the probability that the tag is correct. The JSON export preserves selections, original suggestions, scores, tag origins and analysis timings.
 
