@@ -1,21 +1,28 @@
+async function serverService() {
+  return globalThis.cakeServer || import(browser.runtime.getURL('extension/server-connection.mjs'));
+}
 browser.action.onClicked.addListener(async tab => {
-  const url = new URL(browser.runtime.getURL('index.html'));
-  if (tab.url?.startsWith('https://cake.ski/')) url.searchParams.set('target', String(tab.id));
+  const url = new URL('http://127.0.0.1:8765/');
+  try { url.hash = (await (await serverService()).connect(true)).token; } catch {}
+  url.searchParams.set('integration', '1');
+  url.searchParams.set('channel', [...crypto.getRandomValues(new Uint8Array(16))].map(byte => byte.toString(16).padStart(2, '0')).join(''));
+  if (tab?.url?.startsWith('https://cake.ski/') && Number.isInteger(tab.id)) url.searchParams.set('target', String(tab.id));
   await browser.tabs.create({ url: url.href });
 });
 browser.runtime.onMessage.addListener((message, sender) => {
   // Only our analysis document and our content script may use the background relay.
-  const analysisUrl = browser.runtime.getURL('index.html');
-  const fromAnalysis = sender.url === analysisUrl || sender.url?.startsWith(analysisUrl + '?');
+  const analysisUrl = browser.runtime.getURL('extension/bridge.html');
+  const local = /^http:\/\/127\.0\.0\.1:8765\/(?:index\.html)?(?:\?|$)/.test(sender.url || '');
+  const fromAnalysis = local || sender.url === analysisUrl || sender.url?.startsWith(analysisUrl + '?');
   const fromCake = sender.url?.startsWith('https://cake.ski/');
   if (sender.id !== browser.runtime.id || (!fromAnalysis && !fromCake)) return;
   if (fromCake && message?.type === 'cake-tagger:site-theme' && Number.isInteger(sender.tab?.id) && message.theme && JSON.stringify(message.theme).length <= 4096) {
     return browser.runtime.sendMessage({ type: 'cake-tagger:site-theme-updated', tabId: sender.tab.id, theme: message.theme }).catch(() => null);
   }
-  if (message?.type === 'cake-tagger:settings-get' || ((!fromCake) && message?.type === 'cake-tagger:settings-set')) {
-    if (globalThis.cakeSettingsHandler) return globalThis.cakeSettingsHandler(message).catch(() => ({ error: 'error.settingsSave' }));
-    return import(browser.runtime.getURL('extension/settings-background.mjs')).then(module => module.handleSettings(browser, message)).catch(() => ({ error: 'error.settingsSave' }));
+  if (message?.type === 'cake-tagger:settings-get' || (fromAnalysis && message?.type === 'cake-tagger:settings-notify')) {
+    return serverService().then(service => message.type === 'cake-tagger:settings-get' ? service.getSettings(browser) : service.notifySettings(browser)).catch(() => ({ error: 'error.nativeServer' }));
   }
+  if (fromAnalysis && message?.type === 'cake-tagger:connect') return serverService().then(service => service.connect(true)).catch(() => ({ error: 'error.nativeServer' }));
   if (message?.type === 'cake-tagger:tab-id') {
     return Promise.resolve(sender.tab?.id ?? null);
   }

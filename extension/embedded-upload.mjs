@@ -52,7 +52,7 @@ export function mountUploadPanel(doc, runtime) {
     channel = [...crypto.getRandomValues(new Uint8Array(16))].map(n => n.toString(16).padStart(2, '0')).join('');
     frame = doc.createElement('iframe');
     frame.title = label('embed.title'); frame.className = 'cake-tagger-frame';
-    const url = new URL(runtime.getURL('index.html')); url.searchParams.set('embedded', '1'); url.searchParams.set('channel', channel);
+    const url = new URL(runtime.getURL('extension/bridge.html')); url.searchParams.set('embedded', '1'); url.searchParams.set('channel', channel);
     const created = frame, owner = panel;
     try {
       const id = await runtime.sendMessage({ type: 'cake-tagger:tab-id' });

@@ -1,52 +1,53 @@
 import { messageError } from './messages.mjs';
 
-// Extension documents contact loopback directly, never through the website or
-// its content script. The session credential stays in this module's memory.
-export function createNativeClient({ extension = false, token = '', onState = () => {}, onProgress = () => {}, fetcher = fetch } = {}) {
-  const base = extension ? 'http://127.0.0.1:8765' : '';
-  let credential = token, active;
-  async function connect(signal) {
-    if (credential) return;
-    const response = await fetcher(base + '/api/connect', { method: 'POST', headers: { 'X-Cake-Tagger-Client': 'extension' }, signal });
-    if (!response.ok) throw messageError('error.nativeServer');
-    const data = await response.json();
-    if (!/^[a-f0-9]{48}$/.test(data.token)) throw messageError('error.nativeServer');
-    credential = data.token;
+// A whole video is submitted once; Node owns its frame queue and thread policy.
+export function createNativeClient({ token = '', onState = () => {}, onProgress = () => {}, fetcher = fetch } = {}) {
+  let active;
+  async function request(url, options = {}) {
+    return fetcher(url, { ...options, headers: { Authorization: 'Bearer ' + token, ...options.headers } });
   }
-  async function infer(frames, parallelism = 'auto') {
+  async function infer(frames, parallelism = 'auto', { excludedTags, raw = true, parallelImages } = {}) {
     if (active) throw messageError('error.analysisStart');
-    if (!frames.length || frames.length > 48 || frames.some(frame => !(frame instanceof Uint8ClampedArray) || frame.length !== 448 * 448 * 4)) throw messageError('error.invalidModelInputImage');
+    if (!Array.isArray(frames) || !frames.length || frames.length > 48 || frames.some(frame => !(frame instanceof Uint8ClampedArray) || frame.length !== 802816)) throw messageError('error.invalidModelInputImage');
     const controller = new AbortController(); active = controller;
-    const timings = { modelLoadSeconds: 0, preprocessSeconds: 0, inferenceSeconds: 0 };
-    const scores = [];
-    let runtime;
     try {
-      onState('analysis.loadingModel');
-      await connect(controller.signal);
-      for (let i = 0; i < frames.length; i++) {
-        onProgress(i + 1, frames.length);
-        const options = { method: 'POST', headers: { Authorization: 'Bearer ' + credential, 'Content-Type': 'application/octet-stream' }, body: frames[i], signal: controller.signal };
-        let response = await fetcher(base + '/api/infer?parallelism=' + encodeURIComponent(parallelism), options);
-        // Server restarts rotate credentials. Reconnect once without losing selections.
-        if (response.status === 401 && extension) {
-          credential = ''; await connect(controller.signal);
-          options.headers.Authorization = 'Bearer ' + credential;
-          response = await fetcher(base + '/api/infer?parallelism=' + encodeURIComponent(parallelism), options);
-        }
-        const data = await response.json();
-        if (!response.ok) throw messageError(data.error || 'error.nativeInference');
-        if (!Array.isArray(data.scores) || data.scores.length !== 5813 || data.scores.some(value => !Number.isFinite(value) || value < 0 || value > 1)
-          || Object.keys(timings).some(key => !Number.isFinite(data.timings?.[key]) || data.timings[key] < 0)) throw messageError('error.modelOutput');
-        scores.push(Float32Array.from(data.scores));
-        for (const key of Object.keys(timings)) timings[key] += data.timings[key];
-        runtime = data.runtime;
+      const payload = new Uint8Array(frames.length * 802816);
+      frames.forEach((frame, index) => payload.set(frame, index * 802816));
+      const response = await request('/api/infer?parallelism=' + encodeURIComponent(parallelism) + (raw ? '&raw=1' : '') + (parallelImages == null ? '' : '&images=' + (parallelImages ? 'auto' : 'single')), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', ...(excludedTags ? { 'X-Cake-Tagger-Exclusions': JSON.stringify(excludedTags) } : {}) }, body: payload, signal: controller.signal });
+      if (!response.ok) { const data = await response.json(); throw messageError(data.error || 'error.nativeInference'); }
+      const reader = response.body.getReader(), decoder = new TextDecoder();
+      let pending = '', result;
+      function accept(line) {
+        if (!line.trim()) return;
+        const data = JSON.parse(line);
+        if (data.type === 'error') throw messageError(data.error);
+        if (data.type === 'state') onState(data.state);
+        if (data.type === 'progress') onProgress(data.current, data.total);
+        if (data.type === 'done') result = data;
       }
-      return { scores, timings, runtime };
+      try {
+        for (;;) {
+          const { value, done } = await reader.read();
+          pending += decoder.decode(value, { stream: !done });
+          let end;
+          while ((end = pending.indexOf('\n')) >= 0) { accept(pending.slice(0, end)); pending = pending.slice(end + 1); }
+          if (pending.length > 16000000) throw messageError('error.modelOutput');
+          if (done) break;
+        }
+        accept(pending);
+      } finally { reader.releaseLock(); }
+      if (!result || (raw && (!Array.isArray(result.scores) || result.scores.length !== frames.length
+        || result.scores.some(row => !Array.isArray(row) || row.length !== 5813 || row.some(value => !Number.isFinite(value) || value < 0 || value > 1))))
+        || ['modelLoadSeconds', 'preprocessSeconds', 'inferenceSeconds', 'queueSeconds'].some(key => !Number.isFinite(result.timings?.[key]) || result.timings[key] < 0)) throw messageError('error.modelOutput');
+      if (!raw && (!Array.isArray(result.analysis?.tags) || !Array.isArray(result.analysis?.uncertain) || !Array.isArray(result.analysis?.uncertainScores)
+        || [...result.analysis.tags, ...result.analysis.uncertainScores].some(row => typeof row?.tag !== 'string' || !Number.isFinite(row.confidence) || row.confidence < 0 || row.confidence > 1 || !Number.isInteger(row.supportingFrames) || row.supportingFrames < 0 || row.supportingFrames > frames.length))) throw messageError('error.modelOutput');
+      return { ...(raw ? { scores: result.scores.map(row => Float32Array.from(row)) } : {}), analysis: result.analysis, timings: result.timings, runtime: result.runtime };
     } catch (error) {
       if (controller.signal.aborted) throw new DOMException('analysis.cancelled', 'AbortError');
+      controller.abort();
       if (error instanceof TypeError) throw messageError('error.nativeServer');
       throw error;
     } finally { if (active === controller) active = undefined; }
   }
-  return { infer, stop() { active?.abort(); } };
+  return { infer, request, stop() { active?.abort(); } };
 }

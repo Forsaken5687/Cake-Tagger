@@ -4,11 +4,11 @@ Run `scripts/Test.ps1` from a writable checkout with the bundled runtime availab
 
 ## Automated coverage
 
-Native checks cover shared-session queue limits, cancellation isolation, worker recovery, token refresh, chronological scores, provider metadata, origin boundaries and malformed input bodies. Also run a production API smoke check with restored native dependencies; mocked workers do not establish inference compatibility or speed. The optional native/WASM comparison tool checks synthetic score differences without personal media.
+Native checks cover shared-session queue limits, cancellation isolation, worker recovery, batch streaming, chronological scores, effective overrides above eight, hardware limits, provider metadata, origin boundaries and malformed input bodies. Also run a production API smoke check with restored native dependencies; mocked workers do not establish inference compatibility or speed. Use identical decoded RGBA inputs, thread settings and exclusion policies when comparing paths. Record cold and warm runs separately; CPU time and RSS snapshots are not CPU utilization or peak model memory.
 
 - Frame sampling boundaries, tag aggregation and uncertain candidate scores.
 - Mapping coverage and manual-category exclusions.
-- Preference normalization, persistence and browser message relays.
+- Central preference normalization, legacy migration without overwriting originals, and browser message relays.
 - Automatic analysis queues, latest-selection behavior, disabling, failures and retained corrections.
 - Export validation, tag origins, legacy policies and current exclusion snapshots.
 - File message parent/origin/channel checks, sender boundaries, target matching and inherited tags.
@@ -28,13 +28,14 @@ Tests do not measure model accuracy or certify third-party binaries. They do not
 6. Download JSON with default and custom exclusions; inspect filenames, selected tags, scores, policy and timings.
 7. Reload the page; results must not return. Settings must persist.
 8. Check cancellation, invalid codecs, size/duration limits and narrow layouts.
-9. Open previews with mouse/keyboard, navigate, close with Escape, and verify focus recovery.
+9. Test **Quit** while idle and during inference. Confirm the Node process exits, active/queued work is rejected, saved preferences and existing data remain intact, and a clear success message appears.
+10. Open previews with mouse/keyboard, navigate, close with Escape, and verify focus recovery.
 
 ## Extension browser checks
 
 Use local fixtures when no upload is permitted. Real cake.ski Bulk selection may upload drafts immediately.
 
-Check Firefox and Chrome independently: installation, permissions, single/bulk views, automatic start and disabled mode, adding/removing files while busy, retained results, separate analysis/JSON download, unique filename matching and existing/per-card excluded tags. Test member-role search as well as maintainer Enter selection.
+Check Firefox and Chrome independently: installation, permissions, single/bulk views, automatic start and disabled mode, adding/removing files while busy, retained results, toolbar opening Localhost, shared settings, JSON download, unique filename matching and existing/per-card excluded tags. Test member-role search as well as maintainer Enter selection.
 
 Change the site's accent color while the panel and Settings are open. Check buttons, focus, scores and selected chips. Verify Automatic language follows the page while explicit German/English stays selected.
 

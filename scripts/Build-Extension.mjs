@@ -6,15 +6,23 @@ export function buildExtension(target) {
   if (!['firefox', 'chrome'].includes(target)) throw Error('Unsupported browser.');
   const output = path.join(root, 'outputs', target);
   fs.mkdirSync(output, { recursive: true });
-  const files = ['index.html', 'webext-api.js', 'app.js', 'style.css', 'native-client.mjs', 'runtime-metrics.mjs', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'messages.mjs', 'corrections.mjs', 'sampling.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'tags.txt', 'THIRD_PARTY.md', 'scripts/assets.json', 'assets/logo.svg',
-    'extension/background.js', 'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/auto-analysis.mjs', 'extension/site-theme.mjs', 'extension/message-contract.mjs', 'extension/upload-adapter.mjs', 'extension/integration.mjs',
-    'extension/settings-background.mjs', '_locales/en/messages.json', '_locales/de/messages.json',
-    'model/LICENSE.txt', 'model/coverage.json', 'model/provenance.json', 'model/top_tags.txt'];
+  // Only the page bridge is executable here; model metadata and license notices stay intact.
+  const files = ['webext-api.js', 'preferences.mjs', 'messages.mjs', 'tags.txt', 'assets/logo.svg',
+    'THIRD_PARTY.md', 'scripts/assets.json', 'model/LICENSE.txt', 'model/coverage.json',
+    'model/provenance.json', 'model/top_tags.txt', 'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt',
+    'extension/background.js', 'extension/server-connection.mjs', 'extension/local-bridge.js',
+    'extension/bridge.html', 'extension/bridge.mjs', 'extension/bridge.css',
+    'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs',
+    'extension/site-theme.mjs', 'extension/message-contract.mjs',
+    'extension/upload-adapter.mjs', '_locales/en/messages.json', '_locales/de/messages.json'];
   if (target === 'chrome') files.push('extension/chrome-worker.mjs', ...[16,32,48,128].map(size => `assets/logo-${size}.png`));
-  // Remove only known obsolete engine assets from earlier unpacked builds.
-  for (const obsolete of ['engine-worker.js', 'compute-policy.js', 'inference-pool.mjs', 'model/joytag-int8.onnx', 'vendor/ort-wasm-simd-threaded.wasm', 'vendor/ort-wasm-simd-threaded.mjs', 'vendor/ort.wasm.min.js', 'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt']) {
-    fs.rmSync(path.join(output, obsolete), { force: true });
-  }
+  // Prune only obsolete application code, never notices, provenance or unknown user files.
+  const retired = ['index.html', 'app.js', 'style.css', 'native-client.mjs', 'runtime-metrics.mjs',
+    'analysis-settings.mjs', 'settings-ui.mjs', 'i18n.mjs', 'corrections.mjs', 'sampling.mjs',
+    'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'extension/integration.mjs',
+    'extension/settings-background.mjs', 'extension/auto-analysis.mjs', 'vendor/ort.wasm.min.js',
+    'vendor/ort-wasm-simd-threaded.mjs', 'vendor/ort-wasm-simd-threaded.wasm', 'engine-worker.js', 'compute-policy.js', 'inference-pool.mjs'];
+  for (const name of retired) fs.rmSync(path.join(output, name), { force: true });
   const manifest = JSON.parse(fs.readFileSync(path.join(root, target === 'chrome' ? 'extension/manifest.chrome.json' : 'extension/manifest.json'), 'utf8'));
   const entries = [{ name: 'manifest.json', data: Buffer.from(JSON.stringify(manifest, null, 2)) }, { name: 'README.md', data: fs.readFileSync(path.join(root, target === 'chrome' ? 'docs/CHROME.md' : 'docs/FIREFOX.md')) }, ...files.map(name => ({ name, data: fs.readFileSync(path.join(root, name)) }))];
   // Store-only ZIP: no packaging dependency and no private files from recursive folder scans.

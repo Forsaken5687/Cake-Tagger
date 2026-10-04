@@ -19,15 +19,15 @@ Select videos in the upload area. New files automatically open the embedded anal
 
 Review the results, then click **Apply tags** on each video's card. Single and Bulk are supported. Existing tags and per-card exclusions are preserved. The extension does not submit posts, answer upload questions, change performers or transfer video files to the site. cake.ski itself may upload Bulk drafts immediately when files are selected.
 
-The toolbar icon opens a separate analysis view with JSON export. The separate and embedded views share settings within Chrome; Firefox has its own storage. Both connected views follow the selected cake.ski tab's colors and optional Automatic language setting.
+The toolbar icon opens the same Localhost application with JSON export. All browsers and embedded views share server settings. **Quit** is available in the main page and embedded panel and shuts down the local program. Both connected views follow the selected cake.ski tab's colors and optional Automatic language setting.
 
 Reselect files that were chosen before the extension was loaded. Transfers require a unique exact filename. Image sets are unsupported.
 
 ## Development and validation
 
-`runtime/node.exe scripts/Build-Chrome.mjs` produces the unpacked folder and ZIP. Shared interface code, licenses and provenance are copied from a fixed list; native inference dependencies stay with the local server. PNG icons are derived from the project's own SVG.
+`runtime/node.exe scripts/Build-Chrome.mjs` produces the unpacked folder and ZIP. Integration code, a thin frame bridge, licenses and provenance are copied from a fixed list; native inference dependencies stay with the local server. PNG icons are derived from the project's own SVG.
 
-Chrome uses a module service worker with static imports. `webext-api.js` adapts async message listeners through `sendResponse`. Video decoding and review run in the extension document; inference runs in the local Node server. The background service worker retains no video data or inference session.
+Chrome uses a module service worker with static imports. `webext-api.js` adapts async message listeners through `sendResponse`. Video decoding and review run in the shared Localhost document; inference, tag aggregation and the resource queue run in Node. The background service worker retains no video data or inference session.
 
 Automated tests and local fixtures cover messages, settings, manifests and UI behavior. Installation and the real website flow must also be checked in Chrome. See [testing](TESTING.md) and [security](SECURITY.md).
 

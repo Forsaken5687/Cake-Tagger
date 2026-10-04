@@ -1,6 +1,6 @@
 # Browser integration
 
-Firefox and Chrome share the same UI, analysis engine and upload adapter. All analysis views use the local Node inference server; the standalone interface remains optional. Start the server before analyzing videos.
+Firefox and Chrome connect to one Localhost UI and native backend, using the same upload adapter. All analysis views use the local Node inference server; the standalone interface remains optional. Start the server before analyzing videos.
 
 ## Upload contract
 
@@ -20,7 +20,7 @@ The site changes from Single to Bulk when multiple selected files include a vide
 ## Workflow and boundaries
 
 1. The content script captures user-selected video File references in the active upload mount.
-2. A separate extension-origin iframe receives files through a checked parent/origin/session channel.
+2. A thin extension-origin bridge receives files through a checked parent/origin/session channel and forwards them to the shared Localhost application inside it. The extension performs no inference, aggregation or job scheduling.
 3. New files are analyzed automatically when enabled. Busy selection changes are queued; existing content hashes retain results and corrections.
 4. The user reviews the suggestions and explicitly applies selected tags.
 5. The background relay checks the sender and target tab. Embedded views can address only their own Cake tab.
@@ -32,9 +32,9 @@ The extension does not submit files, captions, performers, upload questions, con
 
 ## Settings, theme and browser differences
 
-Preferences are relayed through the extension background and stored in `storage.local`. Content scripts can read them but cannot save them. Theme updates carry only known color tokens and page language; they are not persisted.
+Preferences are stored on the local backend. Content scripts read them through the extension background; settings saves use the authenticated backend API. Legacy extension settings migrate only if server settings have not been initialized. Theme updates carry only known color tokens and page language; they are not persisted.
 
-Firefox uses a Manifest V3 background script. Chrome uses a module service worker and an async messaging adapter. The extension document uses `runtime.sendMessage` rather than direct tab APIs, including in Firefox's embedded context.
+Firefox uses a Manifest V3 background script. Chrome uses a module service worker and an async messaging adapter. The Localhost application uses a restricted channel bridge to request upload integration. The toolbar opens Localhost directly; a content script relays these integration requests. The embedded wrapper relays the same requests. Neither relay handles model inputs, credentials for inference, or analysis state.
 
 ## Validation
 

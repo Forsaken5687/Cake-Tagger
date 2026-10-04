@@ -15,6 +15,7 @@
 /model/*.onnx
 /runtime/node.exe
 /runtime/native/
+node_modules/
 /vendor/*.wasm
 
 # Media must never enter the repository

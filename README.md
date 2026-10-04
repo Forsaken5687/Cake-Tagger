@@ -15,7 +15,7 @@ Select videos in the cake.ski upload area. By default, the embedded panel opens 
 
 **Important:** cake.ski itself can upload Bulk files as drafts as soon as you select them. Local analysis does not change that behavior.
 
-The extension follows the connected page's colors, including changes to its accent color. Clicking the toolbar icon opens a separate analysis view with JSON export.
+The extension follows the connected page's colors, including changes to its accent color. Clicking the toolbar icon opens the same Localhost application with upload integration and JSON export. The extension bundles no analysis application or model runner.
 
 The description in the browser's extension manager and the toolbar tooltip follow the browser's UI language (German or English, with English as the fallback). These texts are independent of the language selected inside Cake Tagger.
 
@@ -29,22 +29,23 @@ Requires Windows x64 and a current Firefox or Chrome browser with video decoding
 4. Review the suggestions, deselect incorrect tags and add missing ones.
 5. Click **Download JSON** to save `cake-tags.json`.
 
-Results are kept only for the current page session. Download anything you want to retain before closing or reloading the page. **Quit** stops the local server.
+Results are kept only for the current page session. Download anything you want to retain before closing or reloading the page. **Quit** is available in the main page and embedded upload panel. It cancels unfinished work, waits for the native worker to stop, and then shuts down the local server. Download session results before quitting.
 
 A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned artifacts and verify SHA-256 checksums. Complete releases include the archives; `Start.cmd` verifies and extracts the native runtime on first use. Analysis works offline afterward.
 
 ## Settings
 
-**Settings** is available in the standalone, separate extension and embedded views.
+**Settings** is available in the main page and embedded upload panel. Both use one configuration on the local server.
 
 - Language: Automatic, German or English. Automatic follows cake.ski in connected extension views and the browser language in standalone use. Tag names are unchanged.
 - Automatically analyze upload videos: enabled by default; applies only to the embedded upload workflow.
 - Images per video: automatic by duration, or a fixed count from 4 to 48.
-- CPU parallelism: Automatic or an upper limit of 1, 2, 4, 6 or 8. Changes apply to subsequent analyses. The limit controls native CPU threads in the shared server model session.
+- CPU parallelism: leave the field empty for Automatic, or enter a positive thread count. The server recommends half its available logical processors and allows manual testing up to their full count. The dialog displays both values. RAM does not cap this setting; higher counts can reduce throughput. Changes apply to the next video.
+- Adaptive image parallelism: process up to two images at once when the image count and thread budget make this useful. Disable it to compare single-session processing or reduce model memory.
 - Show or hide model scores and uncertain suggestions.
 - Exclude tags from new automatic suggestions. `hairy` and `watermark` are excluded by default and can be enabled individually.
 
-**Save** applies preferences; **Defaults** resets the form draft. Settings persist across reloads. Extensions share settings within their browser; the standalone application has its own storage. Changes preserve existing selections and manual corrections.
+**Save** applies preferences; **Defaults** resets the form draft. Settings persist across reloads. All browsers and embedded views share the server's configuration. Legacy browser preferences migrate only when the server has no saved configuration; the original storage is preserved. Changes preserve existing selections and manual corrections.
 
 ## Analysis and results
 
@@ -54,9 +55,9 @@ The base threshold is fixed at 0.4. Most suggested tags require support in more 
 
 The displayed score is the average of the two strongest frame matches. It is not the proportion of the video showing a tag or the probability that the tag is correct. The JSON export preserves selections, original suggestions, scores, tag origins and analysis timings.
 
-All views use one native model session in Node. Automatic chooses half the available logical processors, bounded to 1–8 threads; the manual setting lowers this limit. Frames are processed in chronological order. Concurrent views share a bounded queue instead of loading additional model copies. Cancelling discards unfinished results while preserving other views and completed corrections. Native CPU scores can differ from earlier WASM results, so existing exports remain readable and cached browser results are not reused as native analyses.
+All views use one centrally managed native backend in Node. Automatic recommends half the available logical processors, with a minimum of one. Manual overrides can use all available logical processors. Adaptive mode divides that budget across up to two model sessions; returned scores preserve chronological order. Concurrent views share a bounded queue instead of loading additional model copies. Cancelling discards unfinished results while preserving other views and completed corrections. Native CPU scores can differ from earlier WASM results, so existing exports remain readable and cached browser results are not reused as native analyses.
 
-JSON runtime details include the native provider, configured thread count, ONNX Runtime version, model checksum and memory metrics. Optional page heap measurements exclude the native model; unavailable fields are `null`.
+JSON runtime details include the native provider, configured thread count, ONNX Runtime version, model checksum and memory metrics. Diagnostics also include queue wait time, CPU time, available processors, the recommended thread count and manual test maximum. Optional page heap measurements exclude the native model; unavailable fields are `null`.
 
 Both standalone and extension exports include system total/free memory and Node process memory sampled after inference. Node RSS includes the native runtime, model and server allocations; it is not an isolated model measurement or a sampled peak.
 

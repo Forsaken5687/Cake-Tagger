@@ -189,3 +189,8 @@ body.embedded button { min-height: 36px; padding: 9px 14px; font-weight: 600; }
 body.embedded .results-heading { margin: 24px 0 14px; align-items: center; }
 body.embedded .results-heading h2 { font-size: 16px; margin: 0; }
 body.embedded .empty-state { padding: 24px 16px; }
+
+.settings-field input[type="number"] { width:58%; min-width:0; }
+body.embedded #quit { margin-left:auto; white-space:nowrap; }
+
+.settings-compute-hint { margin:0; color:var(--muted); font-size:12px; line-height:1.6; }

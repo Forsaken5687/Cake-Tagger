@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validatedSessionURL } from '../session-url.mjs';
 import { validateAnalysisPolicy } from '../analysis-settings.mjs';
-import { handleSettings } from '../extension/settings-background.mjs';
+
 
 test('saved sessions reject shell payloads, credentials, alternate hosts and paths', () => {
   const valid = 'http://127.0.0.1:8765/#' + 'a'.repeat(48);
@@ -15,11 +15,4 @@ test('saved sessions reject shell payloads, credentials, alternate hosts and pat
 test('analysis policies accept current exclusion snapshots and legacy keys, rejecting malformed metadata', () => {
   for (const value of [null, 'coverage-v2:brief', 'coverage-v5:majority', 'coverage-v5:majority:["hairy","watermark"]', 'coverage-v5:majority:[]']) assert.equal(validateAnalysisPolicy(value), value);
   for (const value of [42, 'coverage-v6:majority', 'coverage-v5:unknown', 'coverage-v5:majority:{}', 'coverage-v5:majority:[null]', 'coverage-v5:majority:[', 'coverage-v5:majority:[""]']) assert.throws(() => validateAnalysisPolicy(value));
-});
-
-test('unsupported settings messages never write to extension storage', async () => {
-  let writes = 0;
-  const browser = { storage: { local: { set: async () => { writes++; } } } };
-  await assert.rejects(handleSettings(browser, { type: 'unrelated', settings: {} }), /Unsupported/);
-  assert.equal(writes, 0);
 });

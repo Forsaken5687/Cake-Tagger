@@ -1,6 +1,6 @@
 import { message, messageError, errorMessage } from './messages.mjs';
-import { aggregate, ANALYSIS_VERSION } from './tagging.mjs';
-import { makeRecord, applyRecord, tagSource, exportItem } from './corrections.mjs';
+import { ANALYSIS_VERSION } from './tagging.mjs';
+import { makeRecord, applyRecord, tagSource } from './corrections.mjs';
 import { samplingPlan } from './sampling.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analysis-settings.mjs';
 import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
@@ -8,24 +8,33 @@ import { installSettings } from './settings-ui.mjs';
 import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
 import { createNativeClient } from './native-client.mjs';
 import { memorySnapshot } from './runtime-metrics.mjs';
+import { installPageBridge } from './page-bridge.mjs';
 import { setLanguage, setSiteLanguage, t, translatePage, localizedText, localizedAttribute } from './i18n.mjs';
-const { isExtension, installIntegration, integrationButton } = ['moz-extension:', 'chrome-extension:'].includes(location.protocol)
+const connected = installPageBridge();
+const { isExtension, installIntegration, integrationButton } = connected
   ? await import('./extension/integration.mjs')
   : { isExtension: false, installIntegration() {}, integrationButton() {} };
 const $ = s => document.querySelector(s);
-const settingsStore = createSettingsStore(isExtension ? { runtime: browser.runtime } : { storage: localStorage, events: window });
+let token = location.hash.slice(1) || sessionStorage.getItem('cake-token') || '';
+if (location.hash) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', location.pathname + location.search); }
+const api = async (url, options = {}) => {
+  const response = await fetch(url, { ...options, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', ...options.headers } });
+  const data = await response.json();
+  if (!response.ok) throw messageError(data.error || 'error.requestFailed');
+  return data;
+};
+const settingsStore = createSettingsStore({ storage: localStorage, events: window, request: (method, settings) => api('/api/settings', method === 'get' ? {} : { method: 'POST', body: JSON.stringify({ settings }) }) });
 let settings;
 try { settings = await settingsStore.load(); } catch { settings = settingsStore.get(); }
 setLanguage(settings); translatePage();
-let token = location.hash.slice(1), allTags = [], entries = [], running = false, controller, stopping = false;
-let mapping, modelSignature, inferencePool, poolPreference;
-// Remove the legacy persistent analysis cache; current results live only in memory.
-indexedDB.deleteDatabase('cake-tagger-browser-v1');
+let allTags = [], entries = [], running = false, controller, stopping = false;
+let mapping, modelSignature, nativeClient;
+// Legacy browser data is left untouched; current results live only in memory.
 const sessionRecords = new Map(), sessionCache = new Map();
 let preparing = false;
 const uploadAuto = createUploadAutoAnalysis({
-  busy: () => running || preparing,
-  enabled: () => document.body.classList.contains('embedded') && settings.autoAnalyzeEmbed,
+  busy: () => stopping || running || preparing,
+  enabled: () => !stopping && document.body.classList.contains('embedded') && settings.autoAnalyzeEmbed,
   prepare: setFiles,
   analyze: targets => analyze(targets, true)
 });
@@ -35,30 +44,21 @@ async function cached(key, value) {
   if (value) sessionCache.set(key, value);
   return sessionCache.get(key);
 }
-function terminateWorker() {
-  inferencePool?.stop();
+function cancelInference() {
+  nativeClient?.stop();
 }
-function infer(frames, parallelism) {
-  // Reconfigure between batches; changing settings never interrupts a running video.
-  if (!inferencePool || poolPreference !== parallelism) {
-    inferencePool?.stop(); poolPreference = parallelism;
-    inferencePool = createNativeClient({ extension: isExtension, token,
+function infer(frames, parallelism, excludedTags, parallelImages) {
+  // One transport per page. Session configuration belongs to the backend.
+  if (!nativeClient) {
+    nativeClient = createNativeClient({ token,
       onState: state => localizedText($('#status'), state),
       onProgress: (current, total) => localizedText($('#status'), message('analysis.progress', { current, total }))
     });
   }
-  return inferencePool.infer(frames, parallelism).then(result => {
+  return nativeClient.infer(frames, parallelism, { excludedTags, raw: false, parallelImages }).then(result => {
     return { ...result, runtime: { ...result.runtime, parallelismLimit: parallelism, memory: memorySnapshot() } };
   });
 }
-if (!isExtension && token) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', '/'); }
-else token = sessionStorage.getItem('cake-token') || '';
-const api = async (url, options = {}) => {
-  const r = await fetch(url, { ...options, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', ...options.headers } });
-  const data = await r.json();
-  if (!r.ok) throw messageError(data.error || 'error.requestFailed');
-  return data;
-};
 function showMessage(text) { localizedText($('#message'), text); }
 function remember(entry) {
   sessionRecords.set(entry.result.sha256, makeRecord(entry));
@@ -91,7 +91,7 @@ async function status() {
 function summary() {
   const complete = entries.filter(e => e.result).length;
   localizedText($('#summary'), message(entries.length === 1 ? 'results.summarySingle' : 'results.summary', { count: entries.length, done: complete }));
-  $('#analyze').disabled = running || preparing || !entries.some(e => e.hasFile) || !mapping;
+  $('#analyze').disabled = stopping || running || preparing || !entries.some(e => e.hasFile) || !mapping;
   $('#export').disabled = !complete;
 }
 function textElement(name, text, cls, localize = true) {
@@ -293,9 +293,9 @@ async function analyze(targets = entries, automatic = false) {
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
         else {
-          const inference = await infer(sampleData.inputs, analysisSettings.parallelism);
+          const inference = await infer(sampleData.inputs, analysisSettings.parallelism, analysisSettings.excludedTags, analysisSettings.parallelImages);
           controller.signal.throwIfAborted();
-          result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage, analysisSettings), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', runtime: inference.runtime, seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
+          result = { filename: entry.file.name, sha256: sampleData.sha256, ...inference.analysis, sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', runtime: inference.runtime, seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
           await cached(key, result);
         }
         result = { ...result, sampledFrames: count, samplingMode: sampleData.samplingMode, durationSeconds: sampleData.durationSeconds };
@@ -311,19 +311,13 @@ async function analyze(targets = entries, automatic = false) {
       render();
     }
   } catch (e) { showMessage(e.name === 'AbortError' ? 'analysis.cancelledHint' : errorMessage(e)); }
-  finally { running = false; $('#files').disabled = false; $('#cancel').hidden = true; render(); localizedText($('#status'), 'analysis.ready'); drainEmbeddedFiles(); }
+  finally { running = false; $('#files').disabled = false; $('#cancel').hidden = true; render(); if (!stopping) { localizedText($('#status'), 'analysis.ready'); drainEmbeddedFiles(); } }
 }
 $('#analyze').onclick = () => analyze();
-$('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
+$('#cancel').onclick = () => { controller?.abort(); cancelInference(); };
 $('#export').onclick = async () => {
   $('#export').disabled = true;
   try {
-    if (isExtension) {
-      const snapshot = { version: 2, source: 'cake-tagger-local', createdAt: new Date().toISOString(), items: entries.filter(e => e.result).map(exportItem) };
-      const url = URL.createObjectURL(new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' }));
-      const link = document.createElement('a'); link.href = url; link.download = 'cake-tags.json'; document.body.append(link); link.click(); link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60000); showMessage(''); return;
-    }
     const output = await api('/api/export', { method: 'POST', body: JSON.stringify({ items: entries.filter(e => e.result).map(makeRecord) }) });
     showMessage('');
     const link = document.createElement('a'); link.href = output.download; link.download = 'cake-tags.json'; document.body.append(link); link.click(); link.remove();
@@ -331,8 +325,10 @@ $('#export').onclick = async () => {
   finally { render(); }
 };
 $('#quit').onclick = async () => {
-  controller?.abort(); terminateWorker(); stopping = true;
-  try { await api('/api/stop', { method: 'POST' }); localizedText($('#status'), 'analysis.stopped'); showMessage('page.stoppedHint'); $('#analyze').disabled = true; } catch (e) { stopping = false; showMessage(errorMessage(e)); }
+  controller?.abort(); cancelInference(); stopping = true;
+    $('#quit').disabled = true;
+    try { if (!(await api('/api/stop', { method: 'POST' })).stopped) throw messageError('error.stopFailed'); localizedText($('#status'), 'analysis.stopped'); showMessage('page.stoppedHint'); $('#analyze').disabled = $('#files').disabled = $('#export').disabled = true; document.querySelectorAll('.settings-open').forEach(button => { button.disabled = true; }); }
+    catch (e) { stopping = false; $('#quit').disabled = false; showMessage(e instanceof TypeError ? 'error.stopFailed' : errorMessage(e)); }
 };
 await status();
 installIntegration(receiveFiles, theme => {
@@ -342,6 +338,7 @@ installIntegration(receiveFiles, theme => {
 });
 installSettings(settingsStore, allTags, document.body.classList.contains('embedded'));
 settingsStore.subscribe(next => {
+  if (isExtension) browser.runtime.sendMessage({ type: 'cake-tagger:settings-notify' }).catch(() => {});
   settings = next; setLanguage(settings); translatePage();
   if (!running && mapping) localizedText($('#status'), 'analysis.ready');
   render();

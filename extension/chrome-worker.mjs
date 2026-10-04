@@ -1,4 +1,4 @@
 import '../webext-api.js';
-import { handleSettings } from './settings-background.mjs';
+import * as server from './server-connection.mjs';
 import './background.js';
-globalThis.cakeSettingsHandler = message => handleSettings(browser, message);
+globalThis.cakeServer = server;

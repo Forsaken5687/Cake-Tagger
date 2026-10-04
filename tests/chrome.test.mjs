@@ -35,6 +35,8 @@ test('Chrome message bridge retains async responses and ignores messages with no
 });
 
 test('Chrome service worker initializes the shared settings and tag transfer handlers', async () => {
+  const previousFetch = globalThis.fetch;
+  globalThis.fetch = async url => new Response(JSON.stringify(url.endsWith('/api/connect') ? {token:'a'.repeat(48)} : {initialized:true, settings:{language:'en', frames:'16'}}), {status:200});
   const listeners = [], values = {}, transfers = [];
   globalThis.chrome = {
     action: { onClicked: { addListener() {} } },
@@ -45,14 +47,13 @@ test('Chrome service worker initializes the shared settings and tag transfer han
   try {
     await import('../extension/chrome-worker.mjs');
     assert.equal(listeners.length, 1);
-    const sender = { id: 'own', url: 'chrome-extension://own/index.html?embedded=1', tab: { id: 42 } };
+    const sender = { id: 'own', url: 'chrome-extension://own/extension/bridge.html?embedded=1', tab: { id: 42 } };
     const call = message => new Promise(resolve => {
       assert.equal(listeners[0](message, sender, resolve), true);
     });
-    await call({ type: 'cake-tagger:settings-set', settings: { language: 'en', frames: '16' } });
     assert.equal((await call({ type: 'cake-tagger:settings-get' })).settings.frames, '16');
     const response = await call({ type: 'cake-tagger:transfer', tabId: 42, filename: 'test.m4v', tags: ['tattoos'] });
     assert.deepEqual(response.added, ['tattoos']); assert.equal(transfers[0].type, 'cake-tagger:append');
     assert.equal(listeners[0]({ type: 'cake-tagger:transfer' }, { ...sender, id: 'other' }, () => {}), false);
-  } finally { delete globalThis.chrome; delete globalThis.browser; delete globalThis.cakeSettingsHandler; }
+  } finally { delete globalThis.chrome; delete globalThis.browser; delete globalThis.cakeServer; globalThis.fetch = previousFetch; }
 });

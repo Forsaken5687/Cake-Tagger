@@ -1,12 +1,16 @@
 // Stable message IDs keep wording and runtime data independent of each other.
 export const messages = {
+  'settings.hardwareThreads': { en: 'Automatic: {recommended} threads. Manual test maximum: {maximum} logical processors. Leave blank for Automatic; extra threads may reduce throughput. RAM does not limit this setting.', de: 'Automatisch: {recommended} Threads. Manuelles Testmaximum: {maximum} logische Prozessoren. Für Automatisch leer lassen; zusätzliche Threads können den Durchsatz senken. RAM begrenzt diese Einstellung nicht. Im Zwei-Bilder-Modus wird das Budget auf die Sitzungen aufgeteilt.' },
+  'error.threadLimit': { en: 'The requested thread count exceeds the available logical processors. Check Settings for the hardware limit.', de: 'Die Thread-Anzahl überschreitet die verfügbaren logischen Prozessoren. Das Hardware-Limit steht in den Einstellungen.' },
+  'error.stopFailed': { en: 'The local program could not be stopped. Please try again.', de: 'Das lokale Programm konnte nicht beendet werden. Bitte versuche es erneut.' },
   'error.nativeServer': { en: 'Start Cake Tagger with Start.cmd to connect to the local analysis server.', de: 'Starte Cake Tagger mit Start.cmd, um den lokalen Analyseserver zu verbinden.' },
   'error.nativeInference': { en: 'Local analysis failed. Check the server and run Setup.cmd if dependencies are missing.', de: 'Lokale Analyse fehlgeschlagen. Prüfe den Server und starte Setup.cmd, falls Abhängigkeiten fehlen.' },
   'error.nativeBusy': { en: 'The local analysis server is busy. Try again shortly.', de: 'Der lokale Analyseserver ist ausgelastet. Versuche es gleich noch einmal.' },
   'error.nativeModelChecksum': { en: 'Model checksum mismatch. Run Setup.cmd to restore the model.', de: 'Die Modell-Prüfsumme stimmt nicht. Stelle das Modell mit Setup.cmd wieder her.' },
   'settings.parallelism': { en: 'CPU parallelism', de: 'CPU-Parallelisierung' },
   'settings.parallelismCount': { en: 'Up to {count}', de: 'Bis zu {count}' },
-  'settings.parallelismHint': { en: 'CPU thread limit for the local server. Automatic uses up to half the available logical processors, capped at eight. Higher limits are not always faster.', de: 'CPU-Thread-Limit für den lokalen Server. Automatisch nutzt bis zur Hälfte der verfügbaren logischen Prozessoren, höchstens acht. Höhere Limits sind nicht immer schneller.' },
+  'settings.parallelImages': { en: 'Adaptively process two images at once', de: 'Adaptiv zwei Bilder gleichzeitig verarbeiten' },
+  'settings.parallelismHint': { en: 'Total CPU thread budget for the local server. Automatic uses half the available logical processors. Higher limits are not always faster.', de: 'Gesamtes CPU-Thread-Budget für den lokalen Server. Automatisch nutzt die Hälfte der verfügbaren logischen Prozessoren. Höhere Limits sind nicht immer schneller.' },
   // Runtime diagnostics.
   'diagnostics.title': { en: 'Runtime diagnostics', de: 'Laufzeit-Diagnose' },
   'diagnostics.description': { en: 'Check CPU runtime settings and optionally measure one synthetic image. No videos are needed.', de: 'Prüfe die CPU-Laufzeit und miss optional ein künstliches Testbild. Dafür werden keine Videos benötigt.' },

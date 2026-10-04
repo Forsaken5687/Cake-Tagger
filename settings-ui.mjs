@@ -17,11 +17,20 @@ export function settingsForm(store, tags, onSaved = () => {}) {
   };
   const language = field('settings.language', select([['auto', 'settings.automatic'], ['de', 'language.de'], ['en', 'language.en']])); language.value = draft.language;
   const frames = field('settings.frames', select([['auto', 'settings.autoFrames'], ...[4,6,8,12,16,24,32,48].map(n => [String(n), message('settings.frameCount', { count: n })])])); frames.value = draft.frames;
-  const parallelism = field('settings.parallelism', select([['auto', 'settings.automatic'], ...[1,2,4,6,8].map(count => [String(count), message('settings.parallelismCount', { count })])])); parallelism.value = draft.parallelism;
-  const computeHint = document.createElement('p'); localizedText(computeHint, 'settings.parallelismHint'); form.append(computeHint);
+  const parallelism = document.createElement('input'); parallelism.type = 'number'; parallelism.min = '1'; parallelism.step = '1';
+  parallelism.value = draft.parallelism === 'auto' ? '' : draft.parallelism;
+  localizedAttribute(parallelism, 'placeholder', 'settings.automatic'); field('settings.parallelism', parallelism);
+  const computeHint = document.createElement('p'); computeHint.className = 'settings-compute-hint'; form.append(computeHint);
+  localizedText(computeHint, 'settings.parallelismHint');
+  fetch('/api/capabilities', { headers: { Authorization: 'Bearer ' + (sessionStorage.getItem('cake-token') || '') } }).then(response => response.json()).then(capabilities => {
+    if (!Number.isSafeInteger(capabilities.testMaximum)) return;
+    parallelism.max = String(capabilities.testMaximum);
+    localizedText(computeHint, message('settings.hardwareThreads', { recommended: capabilities.recommendedThreads, maximum: capabilities.testMaximum }));
+  }).catch(() => {});
   const check = (label, key) => { const input = document.createElement('input'); input.type = 'checkbox'; input.checked = draft[key]; field(label, input).classList.add('settings-check'); return input; };
   const scores = check('settings.scores', 'showScores'), uncertain = check('settings.uncertain', 'showUncertain');
   const autoAnalyze = check('settings.autoAnalyze', 'autoAnalyzeEmbed');
+  const parallelImages = check('settings.parallelImages', 'parallelImages');
   const exclusions = document.createElement('section'); exclusions.className = 'settings-exclusions';
   const title = document.createElement('h3'); localizedText(title, 'settings.exclusions');
   const hint = document.createElement('p'); localizedText(hint, 'settings.exclusionsHint');
@@ -50,11 +59,11 @@ export function settingsForm(store, tags, onSaved = () => {}) {
   const actions = document.createElement('div'); actions.className = 'settings-actions';
   const reset = document.createElement('button'); reset.type = 'button'; reset.className = 'quiet'; localizedText(reset, 'action.defaults');
   const save = document.createElement('button'); save.type = 'submit'; localizedText(save, 'action.save');
-  reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; parallelism.value = draft.parallelism; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; autoAnalyze.checked = draft.autoAnalyzeEmbed; renderExclusions(); localizedText(status, ''); };
+  reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; parallelism.value = ''; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; autoAnalyze.checked = draft.autoAnalyzeEmbed; parallelImages.checked = draft.parallelImages; renderExclusions(); localizedText(status, ''); };
   form.onsubmit = async event => {
     event.preventDefault(); save.disabled = reset.disabled = true;
     try {
-      await store.save({ ...draft, language: language.value, frames: frames.value, parallelism: parallelism.value, showScores: scores.checked, showUncertain: uncertain.checked, autoAnalyzeEmbed: autoAnalyze.checked });
+      await store.save({ ...draft, language: language.value, frames: frames.value, parallelism: parallelism.value || 'auto', showScores: scores.checked, showUncertain: uncertain.checked, autoAnalyzeEmbed: autoAnalyze.checked, parallelImages: parallelImages.checked });
       onSaved();
     } catch (error) { localizedText(status, errorMessage(error)); }
     finally { save.disabled = reset.disabled = false; }

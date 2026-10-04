@@ -1,13 +1,12 @@
-import { isFileMessage } from './message-contract.mjs';
 import { message, messageError, errorMessage } from '../messages.mjs';
 import { t, localizedText } from '../i18n.mjs';
-import { applySiteTheme, isThemeMessage } from './site-theme.mjs';
-export const isExtension = ['moz-extension:', 'chrome-extension:'].includes(location.protocol);
+import { applySiteTheme } from './site-theme.mjs';
+export const isExtension = new URL(location.href).searchParams.get('integration') === '1';
 let select, refresh, busy = false;
 let embeddedTab = Number(new URL(location.href).searchParams.get('target'));
 const embedded = new URL(location.href).searchParams.get('embedded') === '1';
 const channel = new URL(location.href).searchParams.get('channel');
-const CAKE_ORIGIN = 'https://cake.ski';
+
 
 export function installIntegration(receiveFiles, onTheme = () => {}) {
   if (!isExtension) return;
@@ -30,19 +29,20 @@ export function installIntegration(receiveFiles, onTheme = () => {}) {
     if (sender.id === browser.runtime.id && message?.type === 'cake-tagger:site-theme-updated' && message.tabId === Number(embedded ? embeddedTab : select?.value)) applyTheme(message.theme);
   });
   window.addEventListener('focus', requestTheme);
-  document.querySelector('#quit').hidden = true;
   if (embedded && channel) {
     document.body.classList.add('embedded');
+    document.querySelector('.panel-heading').append(document.querySelector('#quit'));
     document.querySelector('#upload-title').dataset.i18n = 'analysis.title'; document.querySelector('#upload-title').textContent = t('analysis.title');
     document.querySelector('.results-heading h2').dataset.i18n = 'results.suggestions'; document.querySelector('.results-heading h2').textContent = t('results.suggestions');
-    window.addEventListener('message', event => {
-      if (isThemeMessage(event, parent, CAKE_ORIGIN, channel)) applyTheme(event.data.theme);
-      if (isFileMessage(event, parent, CAKE_ORIGIN, channel, File)) receiveFiles(event.data.files);
+    window.addEventListener('cake-tagger:upload-message', event => {
+      if (event.detail?.channel !== channel) return;
+      if (event.detail.type === 'cake-tagger:theme') applyTheme(event.detail.theme);
+      if (event.detail.type === 'cake-tagger:files' && Array.isArray(event.detail.files) && event.detail.files.every(file => file instanceof File)) receiveFiles(event.detail.files);
     });
     if (!Number.isInteger(embeddedTab) || embeddedTab <= 0) browser.runtime.sendMessage({ type: 'cake-tagger:tab-id' }).then(id => { embeddedTab = id; }).catch(() => {
       localizedText(document.querySelector('#message'), 'error.uploadTabUnavailable');
     });
-    parent.postMessage({ type: 'cake-tagger:ready', channel }, CAKE_ORIGIN);
+    parent.postMessage({ type: 'cake-tagger:ready', channel }, new URL(location.href).searchParams.get('bridgeOrigin'));
     return;
   }
   const panel = document.createElement('section'); panel.className = 'panel integration-panel';

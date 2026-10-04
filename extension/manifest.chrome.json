@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "host_permissions": [
@@ -41,17 +41,27 @@
         "extension/content.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "webext-api.js",
+        "extension/local-bridge.js"
+      ],
+      "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
     {
       "resources": [
-        "index.html",
         "extension/upload-adapter.mjs",
         "extension/embedded-upload.mjs",
         "tags.txt",
         "extension/site-theme.mjs",
-        "messages.mjs"
+        "messages.mjs",
+        "extension/bridge.html"
       ],
       "matches": [
         "https://cake.ski/*"
@@ -59,7 +69,7 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; script-src 'self'; worker-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self'; connect-src 'self' http://127.0.0.1:8765; object-src 'none'"
+    "extension_pages": "default-src 'self'; script-src 'self'; img-src 'self' data: blob:; style-src 'self'; connect-src 'self' http://127.0.0.1:8765; frame-src http://127.0.0.1:8765; object-src 'none'"
   },
   "minimum_chrome_version": "120"
 }

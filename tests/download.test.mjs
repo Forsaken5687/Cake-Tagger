@@ -13,7 +13,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['static.mjs', 'native-engine.mjs', 'native-client.mjs', 'diagnostics.html', 'diagnostics.mjs', 'runtime-metrics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
+  for (const name of ['static.mjs', 'native-policy.mjs', 'preferences.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'native-engine.mjs', 'native-client.mjs', 'diagnostics.html', 'diagnostics.mjs', 'runtime-metrics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
   fs.mkdirSync(path.join(root, 'extension'));
   fs.copyFileSync(new URL('../extension/auto-analysis.mjs', import.meta.url), path.join(root, 'extension/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
@@ -44,10 +44,20 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.equal((await fetch(url.origin + '/api/runtime', { headers: { ...headers, Origin: 'https://cake.ski' } })).status, 403);
     assert.equal((await fetch(url.origin + '/extension/auto-analysis.mjs')).status, 200);
     assert.equal((await fetch(url.origin + '/extension/background.js')).status, 404);
+    const caps = await (await fetch(url.origin + '/api/capabilities', { headers })).json();
+    assert.equal(caps.testMaximum, caps.logicalProcessors);
+    assert.equal((await fetch(url.origin + '/api/settings')).status, 401);
+    const settings = { language:'en', parallelism:String(Math.min(16,caps.testMaximum)), excludedTags:['tattoos'] };
+    const saved = await fetch(url.origin + '/api/settings', { method:'POST', headers, body:JSON.stringify({settings}) });
+    assert.equal(saved.status, 200);
+    assert.equal((await (await fetch(url.origin + '/api/settings', { headers })).json()).settings.parallelism, settings.parallelism);
+    const invalidSettings = await fetch(url.origin + '/api/settings', {method:'POST',headers,body:JSON.stringify({settings:{parallelism:String(caps.testMaximum+1)}})});
+    assert.equal(invalidSettings.status,400);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).parallelism, settings.parallelism);
     const diagnostics = await fetch(url.origin + '/diagnostics.html');
     assert.equal(diagnostics.status, 200);
-    assert.equal(diagnostics.headers.get('cross-origin-opener-policy'), 'same-origin');
-    assert.equal(diagnostics.headers.get('cross-origin-embedder-policy'), 'require-corp');
+    assert.equal(diagnostics.headers.get('cross-origin-opener-policy'), null);
+    assert.equal(diagnostics.headers.get('cross-origin-embedder-policy'), null);
     assert.equal((await fetch(url.origin + '/diagnostics.mjs')).status, 200);
     assert.equal((await fetch(url.origin + '/inference-pool.mjs')).status, 404);
     assert.equal((await fetch(url.origin + '/compute-policy.js')).status, 404);
@@ -88,8 +98,14 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.equal(fs.existsSync(path.join(root, 'outputs')), false);
     assert.equal(fs.readFileSync(old, 'utf8'), 'legacy data deliberately not parsed');
     assert.equal((await fetch(url.origin + '/api/corrections', { headers })).status, 404);
+    const exiting = once(child,'exit');
+    const stopped = await fetch(url.origin+'/api/stop',{method:'POST',headers});
+    assert.deepEqual(await stopped.json(),{stopped:true});
+    assert.equal((await exiting)[0],0);
+    assert.equal(fs.readFileSync(old,'utf8'),'legacy data deliberately not parsed');
+    assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).parallelism,settings.parallelism);
   } finally {
-    const ended = once(child, 'exit'); child.kill(); await ended;
+    if (child.exitCode === null) { const ended = once(child, 'exit'); child.kill(); await ended; }
     assert(fs.realpathSync(root).startsWith(parent + path.sep));
     fs.rmSync(root, { recursive: true, force: true });
   }

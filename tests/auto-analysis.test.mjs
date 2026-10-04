@@ -50,7 +50,7 @@ test('manual analysis delays automatic work; the toggle defaults on and persists
   assert.equal(normalizeSettings().autoAnalyzeEmbed, true);
   assert.equal(normalizeSettings({ autoAnalyzeEmbed: 'false' }).autoAnalyzeEmbed, true);
   let saved;
-  const storage = { getItem: () => saved, setItem: (_, value) => { saved = value; } };
-  const store = createSettingsStore({ storage }); await store.save({ autoAnalyzeEmbed: false });
-  assert.equal((await createSettingsStore({ storage }).load()).autoAnalyzeEmbed, false);
+  const request = async (method,value) => { if (method === 'set') saved=value; return {settings:saved,initialized:!!saved}; };
+  const store = createSettingsStore({ request }); await store.save({ autoAnalyzeEmbed: false });
+  assert.equal((await createSettingsStore({ request }).load()).autoAnalyzeEmbed, false);
 });

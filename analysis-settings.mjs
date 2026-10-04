@@ -21,7 +21,9 @@ export function validateTimings(value) {
   if (value == null) return null;
   const keys = ['samplingSeconds', 'modelLoadSeconds', 'preprocessSeconds', 'inferenceSeconds', 'totalSeconds'];
   if (typeof value !== 'object' || Array.isArray(value) || keys.some(key => !Number.isFinite(value[key]) || value[key] < 0 || value[key] > 86400)) throw messageError('error.invalidAnalysisTimings');
-  return Object.fromEntries(keys.map(key => [key, value[key]]));
+  const optional = ['queueSeconds', 'cpuSeconds', 'workerWallSeconds'];
+  if (optional.some(key => value[key] != null && (!Number.isFinite(value[key]) || value[key] < 0 || value[key] > 86400))) throw messageError('error.invalidAnalysisTimings');
+  return Object.fromEntries([...keys, ...optional.filter(key => value[key] != null)].map(key => [key, value[key]]));
 }
 
 // Optional diagnostics contain capabilities, not full user agents or machine identifiers.
@@ -29,14 +31,18 @@ export function validateRuntime(value) {
   if (value == null) return null;
   const native = value?.provider === 'native-cpu';
   if (typeof value !== 'object' || Array.isArray(value) || !['wasm', 'native-cpu'].includes(value.provider)
-    || (native ? !Number.isInteger(value.configuredNativeThreads) || value.configuredNativeThreads < 1 || value.configuredNativeThreads > 8
+    || (native ? !Number.isInteger(value.configuredNativeThreads) || value.configuredNativeThreads < 1 || value.configuredNativeThreads > value.hardwareConcurrency
       || !/^\d+\.\d+\.\d+$/.test(value.runtimeVersion) || !/^[a-f0-9]{64}$/.test(value.modelSha256)
       : !Number.isInteger(value.configuredWasmThreads) || value.configuredWasmThreads < 1 || value.configuredWasmThreads > 8)
-    || !Number.isInteger(value.hardwareConcurrency) || value.hardwareConcurrency < 1 || value.hardwareConcurrency > 4096
+    || !Number.isInteger(value.hardwareConcurrency) || value.hardwareConcurrency < 1 || !Number.isSafeInteger(value.hardwareConcurrency)
     || (!native && (typeof value.crossOriginIsolated !== 'boolean' || typeof value.sharedArrayBufferAvailable !== 'boolean'
       || !['firefox', 'chromium', 'other'].includes(value.browser)))
     || (value.inferenceWorkers != null && (!Number.isInteger(value.inferenceWorkers) || value.inferenceWorkers < 1 || value.inferenceWorkers > 8))) throw messageError('error.invalidAnalysisRuntime');
-  if (value.parallelismLimit != null && !['auto', '1', '2', '4', '6', '8'].includes(value.parallelismLimit)) throw messageError('error.invalidAnalysisRuntime');
+  if (value.parallelismLimit != null && value.parallelismLimit !== 'auto' && (!/^[1-9]\d*$/.test(value.parallelismLimit) || !Number.isSafeInteger(Number(value.parallelismLimit)))) throw messageError('error.invalidAnalysisRuntime');
+  if (native && value.threadsPerSession != null && (!Array.isArray(value.threadsPerSession)
+    || value.threadsPerSession.length !== value.inferenceWorkers || value.threadsPerSession.some(count => !Number.isSafeInteger(count) || count < 1)
+    || value.threadsPerSession.reduce((sum,count)=>sum+count,0) !== value.configuredNativeThreads
+    || !['auto','single'].includes(value.imageParallelism) || !Number.isInteger(value.residentSessions) || value.residentSessions < value.inferenceWorkers || value.residentSessions > 2)) throw messageError('error.invalidAnalysisRuntime');
   let memory;
   if (value.memory != null) {
     const keys = ['reportedDeviceMemoryGB', 'pageJsHeapUsedBytes', 'pageJsHeapTotalBytes', 'pageJsHeapLimitBytes'];
@@ -57,6 +63,8 @@ export function validateRuntime(value) {
     : ['provider', 'configuredWasmThreads', 'crossOriginIsolated', 'sharedArrayBufferAvailable', 'hardwareConcurrency', 'browser']).map(key => [key, value[key]])),
     ...(value.inferenceWorkers != null ? { inferenceWorkers: value.inferenceWorkers } : {}),
     ...(value.parallelismLimit != null ? { parallelismLimit: value.parallelismLimit } : {}),
+    ...(native ? Object.fromEntries(['logicalProcessors', 'recommendedThreads', 'testMaximum', 'queueCapacity'].filter(key => Number.isSafeInteger(value[key]) && value[key] > 0).map(key => [key, value[key]])) : {}),
+    ...(native && value.threadsPerSession != null ? { threadsPerSession: [...value.threadsPerSession], imageParallelism:value.imageParallelism, residentSessions:value.residentSessions } : {}),
     ...(memory ? { memory } : {}),
     ...(Object.hasOwn(value, 'hostMemory') ? { hostMemory } : {}),
     ...(Object.hasOwn(value, 'serverMemory') ? { serverMemory } : {}) };
