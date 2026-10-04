@@ -13,7 +13,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['static.mjs', 'diagnostics.html', 'diagnostics.mjs', 'inference-pool.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
+  for (const name of ['static.mjs', 'diagnostics.html', 'diagnostics.mjs', 'inference-pool.mjs', 'compute-policy.js', 'runtime-metrics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
   fs.mkdirSync(path.join(root, 'extension'));
   fs.copyFileSync(new URL('../extension/auto-analysis.mjs', import.meta.url), path.join(root, 'extension/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
@@ -26,6 +26,13 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert(fs.existsSync(sessionPath), 'server started');
     const url = new URL(JSON.parse(fs.readFileSync(sessionPath, 'utf8')).url);
     const headers = { Authorization: 'Bearer ' + url.hash.slice(1), 'Content-Type': 'application/json' };
+    assert.equal((await fetch(url.origin + '/api/runtime')).status, 401);
+    const runtimeResponse = await fetch(url.origin + '/api/runtime', { headers });
+    assert.equal(runtimeResponse.status, 200);
+    const runtime = await runtimeResponse.json();
+    assert(runtime.hostMemory.totalBytes > 0); assert(runtime.hostMemory.freeBytes <= runtime.hostMemory.totalBytes);
+    assert(runtime.serverMemory.rssBytes > 0);
+    assert.equal((await fetch(url.origin + '/api/runtime', { headers: { ...headers, Origin: 'https://cake.ski' } })).status, 403);
     assert.equal((await fetch(url.origin + '/extension/auto-analysis.mjs')).status, 200);
     assert.equal((await fetch(url.origin + '/extension/background.js')).status, 404);
     const diagnostics = await fetch(url.origin + '/diagnostics.html');
@@ -34,6 +41,8 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.equal(diagnostics.headers.get('cross-origin-embedder-policy'), 'require-corp');
     assert.equal((await fetch(url.origin + '/diagnostics.mjs')).status, 200);
     assert.equal((await fetch(url.origin + '/inference-pool.mjs')).status, 200);
+    assert.equal((await fetch(url.origin + '/compute-policy.js')).status, 200);
+    assert.equal((await fetch(url.origin + '/runtime-metrics.mjs')).status, 200);
     const sha = 'a'.repeat(64);
     const record = { filename: 'synthetic.mp4', sha256: sha, tags: ['tattoos'], candidateTags: ['tattoos'], reviewed: true, originalSuggestionsKnown: true,
       result: { sha256: sha, tags: [{ tag: 'tattoos', confidence: 0.8, supportingFrames: 4 }], uncertain: [], sampledFrames: 4, threshold: 0.4, analysisPolicy: 'coverage-v5:majority:["hairy","watermark"]', model: 'JoyTag-INT8' } };

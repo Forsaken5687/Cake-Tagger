@@ -25,6 +25,8 @@ The extension's analysis does not upload videos, but cake.ski may stage Bulk dra
 
 ## Remaining trust and limitations
 
+The standalone `/api/runtime` endpoint requires the existing session token and rejects cross-origin requests. It reports system memory availability and the Node server's allocations; it does not inspect other processes. Extension pages do not contact this endpoint or request localhost access. Exported memory metrics are optional and distinguish their measurement scopes.
+
 The browser, local operating system, pinned Node runtime, ONNX Runtime Web, community-converted model and cake.ski page remain trusted components. Checksums establish artifact identity; they do not prove that an artifact is safe. This project does not sandbox other applications running under the same local account.
 
 Browsers decode media and execute WebAssembly; keep supported browsers updated. Large batches can consume substantial CPU and memory despite per-video limits. The model's semantic accuracy and frame-coverage heuristics need an independently reviewed dataset.

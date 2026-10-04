@@ -7,6 +7,7 @@ import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
 import { installSettings } from './settings-ui.mjs';
 import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
 import { createInferencePool, inferenceConcurrency } from './inference-pool.mjs';
+import { memorySnapshot } from './runtime-metrics.mjs';
 import { setLanguage, setSiteLanguage, t, translatePage, localizedText, localizedAttribute } from './i18n.mjs';
 const { isExtension, installIntegration, integrationButton } = ['moz-extension:', 'chrome-extension:'].includes(location.protocol)
   ? await import('./extension/integration.mjs')
@@ -17,13 +18,7 @@ let settings;
 try { settings = await settingsStore.load(); } catch { settings = settingsStore.get(); }
 setLanguage(settings); translatePage();
 let token = location.hash.slice(1), allTags = [], entries = [], running = false, controller, stopping = false;
-let mapping, modelSignature;
-const inferencePool = createInferencePool({
-  createWorker: () => new Worker('/engine-worker.js'),
-  concurrency: inferenceConcurrency({ isolated: globalThis.crossOriginIsolated, cores: navigator.hardwareConcurrency, memoryGB: navigator.deviceMemory }),
-  onState: state => localizedText($('#status'), state),
-  onProgress: (current, total) => localizedText($('#status'), message('analysis.progress', { current, total }))
-});
+let mapping, modelSignature, inferencePool, poolPreference;
 // Remove the legacy persistent analysis cache; current results live only in memory.
 indexedDB.deleteDatabase('cake-tagger-browser-v1');
 const sessionRecords = new Map(), sessionCache = new Map();
@@ -41,10 +36,25 @@ async function cached(key, value) {
   return sessionCache.get(key);
 }
 function terminateWorker() {
-  inferencePool.stop();
+  inferencePool?.stop();
 }
-function infer(frames) {
-  return inferencePool.infer(frames);
+function infer(frames, parallelism) {
+  // Reconfigure between batches; changing settings never interrupts a running video.
+  if (!inferencePool || poolPreference !== parallelism) {
+    inferencePool?.stop(); poolPreference = parallelism;
+    inferencePool = createInferencePool({
+      createWorker: () => new Worker('/engine-worker.js?parallelism=' + encodeURIComponent(parallelism)),
+      concurrency: inferenceConcurrency({ isolated: globalThis.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined', cores: navigator.hardwareConcurrency, memoryGB: navigator.deviceMemory, parallelism }),
+      onState: state => localizedText($('#status'), state),
+      onProgress: (current, total) => localizedText($('#status'), message('analysis.progress', { current, total }))
+    });
+  }
+  return inferencePool.infer(frames).then(async result => {
+    let serverMetrics = { hostMemory: null, serverMemory: null };
+    // Diagnostics are optional: an unavailable or older server must not discard tags.
+    if (!isExtension) { try { serverMetrics = await api('/api/runtime', { signal: AbortSignal.timeout(1500) }); } catch {} }
+    return { ...result, runtime: { ...result.runtime, parallelismLimit: parallelism, memory: memorySnapshot(), ...serverMetrics } };
+  });
 }
 if (!isExtension && token) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', '/'); }
 else token = sessionStorage.getItem('cake-token') || '';
@@ -288,7 +298,7 @@ async function analyze(targets = entries, automatic = false) {
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
         else {
-          const inference = await infer(sampleData.inputs);
+          const inference = await infer(sampleData.inputs, analysisSettings.parallelism);
           controller.signal.throwIfAborted();
           result = { filename: entry.file.name, sha256: sampleData.sha256, ...aggregate(inference.scores, mapping, threshold, coverage, analysisSettings), sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', runtime: inference.runtime, seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
           await cached(key, result);

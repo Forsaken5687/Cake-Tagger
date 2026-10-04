@@ -40,6 +40,7 @@ A Git checkout omits three large dependencies. Run `Setup.cmd` once to download 
 - Language: Automatic, German or English. Automatic follows cake.ski in connected extension views and the browser language in standalone use. Tag names are unchanged.
 - Automatically analyze upload videos: enabled by default; applies only to the embedded upload workflow.
 - Images per video: automatic by duration, or a fixed count from 4 to 48.
+- CPU parallelism: Automatic or an upper limit of 1, 2, 4, 6 or 8. Changes apply to subsequent analyses. The limit counts WASM threads on isolated pages and independent workers on other pages.
 - Show or hide model scores and uncertain suggestions.
 - Exclude tags from new automatic suggestions. `hairy` and `watermark` are excluded by default and can be enabled individually.
 
@@ -53,7 +54,11 @@ The base threshold is fixed at 0.4. Most suggested tags require support in more 
 
 The displayed score is the average of the two strongest frame matches. It is not the proportion of the video showing a tag or the probability that the tag is correct. The JSON export preserves selections, original suggestions, scores, tag origins and analysis timings.
 
-The local server page uses up to four CPU threads in one model session. Extension views without shared-memory isolation process frames in up to four independent workers, depending on reported CPU and memory capabilities. This uses more RAM; model sessions are reused across videos and released when analysis is cancelled or fails. Parallel processing preserves frame order and tag scores.
+Both views use the shared hardware policy in `compute-policy.js`. The local server page uses up to eight CPU threads in one model session. Extension views without shared-memory isolation process frames in up to eight independent workers. The limit reserves CPU capacity for other work and respects reported device memory when available. Automatic uses at most four independent workers when memory information is unavailable; a manual limit can raise this to eight. Additional model sessions use more RAM and are reused across videos, then released on cancellation or failure. Parallel processing preserves frame order.
+
+JSON runtime details include the actual worker count, configured thread count, chosen parallelism limit and available memory metrics. Page JavaScript heap measurements exclude worker and WASM memory; unavailable fields are `null`. They are not the total RAM consumed by the model.
+
+Standalone exports also include operating-system total/free memory and Node server memory, recorded separately after analysis. Extension exports do not require a server and omit these measurements. None of these fields represents peak model RAM.
 
 ## Limitations
 

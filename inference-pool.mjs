@@ -1,17 +1,15 @@
 import { messageError } from './messages.mjs';
+import './compute-policy.js';
 
 // Isolated pages use one internally threaded session. Extension pages process
 // independent frames in separate single-threaded sessions instead.
-export function inferenceConcurrency({ isolated, cores = 2, memoryGB } = {}) {
-  if (isolated) return 1;
-  const cpuLimit = Math.max(1, Math.floor((Number.isFinite(cores) ? cores : 2) / 2));
-  const memoryLimit = Number.isFinite(memoryGB) && memoryGB <= 2 ? 1 : Number.isFinite(memoryGB) && memoryGB <= 4 ? 2 : 4;
-  return Math.min(4, cpuLimit, memoryLimit);
+export function inferenceConcurrency(capabilities = {}) {
+  return globalThis.cakeTaggerComputePolicy(capabilities).workers;
 }
 
 export function createInferencePool({ createWorker, concurrency = 1, onState = () => {}, onProgress = () => {} }) {
   let workers = [], active = false, generation = 0;
-  const limit = Math.max(1, Math.min(4, Math.floor(Number.isFinite(concurrency) ? concurrency : 1)));
+  const limit = Math.max(1, Math.min(8, Math.floor(Number.isFinite(concurrency) ? concurrency : 1)));
   const jobs = new Set();
   function stop(error = new DOMException('analysis.cancelled', 'AbortError')) {
     generation++;

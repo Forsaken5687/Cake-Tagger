@@ -1,4 +1,5 @@
 importScripts('/vendor/ort.wasm.min.js');
+importScripts('/compute-policy.js');
 let session;
 function runtimeInfo() {
   return { provider: 'wasm', configuredWasmThreads: ort.env.wasm.numThreads,
@@ -12,8 +13,10 @@ async function load() {
   if (session) return session;
   postMessage({ type: 'state', state: 'analysis.loadingModel' });
   ort.env.wasm.wasmPaths = '/vendor/';
-  ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
-  session = await ort.InferenceSession.create('/model/joytag-int8.onnx', { executionProviders: ['wasm'], graphOptimizationLevel: 'all', intraOpNumThreads: 4 });
+  const parallelism = new URL(self.location.href).searchParams.get('parallelism') || 'auto';
+  const policy = globalThis.cakeTaggerComputePolicy({ isolated: self.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined', cores: navigator.hardwareConcurrency, memoryGB: navigator.deviceMemory, parallelism });
+  ort.env.wasm.numThreads = policy.threads;
+  session = await ort.InferenceSession.create('/model/joytag-int8.onnx', { executionProviders: ['wasm'], graphOptimizationLevel: 'all', intraOpNumThreads: policy.threads });
   postMessage({ type: 'state', state: 'analysis.ready' });
   return session;
 }

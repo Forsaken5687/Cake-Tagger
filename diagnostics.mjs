@@ -1,5 +1,6 @@
 import { setLanguage, translatePage, localizedText } from './i18n.mjs';
 import { errorMessage } from './messages.mjs';
+import { memorySnapshot } from './runtime-metrics.mjs';
 
 setLanguage({ language: 'auto' }); translatePage();
 const status = document.querySelector('#status'), report = document.querySelector('#report');
@@ -16,7 +17,7 @@ worker.onmessage = ({ data }) => {
   if (data.type === 'error') return fail(new Error(data.error));
   if (data.type !== 'done') return;
   busy = false;
-  details = { ...details, runtime: data.runtime,
+  details = { ...details, runtime: { ...data.runtime, memory: memorySnapshot() },
     ...(data.id === 'load' ? { modelLoadSeconds: data.seconds } : { sampledFrames: 1, timings: data.timings, totalSeconds: data.seconds, outputLabels: data.scores[0].length }) };
   report.textContent = JSON.stringify(details, null, 2);
   run.disabled = download.disabled = false; localizedText(status, 'analysis.ready');

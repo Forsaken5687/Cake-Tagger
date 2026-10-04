@@ -28,11 +28,32 @@ export function validateTimings(value) {
 export function validateRuntime(value) {
   if (value == null) return null;
   if (typeof value !== 'object' || Array.isArray(value) || value.provider !== 'wasm'
-    || !Number.isInteger(value.configuredWasmThreads) || value.configuredWasmThreads < 1 || value.configuredWasmThreads > 4
+    || !Number.isInteger(value.configuredWasmThreads) || value.configuredWasmThreads < 1 || value.configuredWasmThreads > 8
     || !Number.isInteger(value.hardwareConcurrency) || value.hardwareConcurrency < 1 || value.hardwareConcurrency > 4096
     || typeof value.crossOriginIsolated !== 'boolean' || typeof value.sharedArrayBufferAvailable !== 'boolean'
     || !['firefox', 'chromium', 'other'].includes(value.browser)
-    || (value.inferenceWorkers != null && (!Number.isInteger(value.inferenceWorkers) || value.inferenceWorkers < 1 || value.inferenceWorkers > 4))) throw messageError('error.invalidAnalysisRuntime');
+    || (value.inferenceWorkers != null && (!Number.isInteger(value.inferenceWorkers) || value.inferenceWorkers < 1 || value.inferenceWorkers > 8))) throw messageError('error.invalidAnalysisRuntime');
+  if (value.parallelismLimit != null && !['auto', '1', '2', '4', '6', '8'].includes(value.parallelismLimit)) throw messageError('error.invalidAnalysisRuntime');
+  let memory;
+  if (value.memory != null) {
+    const keys = ['reportedDeviceMemoryGB', 'pageJsHeapUsedBytes', 'pageJsHeapTotalBytes', 'pageJsHeapLimitBytes'];
+    if (typeof value.memory !== 'object' || Array.isArray(value.memory)
+      || !['page-js-heap', 'unavailable'].includes(value.memory.scope)
+      || keys.some(key => value.memory[key] !== null && (!Number.isFinite(value.memory[key]) || value.memory[key] < 0 || value.memory[key] > Number.MAX_SAFE_INTEGER))) throw messageError('error.invalidAnalysisRuntime');
+    memory = { ...Object.fromEntries(keys.map(key => [key, value.memory[key]])), scope: value.memory.scope };
+  }
+  const memoryFields = (input, keys) => {
+    if (input == null) return null;
+    if (typeof input !== 'object' || Array.isArray(input) || keys.some(key => !Number.isSafeInteger(input[key]) || input[key] < 0)) throw messageError('error.invalidAnalysisRuntime');
+    return Object.fromEntries(keys.map(key => [key, input[key]]));
+  };
+  const hostMemory = memoryFields(value.hostMemory, ['totalBytes', 'freeBytes']);
+  const serverMemory = memoryFields(value.serverMemory, ['rssBytes', 'heapUsedBytes', 'heapTotalBytes', 'externalBytes', 'arrayBuffersBytes']);
+  if (hostMemory && (hostMemory.totalBytes === 0 || hostMemory.freeBytes > hostMemory.totalBytes)) throw messageError('error.invalidAnalysisRuntime');
   return { ...Object.fromEntries(['provider', 'configuredWasmThreads', 'crossOriginIsolated', 'sharedArrayBufferAvailable', 'hardwareConcurrency', 'browser'].map(key => [key, value[key]])),
-    ...(value.inferenceWorkers != null ? { inferenceWorkers: value.inferenceWorkers } : {}) };
+    ...(value.inferenceWorkers != null ? { inferenceWorkers: value.inferenceWorkers } : {}),
+    ...(value.parallelismLimit != null ? { parallelismLimit: value.parallelismLimit } : {}),
+    ...(memory ? { memory } : {}),
+    ...(Object.hasOwn(value, 'hostMemory') ? { hostMemory } : {}),
+    ...(Object.hasOwn(value, 'serverMemory') ? { serverMemory } : {}) };
 }

@@ -22,5 +22,5 @@ test('runtime diagnostics survive correction export without retaining arbitrary 
   const record = validateRecord(makeRecord(entry), ['solo']);
   assert.deepEqual(exportItem(applyRecord({ file: entry.file }, record)).runtime, runtime);
   assert.equal(validateRuntime(undefined), null);
-  for (const broken of [{}, { ...runtime, configuredWasmThreads: 0 }, { ...runtime, configuredWasmThreads: 1.5 }, { ...runtime, inferenceWorkers: 5 }, { ...runtime, hardwareConcurrency: '24' }, { ...runtime, crossOriginIsolated: 'true' }, { ...runtime, browser: 'unknown' }]) assert.throws(() => validateRuntime(broken));
+  for (const broken of [{}, { ...runtime, configuredWasmThreads: 0 }, { ...runtime, configuredWasmThreads: 1.5 }, { ...runtime, inferenceWorkers: 9 }, { ...runtime, hardwareConcurrency: '24' }, { ...runtime, crossOriginIsolated: 'true' }, { ...runtime, browser: 'unknown' }]) assert.throws(() => validateRuntime(broken));
 });

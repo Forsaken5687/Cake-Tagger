@@ -1,5 +1,8 @@
 // Stable message IDs keep wording and runtime data independent of each other.
 export const messages = {
+  'settings.parallelism': { en: 'CPU parallelism', de: 'CPU-Parallelisierung' },
+  'settings.parallelismCount': { en: 'Up to {count}', de: 'Bis zu {count}' },
+  'settings.parallelismHint': { en: 'Limited by reported CPU and memory capabilities. Higher limits can use more RAM and are not always faster. Automatic stays conservative when memory information is unavailable.', de: 'Wird an die gemeldete CPU und den Arbeitsspeicher angepasst. Höhere Limits können mehr RAM benötigen und sind nicht immer schneller. Automatisch bleibt bei fehlenden RAM-Angaben vorsichtig.' },
   // Runtime diagnostics.
   'diagnostics.title': { en: 'Runtime diagnostics', de: 'Laufzeit-Diagnose' },
   'diagnostics.description': { en: 'Check CPU runtime settings and optionally measure one synthetic image. No videos are needed.', de: 'Prüfe die CPU-Laufzeit und miss optional ein künstliches Testbild. Dafür werden keine Videos benötigt.' },

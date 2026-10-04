@@ -7,7 +7,7 @@ export function buildExtension(target) {
   if (!['firefox', 'chrome'].includes(target)) throw Error('Unsupported browser.');
   const output = path.join(root, 'outputs', target);
   fs.mkdirSync(output, { recursive: true });
-  const files = ['index.html', 'webext-api.js', 'app.js', 'style.css', 'engine-worker.js', 'inference-pool.mjs', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'messages.mjs', 'corrections.mjs', 'sampling.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'tags.txt', 'THIRD_PARTY.md', 'scripts/assets.json', 'assets/logo.svg',
+  const files = ['index.html', 'webext-api.js', 'app.js', 'style.css', 'engine-worker.js', 'compute-policy.js', 'runtime-metrics.mjs', 'inference-pool.mjs', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'messages.mjs', 'corrections.mjs', 'sampling.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'tags.txt', 'THIRD_PARTY.md', 'scripts/assets.json', 'assets/logo.svg',
     'extension/background.js', 'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/auto-analysis.mjs', 'extension/site-theme.mjs', 'extension/message-contract.mjs', 'extension/upload-adapter.mjs', 'extension/integration.mjs',
     'extension/settings-background.mjs', '_locales/en/messages.json', '_locales/de/messages.json',
     'model/LICENSE.txt', 'model/coverage.json', 'model/provenance.json', 'model/top_tags.txt',
