@@ -1,4 +1,4 @@
-import { messageError } from './messages.mjs';
+import { messageError } from '../shared/messages.mjs';
 
 // Only the same-origin local page can request this handshake. External websites
 // cannot reproduce its Origin plus custom header through an approved preflight.

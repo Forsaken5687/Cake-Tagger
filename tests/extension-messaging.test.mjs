@@ -48,7 +48,7 @@ test('embedded transfer works with runtime messaging and no browser.tabs API', a
   try {
     globalThis.location = { protocol: 'http:', href: 'http://127.0.0.1:8765/?integration=1&embedded=1&target=42' };
     globalThis.browser = { runtime: { sendMessage: message => listener(message, sender) } };
-    const { integrationButton } = await import('../extension/integration.mjs?runtime-only');
+    const { integrationButton } = await import('../src/client/integration.mjs?runtime-only');
     const messages = [];
     const button = integrationButton({ file: { name: 'clip.m4v' }, selected: new Map([['tattoos', true], ['glasses', false]]) }, () => ({}), message => messages.push(message));
     await button.onclick();

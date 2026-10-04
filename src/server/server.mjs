@@ -1,4 +1,4 @@
-import { messageError, errorMessage } from './messages.mjs';
+import { messageError, errorMessage } from '../shared/messages.mjs';
 import http from 'node:http';
 import os from 'node:os';
 import fs from 'node:fs';
@@ -6,22 +6,51 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
-import { validateRecord, applyRecord, exportItem } from './corrections.mjs';
-import { validatedSessionURL } from './session-url.mjs';
+import { validateRecord, applyRecord, exportItem } from '../shared/corrections.mjs';
+import { validatedSessionURL } from '../shared/session-url.mjs';
 import { createNativeEngine } from './native-engine.mjs';
 import { computeCapabilities, resolveThreads } from './native-policy.mjs';
-import { normalizeSettings } from './preferences.mjs';
-import { aggregate } from './tagging.mjs';
-import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE } from './analysis-settings.mjs';
+import { normalizeSettings } from '../shared/preferences.mjs';
+import { aggregate } from '../shared/tagging.mjs';
+import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE } from '../shared/analysis-settings.mjs';
 
-const root = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const token = randomBytes(24).toString('hex');
 const showBrowser = !process.argv.includes('--no-browser') && process.env.CAKE_TAGGER_NO_BROWSER !== '1';
 const port = Number(process.env.CAKE_TAGGER_PORT ?? 8765);
 if (!Number.isInteger(port) || port < 0 || port > 65535) throw messageError('error.invalidPort');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.onnx': 'application/octet-stream' };
+// Serve only the reviewed browser module set; backend and private paths stay inaccessible.
+const aliases = {'/analysis.html':'src/client/analysis.html','/diagnostics.html':'src/client/diagnostics.html'};
+const publicFiles = new Set([
+  'src/client/analysis.html',
+  'src/client/diagnostics.html',
+  'src/client/app.js',
+  'src/client/diagnostics.mjs',
+  'src/client/i18n.mjs',
+  'src/client/native-client.mjs',
+  'src/client/local-session.mjs',
+  'src/client/page-bridge.mjs',
+  'src/client/runtime-metrics.mjs',
+  'src/client/sampling.mjs',
+  'src/client/style.css',
+  'src/client/auto-analysis.mjs',
+  'src/client/integration.mjs',
+  'src/shared/analysis-settings.mjs',
+  'src/shared/corrections.mjs',
+  'src/shared/messages.mjs',
+  'src/shared/preferences.mjs',
+  'src/shared/session-url.mjs',
+  'src/shared/tag-policy.mjs',
+  'src/shared/tagging.mjs',
+  'src/shared/site-theme.mjs',
+  'model/mapping.json',
+  'model/tags.txt',
+  'model/provenance.json',
+  'assets/logo.svg',
+]);
 fs.mkdirSync(path.join(root, 'data'), { recursive: true });
-const tagList = fs.readFileSync(path.join(root, 'tags.txt'), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
+const tagList = fs.readFileSync(path.join(root, 'model/tags.txt'), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
 const downloads = new Map(), sockets = new Set();
 // Record the applied scheduling class without overriding OS or user choices.
 let processPriority = 'unknown';
@@ -36,7 +65,7 @@ const settingsFile = path.join(root, 'data/preferences.json');
 let savedSettings;
 try { savedSettings = normalizeSettings(JSON.parse(fs.readFileSync(settingsFile))); } catch {}
 const capabilities = computeCapabilities();
-const mapping = JSON.parse(fs.readFileSync(path.join(root, 'mapping.json')));
+const mapping = JSON.parse(fs.readFileSync(path.join(root, 'model/mapping.json')));
 function openBrowser(url) {
   // Pass the URL as data, never interpolate a session file into PowerShell code.
   spawn('powershell.exe', ['-NoProfile', '-Command', 'Start-Process -FilePath $env:CAKE_TAGGER_OPEN_URL'], {
@@ -187,8 +216,9 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   if (requested === '/' || requested === '/index.html') { res.writeHead(302, { Location: 'https://cake.ski/', 'Cache-Control': 'no-store' }); return res.end(); }
-  if (!(/^\/(analysis\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|page-bridge\.mjs|native-client\.mjs|local-session\.mjs|runtime-metrics\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|trusted-event\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || /^\/extension\/(auto-analysis|integration|site-theme|message-contract)\.mjs$/.test(requested) || /^\/assets\/logo\.svg$/.test(requested) || requested === '/model/provenance.json')) { res.writeHead(404); return res.end(); }
-  const file = path.join(root, requested.slice(1));
+  const relative = aliases[requested] || requested.slice(1);
+  if (!aliases[requested] && !publicFiles.has(relative)) { res.writeHead(404); return res.end(); }
+  const file = path.join(root, relative);
   let stat;
   try { stat = fs.statSync(file); if (!stat.isFile()) throw Error(); } catch { res.writeHead(404); return res.end(); }
 

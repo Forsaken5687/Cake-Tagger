@@ -5,6 +5,7 @@
 /work/
 /.agents/
 /.codex/
+/.kilo/
 .env
 .env.*
 *.log

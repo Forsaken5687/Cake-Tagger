@@ -1,6 +1,7 @@
 # Project conventions
 
 - Keep the project ready to share. Product text describes the current workflow; do not include conversation history, personal comparisons or machine-specific test details.
+- Put application code in `src/client/`, `src/server/` or `src/shared/`; browser-specific code and locale catalogs belong in `extension/`. Keep only entry points and project metadata at the root.
 - Use `README.md` as the entry point. Put technical documentation in `docs/`, reusable tooling in `scripts/`, and synthetic tests in `tests/`.
 - Store temporary experiments and personal test reports under ignored `work/`. Keep corrections and session tokens in ignored `data/`; exports and packages in ignored `outputs/`.
 - Never commit videos, personal feedback, generated exports, session tokens or large model/runtime binaries. Maintain `.gitignore` and the asset manifest when adding dependencies.

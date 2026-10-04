@@ -1,10 +1,10 @@
-import { message, messageError, errorMessage } from './messages.mjs';
-import { ANALYSIS_VERSION } from './tagging.mjs';
-import { makeRecord, applyRecord, tagSource } from './corrections.mjs';
+import { message, messageError, errorMessage } from '../shared/messages.mjs';
+import { ANALYSIS_VERSION } from '../shared/tagging.mjs';
+import { makeRecord, applyRecord, tagSource } from '../shared/corrections.mjs';
 import { samplingPlan } from './sampling.mjs';
-import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analysis-settings.mjs';
-import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
-import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
+import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from '../shared/analysis-settings.mjs';
+import { createSettingsStore, suggestionPolicy } from '../shared/preferences.mjs';
+import { createUploadAutoAnalysis } from './auto-analysis.mjs';
 import { createNativeClient } from './native-client.mjs';
 import { createLocalSession } from './local-session.mjs';
 import { memorySnapshot } from './runtime-metrics.mjs';
@@ -13,7 +13,7 @@ import { setLanguage, setSiteLanguage, t, translatePage, localizedText, localize
 const connected = installPageBridge();
 if (!connected) { location.replace('https://cake.ski/'); throw Error('Upload integration context required.'); }
 const { isExtension, installIntegration, integrationButton } = connected
-  ? await import('./extension/integration.mjs')
+  ? await import('./integration.mjs')
   : { isExtension: false, installIntegration() {}, integrationButton() {} };
 const $ = s => document.querySelector(s);
 const session = createLocalSession();
@@ -86,7 +86,7 @@ async function status() {
   if (stopping) return;
   try {
     const [tagText, map, provenance] = await Promise.all([
-      fetch('/tags.txt').then(r => r.text()), fetch('/mapping.json').then(r => r.json()), fetch('/model/provenance.json').then(r => r.json()),
+      fetch('/model/tags.txt').then(r => r.text()), fetch('/model/mapping.json').then(r => r.json()), fetch('/model/provenance.json').then(r => r.json()),
     ]);
     allTags = tagText.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean); mapping = map;
     modelSignature = 'native-cpu-v1|' + provenance.sha256 + JSON.stringify(map);

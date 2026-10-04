@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { readTags, excluded } from '../tag-policy.mjs';
+import { readTags, excluded } from '../src/shared/tag-policy.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = name => fs.readFileSync(new URL(name, root), 'utf8');
-const tags = readTags(read('tags.txt'));
-const mapping = JSON.parse(read('mapping.json'));
+const tags = readTags(read('model/tags.txt'));
+const mapping = JSON.parse(read('model/mapping.json'));
 const labels = read('model/top_tags.txt').replace(/^\uFEFF/, '').trimEnd().split(/\r?\n/);
 for (const [tag, indices] of Object.entries(mapping)) {
   if (!tags.includes(tag) || !indices.length || indices.some(i => !Number.isInteger(i) || !labels[i])) throw Error(`Invalid mapping: ${tag}`);

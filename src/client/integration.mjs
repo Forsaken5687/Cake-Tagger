@@ -1,6 +1,6 @@
-import { message, messageError, errorMessage } from '../messages.mjs';
-import { t, localizedText } from '../i18n.mjs';
-import { applySiteTheme } from './site-theme.mjs';
+import { message, messageError, errorMessage } from '../shared/messages.mjs';
+import { t, localizedText } from './i18n.mjs';
+import { applySiteTheme } from '../shared/site-theme.mjs';
 export const isExtension = new URL(location.href).searchParams.get('integration') === '1';
 let busy = false;
 let embeddedTab = Number(new URL(location.href).searchParams.get('target'));

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { makeRecord, applyRecord, exportItem, validateRecord } from '../corrections.mjs';
+import { makeRecord, applyRecord, exportItem, validateRecord } from '../src/shared/corrections.mjs';
 const sha='a'.repeat(64);
 const raw={filename:'same.m4v',sha256:sha,tags:[{tag:'solo',confidence:0.9,supportingFrames:4},{tag:'glasses',confidence:0.7,supportingFrames:2}],uncertain:['tattoos'],sampledFrames:4,threshold:0.5,model:'JoyTag-INT8',createdAt:'2026-10-03T12:00:00Z'};
 const entry={file:{name:'same.m4v'},result:raw,selected:new Map([['solo',true],['glasses',false],['tattoos',true]]),reviewed:true};
-const tags=fs.readFileSync('tags.txt','utf8').split(/\r?\n/).filter(Boolean);
+const tags=fs.readFileSync('model/tags.txt','utf8').split(/\r?\n/).filter(Boolean);
 const stored=validateRecord(makeRecord(entry),tags);
 const restored=applyRecord({file:{name:'renamed.m4v'}},stored);
 assert.deepEqual([...restored.selected],[['solo',true],['glasses',false],['tattoos',true]]);

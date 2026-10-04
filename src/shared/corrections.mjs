@@ -1,5 +1,5 @@
 import { messageError } from './messages.mjs';
-import { MAX_FRAMES, MAX_DURATION } from './sampling.mjs';
+import { MAX_FRAMES, MAX_DURATION } from '../client/sampling.mjs';
 import { validateTimings, validateAnalysisPolicy, validateRuntime } from './analysis-settings.mjs';
 
 export function tagSource(entry, tag) {

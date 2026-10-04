@@ -18,28 +18,21 @@ Native checks cover shared-session queue limits, cancellation isolation, worker 
 
 Tests do not measure model accuracy or certify third-party binaries. They do not replace installing the extensions in their target browsers.
 
-## Standalone browser checks
+## Browser checks
 
-1. Start the application and check the empty state and Settings dialog in both languages.
-2. Select supported synthetic videos, analyze them, and review suggested/uncertain tags and scores.
-3. Add and deselect tags; verify counters and origins.
-4. Change file selection during preparation and verify the newest selection is retained.
-5. Reselect identical file content during the session; corrections must remain.
-6. Download JSON with default and custom exclusions; inspect filenames, selected tags, scores, policy and timings.
-7. Reload the page; results must not return. Settings must persist.
-8. Check cancellation, invalid codecs, size/duration limits and narrow layouts.
-9. Test **Quit** while idle and during inference. Confirm the Node process exits, active/queued work is rejected, saved preferences and existing data remain intact, and a clear success message appears.
-10. Open previews with mouse/keyboard, navigate, close with Escape, and verify focus recovery.
+Use local fixtures when no upload is permitted. Real cake.ski Bulk selection may upload drafts immediately. Test Firefox and Chrome independently; fixtures cannot prove target-browser permissions, codec behavior or service-worker lifecycle.
 
-## Extension browser checks
+1. Open the upload area and check Settings in both languages.
+2. Select synthetic videos in Single and Bulk layouts. Check automatic and manual analysis, uncertainty scores, deselection and applying tags. Add manual tags using the site's own field.
+3. Change selection during preparation and inference. Check the latest pending selection, preserved corrections and cancellation without automatic retries.
+4. Download JSON; inspect filenames, selected tags, original suggestions, exclusions and timings. Check visible download status and browser download-list entries.
+5. Reload the page: results must not return, while preferences persist.
+6. Change the site's accent color and language. Check chips, buttons, focus and Settings.
+7. Verify unique filename matching, inherited Bulk tags and per-card exclusions. Check both member and maintainer roles.
+8. Test Quit while idle and during inference. Confirm the Node process exits and saved preferences and existing data remain intact.
+9. Open runtime diagnostics and run its synthetic single-image check. Record cold and warm runs separately.
 
-Use local fixtures when no upload is permitted. Real cake.ski Bulk selection may upload drafts immediately.
-
-Check Firefox and Chrome independently: installation, permissions, single/bulk views, automatic start and disabled mode, adding/removing files while busy, retained results, toolbar opening Localhost, shared settings, JSON download, unique filename matching and existing/per-card excluded tags. Test member-role search as well as maintainer Enter selection.
-
-Change the site's accent color while the panel and Settings are open. Check buttons, focus, scores and selected chips. Verify Automatic language follows the page while explicit German/English stays selected.
-
-Local fixtures can replace WebExtension APIs and intercept website calls, but cannot prove target-browser permissions, codec behavior, service worker lifecycle or full inference. Keep personal media and review reports outside Git and release packages.
+Keep personal media and test reports outside Git and release packages.
 
 ## Release checks
 

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-const source=fs.readFileSync(new URL('../page-bridge.mjs',import.meta.url),'utf8').replace('export function','function');
+const source=fs.readFileSync(new URL('../src/client/page-bridge.mjs',import.meta.url),'utf8').replace('export function','function');
 function setup(embedded,parentIsSelf=false){
  const window={addEventListener(){}};
  const parent=parentIsSelf?window:{postMessage(){}};

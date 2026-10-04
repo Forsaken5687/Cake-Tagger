@@ -1,6 +1,6 @@
-import { isTrustedEvent } from '../trusted-event.mjs';
-import { translate } from '../messages.mjs';
-import { settingsForm } from '../settings-ui.mjs';
+import { isTrustedEvent } from '../src/shared/trusted-event.mjs';
+import { translate } from '../src/shared/messages.mjs';
+import { settingsForm } from '../src/shared/settings-ui.mjs';
 import { inspectUploads } from './upload-adapter.mjs';
 
 // These controls render only public tag metadata. The isolated local document

@@ -12,10 +12,10 @@ test('both extension packages contain integration only and retain notices and pr
   assert.equal(manifest.version,JSON.parse(fs.readFileSync(new URL('../extension/'+(target === 'chrome' ? 'manifest.chrome.json' : 'manifest.json'),import.meta.url))).version);
   assert(!manifest.content_scripts.some(script=>script.js.includes('extension/local-bridge.js')));
   assert(!fs.existsSync(new URL('extension/local-bridge.js',root)));
-  assert(fs.existsSync(new URL('settings-ui.mjs',root)));
-  assert(fs.existsSync(new URL('trusted-event.mjs',root)));
+  assert(fs.existsSync(new URL('src/shared/settings-ui.mjs',root)));
+  assert(fs.existsSync(new URL('src/shared/trusted-event.mjs',root)));
   assert(manifest.web_accessible_resources[0].resources.includes('extension/bridge.html'));
-  for(const file of ['index.html','app.js','native-client.mjs','sampling.mjs','tagging.mjs','extension/integration.mjs','extension/auto-analysis.mjs','extension/settings-background.mjs'])assert.equal(fs.existsSync(new URL(file,root)),false,file);
+  for(const file of ['index.html','src/client/app.js','src/client/native-client.mjs','src/client/sampling.mjs','src/shared/tagging.mjs','src/client/integration.mjs','src/client/auto-analysis.mjs','extension/settings-background.mjs'])assert.equal(fs.existsSync(new URL(file,root)),false,file);
   for(const file of ['model/LICENSE.txt','model/provenance.json','vendor/LICENSE-ONNX.txt','vendor/ThirdPartyNotices.txt','scripts/assets.json'])assert.deepEqual(fs.readFileSync(new URL(file,root)),fs.readFileSync(new URL('../'+file,import.meta.url)));
   // Resolve static module imports and literal runtime.getURL references before shipping.
   for(const entry of fs.readdirSync(new URL('extension/',root))){
@@ -46,4 +46,25 @@ test('release allowlist includes local module dependencies and excludes develope
   }
  }
  assert(!files.has('scripts/Test.ps1'));assert(!files.has('scripts/Package.ps1'));assert(!files.has('AGENTS.md'));
+});
+
+
+test('fresh extension builds exclude old files while preserving unknown contents outside releases',()=>{
+ const stale=new URL('../outputs/chrome/obsolete-fixture.mjs',import.meta.url);
+ fs.mkdirSync(new URL('../outputs/chrome/',import.meta.url),{recursive:true});
+ fs.writeFileSync(stale,'synthetic stale build file');
+ const result=buildExtension('chrome');
+ assert.equal(fs.existsSync(stale),false);
+ assert.equal(fs.readFileSync(path.join(result.previous,'obsolete-fixture.mjs'),'utf8'),'synthetic stale build file');
+ const root=new URL('../outputs/chrome/',import.meta.url);
+ const actual=fs.readdirSync(root,{recursive:true,withFileTypes:true}).filter(entry=>entry.isFile());
+ assert.equal(actual.length,result.files.length);
+ for(const name of result.files)assert(fs.existsSync(new URL(name,root)),name);
+ for(const file of result.files.filter(name=>/\.(js|mjs)$/.test(name))){
+  const source=fs.readFileSync(new URL(file,root),'utf8');
+  for(const match of source.matchAll(/(?:from\s+|import\s*(?:\(\s*)?)['"](\.[^'"]+)['"]/g)){
+   const dependency=path.posix.normalize(path.posix.join(path.posix.dirname(file),match[1]));
+   assert(result.files.includes(dependency),file+' -> '+dependency);
+  }
+ }
 });

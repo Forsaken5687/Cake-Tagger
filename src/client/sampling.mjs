@@ -1,4 +1,4 @@
-import { messageError } from './messages.mjs';
+import { messageError } from '../shared/messages.mjs';
 export const MAX_DURATION = 600;
 export const MAX_FRAMES = 48;
 export const FRAME_COUNTS = [4, 6, 8, 12, 16, 24, 32, 48];

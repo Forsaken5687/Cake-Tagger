@@ -8,8 +8,7 @@ The project is in development. Model scores are not calibrated probabilities, an
 
 The Firefox and Chrome extensions provide the interface and upload integration. Start the local Node server with `Start.cmd` before analyzing videos. The model runs on your computer; no separate AI application is required.
 
-- [Firefox installation and usage](docs/FIREFOX.md)
-- [Chrome installation and usage](docs/CHROME.md)
+- [Browser installation and usage](docs/BROWSERS.md)
 
 Select videos in the cake.ski upload area. By default, new files are analyzed automatically. Suggestions appear directly on the upload cards. Review the suggestions, then use **Apply tags** for each video. Add manual tags using the site's own tag field. Existing tags and per-card exclusions are preserved. The extension does not submit or publish posts.
 
@@ -82,11 +81,22 @@ Settings are persisted; exports contain filenames and tags. Selecting files on c
 
 For unexpected slowdowns during analysis, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It uses the same native Node API and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
 
-Development tools and tests belong to the source checkout and are not included in runtime releases. Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Firefox.mjs` and `runtime/node.exe scripts/Build-Chrome.mjs`.
+Development tools and tests belong to the source checkout and are not included in runtime releases. Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Extension.mjs firefox` and `runtime/node.exe scripts/Build-Extension.mjs chrome`.
 
 
 `scripts/Package.ps1` builds `outputs/Cake-Tagger.zip` from an explicit runtime file list and checksum-verified assets. It includes `extensions/Cake-Tagger-Firefox.zip` and the unpacked `extensions/chrome/` directory. Tests, developer tooling, redundant extension sources, private data, media, scratch files and Git history are excluded. Share this package rather than the working directory.
 
-Source lives in the project root and `extension/`; documentation in `docs/`, tooling in `scripts/`, and synthetic tests in `tests/`. `work/`, `data/` and `outputs/` are ignored.
 
 Further reading: [architecture](docs/TECHNICAL.md), [integration contract](docs/INTEGRATION.md), [testing](docs/TESTING.md).
+
+### Project structure
+
+- `src/client/`: hidden processing document, video sampling, transport and diagnostics.
+- `src/server/`: HTTP service, native worker and CPU scheduling.
+- `src/shared/`: tagging rules, settings, translations and message contracts.
+- `extension/`: browser manifests, toolbar, upload controls and connection bridges.
+- `model/`: tag taxonomy, mappings, coverage and model provenance.
+- `docs/`, `scripts/`, `tests/`: documentation, tooling and synthetic checks.
+- `data/`, `work/`, `outputs/`: ignored preferences, temporary work and current release artifacts.
+
+Complete releases contain only runtime files, notices, documentation and the packaged extensions.

@@ -1,4 +1,4 @@
-import { SETTINGS_KEY, normalizeSettings } from '../preferences.mjs';
+import { SETTINGS_KEY, normalizeSettings } from '../src/shared/preferences.mjs';
 const base = 'http://127.0.0.1:8765';
 let token;
 export async function connect(refresh = false) {

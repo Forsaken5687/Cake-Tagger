@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeTheme, readSiteTheme, applySiteTheme, isThemeMessage } from '../extension/site-theme.mjs';
-import { setLanguage, setSiteLanguage, t } from '../i18n.mjs';
+import { normalizeTheme, readSiteTheme, applySiteTheme, isThemeMessage } from '../src/shared/site-theme.mjs';
+import { setLanguage, setSiteLanguage, t } from '../src/client/i18n.mjs';
 
 test('site theme reads the Cake palette and updates it without retaining stale accents', () => {
   const source = new Map([['--cake-accent', '#fe2c55'], ['--cake-accent-a12', 'rgba(254, 44, 85, .12)'], ['--cake-text', '#ffffff']]);

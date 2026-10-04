@@ -9,7 +9,7 @@ test('Chrome manifest uses a module service worker, PNG icons and limited permis
   assert.equal(manifest.browser_specific_settings, undefined);
   assert.deepEqual(manifest.permissions, ['storage','downloads']);
   assert.deepEqual(manifest.host_permissions, ['https://cake.ski/*', 'http://127.0.0.1/*']);
-  assert.equal(manifest.content_scripts[0].js[0], 'webext-api.js');
+  assert.equal(manifest.content_scripts[0].js[0], 'extension/webext-api.js');
   assert.equal(manifest.action.default_popup, 'extension/popup.html');
   for (const [size, icon] of Object.entries(manifest.icons)) {
     const png = fs.readFileSync(new URL('../' + icon, import.meta.url));
@@ -20,7 +20,7 @@ test('Chrome manifest uses a module service worker, PNG icons and limited permis
 test('Chrome message bridge retains async responses and ignores messages with no handler', async () => {
   const callbacks = [];
   const chrome = { runtime: { id: 'own', getURL: path => 'chrome-extension://own/' + path, sendMessage: async message => message, onMessage: { addListener: fn => callbacks.push(fn) } } };
-  const scope = { chrome }; vm.runInNewContext(fs.readFileSync(new URL('../webext-api.js', import.meta.url), 'utf8'), scope);
+  const scope = { chrome }; vm.runInNewContext(fs.readFileSync(new URL('../extension/webext-api.js', import.meta.url), 'utf8'), scope);
   scope.browser.runtime.onMessage.addListener(message => message.type === 'handled' ? Promise.resolve({ ok: true }) : undefined);
   let response;
   assert.equal(callbacks[0]({ type: 'ignored' }, {}, () => { throw Error('Must not steal response'); }), false);
@@ -30,7 +30,7 @@ test('Chrome message bridge retains async responses and ignores messages with no
   assert.equal(callbacks[1]({}, {}, value => { response = value; }), true);
   await Promise.resolve(); assert.equal(response.error, 'failure');
   const existing = { runtime: { id: 'firefox' } }, firefox = { browser: existing, chrome };
-  vm.runInNewContext(fs.readFileSync(new URL('../webext-api.js', import.meta.url), 'utf8'), firefox);
+  vm.runInNewContext(fs.readFileSync(new URL('../extension/webext-api.js', import.meta.url), 'utf8'), firefox);
   assert.equal(firefox.browser, existing);
 });
 

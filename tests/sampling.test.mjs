@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { samplingPlan } from '../sampling.mjs';
-import { makeRecord, validateRecord, applyRecord, exportItem } from '../corrections.mjs';
+import { samplingPlan } from '../src/client/sampling.mjs';
+import { makeRecord, validateRecord, applyRecord, exportItem } from '../src/shared/corrections.mjs';
 
 test('auto chooses bounded counts at duration boundaries', () => {
   for (const [duration, count] of [[0.01,8],[10,8],[15,8],[15.01,12],[30,12],[30.01,16],[60,16],[60.01,24],[120,24],[120.01,32],[300,32],[300.01,48],[600,48]]) {

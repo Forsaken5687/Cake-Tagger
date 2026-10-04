@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatedSessionURL } from '../session-url.mjs';
-import { validateAnalysisPolicy } from '../analysis-settings.mjs';
+import { validatedSessionURL } from '../src/shared/session-url.mjs';
+import { validateAnalysisPolicy } from '../src/shared/analysis-settings.mjs';
 
 
 test('saved sessions reject shell payloads, credentials, alternate hosts and paths', () => {

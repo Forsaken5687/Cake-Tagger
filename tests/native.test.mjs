@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { createNativeEngine } from '../native-engine.mjs';
-import { createNativeClient } from '../native-client.mjs';
-import { computeCapabilities, resolveThreads } from '../native-policy.mjs';
-import { validateRuntime } from '../analysis-settings.mjs';
+import { createNativeEngine } from '../src/server/native-engine.mjs';
+import { createNativeClient } from '../src/client/native-client.mjs';
+import { computeCapabilities, resolveThreads } from '../src/server/native-policy.mjs';
+import { validateRuntime } from '../src/shared/analysis-settings.mjs';
 
 const image = value => new Uint8ClampedArray(448 * 448 * 4).fill(value);
 const result = (value,threads) => ({scores:[value], timings:{modelLoadSeconds:0,preprocessSeconds:0,inferenceSeconds:0.1},runtime:{configuredNativeThreads:threads}});

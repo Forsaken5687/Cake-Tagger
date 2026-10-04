@@ -1,4 +1,4 @@
-import { messageError } from './messages.mjs';
+import { messageError } from '../shared/messages.mjs';
 
 // A whole video is submitted once; Node owns its frame queue and thread policy.
 export function createNativeClient({ token = '', onState = () => {}, onProgress = () => {}, fetcher = fetch } = {}) {

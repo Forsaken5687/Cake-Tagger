@@ -13,13 +13,13 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['analysis.html', 'static.mjs', 'native-policy.mjs', 'preferences.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'native-engine.mjs', 'native-client.mjs', 'local-session.mjs', 'diagnostics.html', 'diagnostics.mjs', 'runtime-metrics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
-  fs.mkdirSync(path.join(root, 'extension'));
-  fs.copyFileSync(new URL('../extension/auto-analysis.mjs', import.meta.url), path.join(root, 'extension/auto-analysis.mjs'));
+  for (const name of ['src/client/analysis.html', 'src/server/server.mjs', 'src/server/native-policy.mjs', 'src/shared/preferences.mjs', 'src/shared/tagging.mjs', 'src/shared/tag-policy.mjs', 'model/mapping.json', 'src/server/native-engine.mjs', 'src/client/native-client.mjs', 'src/client/local-session.mjs', 'src/client/diagnostics.html', 'src/client/diagnostics.mjs', 'src/client/runtime-metrics.mjs', 'src/shared/messages.mjs', 'src/shared/session-url.mjs', 'src/shared/corrections.mjs', 'src/client/sampling.mjs', 'src/shared/analysis-settings.mjs', 'model/tags.txt']) { fs.mkdirSync(path.dirname(path.join(root,name)),{recursive:true}); fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root,name)); }
+  fs.mkdirSync(path.join(root, 'src/client'),{recursive:true});
+  fs.copyFileSync(new URL('../src/client/auto-analysis.mjs', import.meta.url), path.join(root, 'src/client/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
   const old = path.join(root, 'data/corrections.json');
   fs.writeFileSync(old, 'legacy data deliberately not parsed');
-  const child = spawn(process.execPath, ['static.mjs', '--no-browser'], { cwd: root, env: { ...process.env, CAKE_TAGGER_PORT: '0' }, stdio: 'ignore' });
+  const child = spawn(process.execPath, ['src/server/server.mjs', '--no-browser'], { cwd: root, env: { ...process.env, CAKE_TAGGER_PORT: '0' }, stdio: 'ignore' });
   try {
     const sessionPath = path.join(root, 'data/session.json');
     for (let i = 0; i < 100 && !fs.existsSync(sessionPath); i++) await delay(30);
@@ -30,7 +30,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
       const response = await fetch(url.origin + route, { redirect: 'manual' });
       assert.equal(response.status, 302); assert.equal(response.headers.get('location'), 'https://cake.ski/');
     }
-    const hidden = await fetch(url.origin + '/analysis.html');
+    const hidden = await fetch(url.origin + '/src/client/analysis.html');
     assert.equal(hidden.status, 200); assert((await hidden.text()).includes('<body hidden>'));
     assert.equal((await fetch(url.origin + '/api/runtime')).status, 401);
     assert.equal((await fetch(url.origin + '/api/connect', { method: 'POST' })).status, 403);
@@ -52,7 +52,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert(runtime.hostMemory.totalBytes > 0); assert(runtime.hostMemory.freeBytes <= runtime.hostMemory.totalBytes);
     assert(runtime.serverMemory.rssBytes > 0);
     assert.equal((await fetch(url.origin + '/api/runtime', { headers: { ...headers, Origin: 'https://cake.ski' } })).status, 403);
-    assert.equal((await fetch(url.origin + '/extension/auto-analysis.mjs')).status, 200);
+    assert.equal((await fetch(url.origin + '/src/client/auto-analysis.mjs')).status, 200);
     assert.equal((await fetch(url.origin + '/extension/background.js')).status, 404);
     const caps = await (await fetch(url.origin + '/api/capabilities', { headers })).json();
     assert.equal(caps.testMaximum, caps.logicalProcessors);
@@ -64,14 +64,14 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     const invalidSettings = await fetch(url.origin + '/api/settings', {method:'POST',headers,body:JSON.stringify({settings:{parallelism:String(caps.testMaximum+1)}})});
     assert.equal(invalidSettings.status,400);
     assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).parallelism, settings.parallelism);
-    const diagnostics = await fetch(url.origin + '/diagnostics.html');
+    const diagnostics = await fetch(url.origin + '/src/client/diagnostics.html');
     assert.equal(diagnostics.status, 200);
     assert.equal(diagnostics.headers.get('cross-origin-opener-policy'), null);
     assert.equal(diagnostics.headers.get('cross-origin-embedder-policy'), null);
-    assert.equal((await fetch(url.origin + '/diagnostics.mjs')).status, 200);
+    assert.equal((await fetch(url.origin + '/src/client/diagnostics.mjs')).status, 200);
     assert.equal((await fetch(url.origin + '/inference-pool.mjs')).status, 404);
     assert.equal((await fetch(url.origin + '/compute-policy.js')).status, 404);
-    assert.equal((await fetch(url.origin + '/runtime-metrics.mjs')).status, 200);
+    assert.equal((await fetch(url.origin + '/src/client/runtime-metrics.mjs')).status, 200);
     const sha = 'a'.repeat(64);
     const record = { filename: 'synthetic.mp4', sha256: sha, tags: ['tattoos'], candidateTags: ['tattoos'], reviewed: true, originalSuggestionsKnown: true,
       result: { sha256: sha, tags: [{ tag: 'tattoos', confidence: 0.8, supportingFrames: 4 }], uncertain: [], sampledFrames: 4, threshold: 0.4, analysisPolicy: 'coverage-v5:majority:["hairy","watermark"]', model: 'JoyTag-INT8' } };
@@ -100,7 +100,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
       }).on('error', reject);
     });
     assert.equal(reboundStatus, 403);
-    const page = await fetch(url.origin + '/tags.txt');
+    const page = await fetch(url.origin + '/model/tags.txt');
     assert.match(page.headers.get('content-security-policy'), /frame-ancestors 'none'/);
     for (const name of ['/data/session.json', '/data/corrections.json', '/.git/config', '/README.md']) {
       assert.equal((await fetch(url.origin + name)).status, 404);

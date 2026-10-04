@@ -1,5 +1,5 @@
-import { isFileMessage } from './message-contract.mjs';
-import { translate } from '../messages.mjs';
+import { isFileMessage } from '../src/shared/message-contract.mjs';
+import { translate } from '../src/shared/messages.mjs';
 const channel = new URL(location.href).searchParams.get('channel');
 const localOrigin = 'http://127.0.0.1:8765', cakeOrigin = 'https://cake.ski';
 const frame = document.querySelector('#app');
@@ -20,7 +20,7 @@ window.addEventListener('message', async event => {
 try {
   const connection = await browser.runtime.sendMessage({ type: 'cake-tagger:connect' });
   if (!connection?.token) throw Error();
-  const url = new URL('/analysis.html',localOrigin);
+  const url = new URL('/src/client/analysis.html',localOrigin);
   url.searchParams.set('integration', '1'); url.searchParams.set('embedded', '1');
   url.searchParams.set('channel', channel); url.searchParams.set('bridgeOrigin', location.origin);
   const target = new URL(location.href).searchParams.get('target'); if (target) url.searchParams.set('target', target);

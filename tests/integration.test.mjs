@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chooseTarget, planTags } from '../extension/upload-adapter.mjs';
-import { isFileMessage } from '../extension/message-contract.mjs';
+import { isFileMessage } from '../src/shared/message-contract.mjs';
 test('embedded file transfer accepts only the expected parent origin and session', () => {
   const source = {}, file = new File(['synthetic'], 'test.mp4');
   const event = { source, origin: 'https://cake.ski', data: { type: 'cake-tagger:files', channel: 'session-a', files: [file] } };
@@ -34,5 +34,5 @@ test('Firefox manifest confines page access and connects only to the local analy
   assert.ok(!manifest.content_security_policy.extension_pages.includes('wasm-unsafe-eval'));
   assert.deepEqual(manifest.permissions, ['storage','downloads']);
   assert.equal(manifest.action.default_popup, 'extension/popup.html');
-  assert.ok(!manifest.web_accessible_resources[0].resources.some(p => p.startsWith('model/') || p.startsWith('vendor/')));
+  assert.ok(!manifest.web_accessible_resources[0].resources.some(p => (p.startsWith('model/') && p !== 'model/tags.txt') || p.startsWith('vendor/')));
 });

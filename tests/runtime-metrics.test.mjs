@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { memorySnapshot } from '../runtime-metrics.mjs';
-import { validateRuntime } from '../analysis-settings.mjs';
+import { memorySnapshot } from '../src/client/runtime-metrics.mjs';
+import { validateRuntime } from '../src/shared/analysis-settings.mjs';
 
 test('RAM diagnostics preserve unknown values and label partial measurements', () => {
   const unavailable = memorySnapshot({ performance: {}, navigator: {} });

@@ -1,4 +1,4 @@
-import { message, messageError } from '../messages.mjs';
+import { message, messageError } from '../src/shared/messages.mjs';
 const ids = new WeakMap();
 let nextId = 0;
 const normalize = text => String(text).replace(/^#/, '').trim().toLowerCase();

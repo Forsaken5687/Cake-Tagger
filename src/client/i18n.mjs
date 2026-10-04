@@ -1,5 +1,5 @@
-import { resolvedLanguage } from './preferences.mjs';
-import { translate } from './messages.mjs';
+import { resolvedLanguage } from '../shared/preferences.mjs';
+import { translate } from '../shared/messages.mjs';
 let language = 'de';
 let preference = 'auto', siteLanguage;
 export function setLanguage(settings, browserLanguage = globalThis.navigator?.language || 'de') {

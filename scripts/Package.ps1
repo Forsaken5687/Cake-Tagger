@@ -16,9 +16,9 @@ try {
         if (-not (Test-Path -LiteralPath $source) -or (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -ne $asset.sha256) { throw ('Dependency missing or modified: ' + $asset.path + '. Run Setup.cmd first.') }
     }
     $taggerNode = Join-Path $taggerRoot 'runtime/node.exe'
-    foreach ($builder in @('scripts/Build-Firefox.mjs', 'scripts/Build-Chrome.mjs')) {
-        & $taggerNode $builder
-        if ($LASTEXITCODE -ne 0) { throw ('Could not build extension package: ' + $builder) }
+    foreach ($target in @('firefox', 'chrome')) {
+        & $taggerNode 'scripts/Build-Extension.mjs' $target
+        if ($LASTEXITCODE -ne 0) { throw ('Could not build extension package: ' + $target) }
     }
     New-Item -ItemType Directory -Force -Path 'outputs' | Out-Null
     $output = Join-Path $taggerRoot 'outputs/Cake-Tagger.zip'

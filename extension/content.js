@@ -1,8 +1,8 @@
 (async () => {
-  const { errorMessage } = await import(browser.runtime.getURL('messages.mjs'));
-  const { readSiteTheme } = await import(browser.runtime.getURL('extension/site-theme.mjs'));
+  const { errorMessage } = await import(browser.runtime.getURL('src/shared/messages.mjs'));
+  const { readSiteTheme } = await import(browser.runtime.getURL('src/shared/site-theme.mjs'));
   const { inspectUploads, appendTags } = await import(browser.runtime.getURL('extension/upload-adapter.mjs'));
-  const text = await fetch(browser.runtime.getURL('tags.txt')).then(r => r.text());
+  const text = await fetch(browser.runtime.getURL('model/tags.txt')).then(r => r.text());
   const allowed = new Set(text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean));
   const { mountUploadPanel } = await import(browser.runtime.getURL('extension/embedded-upload.mjs'));
   mountUploadPanel(document, browser.runtime);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { aggregate } from '../tagging.mjs';
-import { applyRecord, makeRecord, validateRecord, exportItem } from '../corrections.mjs';
+import { aggregate } from '../src/shared/tagging.mjs';
+import { applyRecord, makeRecord, validateRecord, exportItem } from '../src/shared/corrections.mjs';
 
 test('uncertain candidates have real scores, stay unchecked and preserve existing choices', () => {
   const result = { ...aggregate([[0.9], [0.7], [0.1], [0.1]], { piercings: [0] }, 0.4), sha256: 'd'.repeat(64), sampledFrames: 4, model: 'JoyTag-INT8', analysisPolicy: 'coverage-v5:majority' };

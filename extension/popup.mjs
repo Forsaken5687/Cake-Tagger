@@ -1,4 +1,4 @@
-import { translate, errorMessage } from '../messages.mjs';
+import { translate, errorMessage } from '../src/shared/messages.mjs';
 let language = navigator.language.startsWith('de') ? 'de' : 'en';
 const t = key => translate(key, language);
 const status = document.querySelector('#status');

@@ -1,5 +1,5 @@
 import { setLanguage, translatePage, localizedText } from './i18n.mjs';
-import { errorMessage } from './messages.mjs';
+import { errorMessage } from '../shared/messages.mjs';
 import { memorySnapshot } from './runtime-metrics.mjs';
 import { createNativeClient } from './native-client.mjs';
 import { createLocalSession } from './local-session.mjs';

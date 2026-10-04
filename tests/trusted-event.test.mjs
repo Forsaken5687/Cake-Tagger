@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {isTrustedEvent} from '../trusted-event.mjs';
+import {isTrustedEvent} from '../src/shared/trusted-event.mjs';
 test('native event brand accepts a different constructor realm and rejects forged events',()=>{
  const branded=new WeakSet();const prototype={composedPath(){if(!branded.has(this))throw TypeError('Illegal invocation');return [];}};
  class PageEvent{};class ContentEvent{};

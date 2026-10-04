@@ -1,6 +1,6 @@
 // Keep the analysis document on the extension origin, separate from the site.
-import { translate, errorMessage }  from '../messages.mjs';
-import { readSiteTheme } from './site-theme.mjs';
+import { translate, errorMessage }  from '../src/shared/messages.mjs';
+import { readSiteTheme } from '../src/shared/site-theme.mjs';
 import { createUploadUI } from './upload-ui.mjs';
 export function mountUploadPanel(doc, runtime) {
   const selections = new WeakMap();

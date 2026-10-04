@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SETTINGS_KEY, normalizeSettings, resolvedLanguage, createSettingsStore, suggestionPolicy } from '../preferences.mjs';
+import { SETTINGS_KEY, normalizeSettings, resolvedLanguage, createSettingsStore, suggestionPolicy } from '../src/shared/preferences.mjs';
 
-import { aggregate } from '../tagging.mjs';
-import { setLanguage, t } from '../i18n.mjs';
+import { aggregate } from '../src/shared/tagging.mjs';
+import { setLanguage, t } from '../src/client/i18n.mjs';
 
 test('preferences normalize corrupt storage and ignore unrelated private fields', () => {
   assert.deepEqual(normalizeSettings(null).excludedTags, ['hairy', 'watermark']);

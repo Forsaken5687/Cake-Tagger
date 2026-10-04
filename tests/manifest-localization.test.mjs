@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 test('both browser manifests resolve metadata through complete native locale catalogs', () => {
-  const catalogs = Object.fromEntries(['en', 'de'].map(locale => [locale, JSON.parse(fs.readFileSync(new URL(`../_locales/${locale}/messages.json`, import.meta.url), 'utf8'))]));
+  const catalogs = Object.fromEntries(['en', 'de'].map(locale => [locale, JSON.parse(fs.readFileSync(new URL(`../extension/_locales/${locale}/messages.json`, import.meta.url), 'utf8'))]));
   assert.deepEqual(Object.keys(catalogs.en).sort(), Object.keys(catalogs.de).sort());
   for (const filename of ['manifest.json', 'manifest.chrome.json']) {
     const manifest = JSON.parse(fs.readFileSync(new URL('../extension/' + filename, import.meta.url), 'utf8'));

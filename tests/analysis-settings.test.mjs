@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION, validateTimings, validateRuntime } from '../analysis-settings.mjs';
-import { makeRecord, validateRecord, applyRecord, exportItem } from '../corrections.mjs';
+import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION, validateTimings, validateRuntime } from '../src/shared/analysis-settings.mjs';
+import { makeRecord, validateRecord, applyRecord, exportItem } from '../src/shared/corrections.mjs';
 
 test('fixed defaults and timing metadata survive persistence and export', () => {
   assert.equal(DEFAULT_THRESHOLD, 0.4); assert.equal(DEFAULT_COVERAGE, 'majority');

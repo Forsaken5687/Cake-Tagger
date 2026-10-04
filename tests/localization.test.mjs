@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { messages, message, translate, messageError, errorMessage } from '../messages.mjs';
-import { setLanguage, t, localizedText, localizedAttribute, translatePage } from '../i18n.mjs';
+import { messages, message, translate, messageError, errorMessage } from '../src/shared/messages.mjs';
+import { setLanguage, t, localizedText, localizedAttribute, translatePage } from '../src/client/i18n.mjs';
 
 test('both languages define identical placeholders and every source message ID exists', () => {
   const placeholders = text => [...text.matchAll(/\{([a-zA-Z]+)\}/g)].map(match => match[1]).sort();
@@ -11,9 +11,9 @@ test('both languages define identical placeholders and every source message ID e
     assert.deepEqual(placeholders(entry.en), placeholders(entry.de), key);
     assert(!/[\uFFFD]|Ã|â€/.test(entry.en + entry.de), `${key}: corrupted encoding`);
   }
-  for (const dir of ['.', 'extension']) {
+  for (const dir of ['src/client', 'src/shared', 'src/server', 'extension']) {
     for (const name of fs.readdirSync(new URL('../' + dir + '/', import.meta.url))) {
-      if (!/\.(mjs|js|html)$/.test(name) || name === 'messages.mjs') continue;
+      if (!/\.(mjs|js|html)$/.test(name) || name === 'src/shared/messages.mjs') continue;
       const source = fs.readFileSync(new URL('../' + dir + '/' + name, import.meta.url), 'utf8');
       for (const [, key] of source.matchAll(/["']((?:action|settings|language|page|upload|analysis|results|tags|export|preview|transfer|embed|error|diagnostics)\.[a-zA-Z]+)["']/g)) {
         if (/\.(txt|json|mjs|js|html)$/.test(key)) continue;

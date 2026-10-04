@@ -6,10 +6,10 @@ import { parentPort } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
 import { computeCapabilities, resolveThreads } from './native-policy.mjs';
 
-const require = createRequire(new URL('./runtime/native/loader.cjs', import.meta.url));
+const require = createRequire(new URL('../../runtime/native/loader.cjs', import.meta.url));
 const ort = require('onnxruntime-node');
-const model = new URL('./model/joytag-int8.onnx', import.meta.url);
-const expectedHash = JSON.parse(fs.readFileSync(new URL('./model/provenance.json', import.meta.url))).sha256;
+const model = new URL('../../model/joytag-int8.onnx', import.meta.url);
+const expectedHash = JSON.parse(fs.readFileSync(new URL('../../model/provenance.json', import.meta.url))).sha256;
 if (createHash('sha256').update(fs.readFileSync(model)).digest('hex') !== expectedHash) throw Error('error.nativeModelChecksum');
 const cores = os.availableParallelism();
 const mean = [0.48145466, 0.4578275, 0.40821073];

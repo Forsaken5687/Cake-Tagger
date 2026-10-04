@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createLocalSession} from '../local-session.mjs';
+import {createLocalSession} from '../src/client/local-session.mjs';
 
 for(const stale of ['', 'a'.repeat(48)]) test('local session connects automatically with '+(stale ? 'a stale token':'no token'),async()=>{
  let saved=stale, handshakes=0, calls=0;

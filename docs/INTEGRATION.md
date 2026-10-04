@@ -34,7 +34,7 @@ The extension does not submit files, captions, performers, upload questions, con
 
 Preferences are stored on the local backend. Content scripts read them through the extension background; settings saves use the authenticated backend API. Legacy extension settings migrate only if server settings have not been initialized. Theme updates carry only known color tokens and page language; they are not persisted.
 
-Firefox uses a Manifest V3 background script. Chrome uses a module service worker and an async messaging adapter. The Localhost application uses a restricted channel bridge to request upload integration. The toolbar opens Localhost directly; a content script relays these integration requests. The embedded wrapper relays the same requests. Neither relay handles model inputs, credentials for inference, or analysis state.
+Firefox uses a Manifest V3 background script. Chrome uses a module service worker and an async messaging adapter. The Localhost application uses a restricted channel bridge to request upload integration. The extension menu opens the site upload area. Its isolated content script registers a tab/channel and communicates with the hidden processing bridge through an acknowledged runtime port. Neither relay performs inference or owns the analysis queue.
 
 ## Validation
 

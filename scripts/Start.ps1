@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
-$taggerRoot = $PSScriptRoot
+$taggerRoot = Split-Path -Parent $PSScriptRoot
 $taggerNode = Join-Path $taggerRoot 'runtime\node.exe'
 $env:CAKE_TAGGER_NO_BROWSER = '1'
-$taggerServer = Join-Path $taggerRoot 'static.mjs'
+$taggerServer = Join-Path $taggerRoot 'src/server/server.mjs'
 if (-not (Test-Path -LiteralPath $taggerNode)) { throw 'The bundled runtime is missing.' }
 & $taggerNode (Join-Path $taggerRoot 'scripts/Setup-Native.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Native runtime setup failed. Run Setup.cmd first.' }

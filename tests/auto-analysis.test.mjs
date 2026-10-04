@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createUploadAutoAnalysis } from '../extension/auto-analysis.mjs';
-import { normalizeSettings, createSettingsStore } from '../preferences.mjs';
+import { createUploadAutoAnalysis } from '../src/client/auto-analysis.mjs';
+import { normalizeSettings, createSettingsStore } from '../src/shared/preferences.mjs';
 const file = name => ({ name, size: 20, lastModified: 1 });
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 

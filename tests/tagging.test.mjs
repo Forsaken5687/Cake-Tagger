@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { aggregate } from '../tagging.mjs';
-import { makeRecord, applyRecord, validateRecord, exportItem } from '../corrections.mjs';
+import { aggregate } from '../src/shared/tagging.mjs';
+import { makeRecord, applyRecord, validateRecord, exportItem } from '../src/shared/corrections.mjs';
 
 test('watermark is excluded in both modes but manual selections survive storage and export', () => {
   for (const mode of ['majority', 'brief']) {
