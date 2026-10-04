@@ -6,7 +6,7 @@ The project is in development. Model scores are not calibrated probabilities, an
 
 ## Browser extensions
 
-The Firefox and Chrome extensions include the model and inference runtime. They work without the standalone server or separate AI software.
+The Firefox and Chrome extensions provide the interface and upload integration. Start the local Node server with `Start.cmd` before analyzing videos. The model runs on your computer; no separate AI application is required.
 
 - [Firefox installation and usage](docs/FIREFOX.md)
 - [Chrome installation and usage](docs/CHROME.md)
@@ -21,7 +21,7 @@ The description in the browser's extension manager and the toolbar tooltip follo
 
 ## Standalone application
 
-Requires Windows x64 and a current Firefox or Chrome browser with WebAssembly, video decoding and Canvas support. Inference runs on the CPU.
+Requires Windows x64 and a current Firefox or Chrome browser with video decoding and Canvas support. Node runs native ONNX Runtime on the CPU; the browser handles video decoding, previews and tag review.
 
 1. Extract the complete release into a writable folder.
 2. Run `Start.cmd`.
@@ -31,7 +31,7 @@ Requires Windows x64 and a current Firefox or Chrome browser with WebAssembly, v
 
 Results are kept only for the current page session. Download anything you want to retain before closing or reloading the page. **Quit** stops the local server.
 
-A Git checkout omits three large dependencies. Run `Setup.cmd` once to download their pinned versions and verify SHA-256 checksums. Complete release packages already include them. The standalone application can then analyze videos offline.
+A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned artifacts and verify SHA-256 checksums. Complete releases include the archives; `Start.cmd` verifies and extracts the native runtime on first use. Analysis works offline afterward.
 
 ## Settings
 
@@ -40,7 +40,7 @@ A Git checkout omits three large dependencies. Run `Setup.cmd` once to download 
 - Language: Automatic, German or English. Automatic follows cake.ski in connected extension views and the browser language in standalone use. Tag names are unchanged.
 - Automatically analyze upload videos: enabled by default; applies only to the embedded upload workflow.
 - Images per video: automatic by duration, or a fixed count from 4 to 48.
-- CPU parallelism: Automatic or an upper limit of 1, 2, 4, 6 or 8. Changes apply to subsequent analyses. The limit counts WASM threads on isolated pages and independent workers on other pages.
+- CPU parallelism: Automatic or an upper limit of 1, 2, 4, 6 or 8. Changes apply to subsequent analyses. The limit controls native CPU threads in the shared server model session.
 - Show or hide model scores and uncertain suggestions.
 - Exclude tags from new automatic suggestions. `hairy` and `watermark` are excluded by default and can be enabled individually.
 
@@ -54,11 +54,11 @@ The base threshold is fixed at 0.4. Most suggested tags require support in more 
 
 The displayed score is the average of the two strongest frame matches. It is not the proportion of the video showing a tag or the probability that the tag is correct. The JSON export preserves selections, original suggestions, scores, tag origins and analysis timings.
 
-Both views use the shared hardware policy in `compute-policy.js`. The local server page uses up to eight CPU threads in one model session. Extension views without shared-memory isolation process frames in up to eight independent workers. The limit reserves CPU capacity for other work and respects reported device memory when available. Automatic uses at most four independent workers when memory information is unavailable; a manual limit can raise this to eight. Additional model sessions use more RAM and are reused across videos, then released on cancellation or failure. Parallel processing preserves frame order.
+All views use one native model session in Node. Automatic chooses half the available logical processors, bounded to 1–8 threads; the manual setting lowers this limit. Frames are processed in chronological order. Concurrent views share a bounded queue instead of loading additional model copies. Cancelling discards unfinished results while preserving other views and completed corrections. Native CPU scores can differ from earlier WASM results, so existing exports remain readable and cached browser results are not reused as native analyses.
 
-JSON runtime details include the actual worker count, configured thread count, chosen parallelism limit and available memory metrics. Page JavaScript heap measurements exclude worker and WASM memory; unavailable fields are `null`. They are not the total RAM consumed by the model.
+JSON runtime details include the native provider, configured thread count, ONNX Runtime version, model checksum and memory metrics. Optional page heap measurements exclude the native model; unavailable fields are `null`.
 
-Standalone exports also include operating-system total/free memory and Node server memory, recorded separately after analysis. Extension exports do not require a server and omit these measurements. None of these fields represents peak model RAM.
+Both standalone and extension exports include system total/free memory and Node process memory sampled after inference. Node RSS includes the native runtime, model and server allocations; it is not an isolated model measurement or a sampled peak.
 
 ## Limitations
 
@@ -73,15 +73,17 @@ Standalone exports also include operating-system total/free memory and Node serv
 
 ## Privacy and security
 
-Analysis takes place in the browser. Videos and preview images are not sent to a tagging service or saved in the project. Results, corrections and analysis caches remain in page memory. The local server binds only to `127.0.0.1` and uses a per-session token for protected actions. Downloads are short-lived in-memory snapshots.
+Video decoding takes place in the browser. Only 448 × 448 RGBA samples are sent to the Node server on this computer for inference; full videos, filenames and preview images are not sent for analysis or saved by the server. Results and corrections remain in page memory. The server binds only to `127.0.0.1`, authenticates inference requests and rejects unrelated website origins. Downloads are short-lived in-memory snapshots.
 
 Settings are persisted; exports contain filenames and tags. Selecting files on cake.ski and applying tags can trigger that website's normal upload and search requests. See [security boundaries](docs/SECURITY.md) and [third-party components](THIRD_PARTY.md).
 
 ## Development and sharing
 
-For unexpected slowdowns in the standalone application, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It initializes the same CPU worker and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
+For unexpected slowdowns in the standalone application, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It uses the same native Node API and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
 
 Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Firefox.mjs` and `runtime/node.exe scripts/Build-Chrome.mjs`.
+
+To compare native CPU and browser WASM providers, run `runtime/node.exe scripts/Benchmark-Native.mjs` on Windows. It verifies pinned npm archives, keeps the optional native runtime in ignored `work/native-benchmark/`, times eight synthetic frames with eight CPU threads, and serves a browser comparison at `http://127.0.0.1:8793/`. Click **Run browser comparison** to measure four/eight WASM workers and compare every score and the resulting tag sets. `--native-only` skips the browser server. This is an evaluation tool; it does not change the application's backend or require videos. Reports describe the tested hardware and are not bundled in releases.
 
 `scripts/Package.ps1` builds `outputs/Cake-Tagger.zip` from tracked project files and checksum-verified assets. It includes `extensions/Cake-Tagger-Firefox.zip` and the unpacked `extensions/chrome/` directory. Private data, media, scratch files and Git history are excluded. Share this package rather than the working directory.
 

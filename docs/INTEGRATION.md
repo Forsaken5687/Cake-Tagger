@@ -1,6 +1,6 @@
 # Browser integration
 
-Firefox and Chrome share the same UI, analysis engine and upload adapter. Extensions run without the local HTTP server; the standalone interface remains optional.
+Firefox and Chrome share the same UI, analysis engine and upload adapter. All analysis views use the local Node inference server; the standalone interface remains optional. Start the server before analyzing videos.
 
 ## Upload contract
 

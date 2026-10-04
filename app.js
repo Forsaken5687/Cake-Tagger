@@ -6,7 +6,7 @@ import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analy
 import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
 import { installSettings } from './settings-ui.mjs';
 import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
-import { createInferencePool, inferenceConcurrency } from './inference-pool.mjs';
+import { createNativeClient } from './native-client.mjs';
 import { memorySnapshot } from './runtime-metrics.mjs';
 import { setLanguage, setSiteLanguage, t, translatePage, localizedText, localizedAttribute } from './i18n.mjs';
 const { isExtension, installIntegration, integrationButton } = ['moz-extension:', 'chrome-extension:'].includes(location.protocol)
@@ -42,18 +42,13 @@ function infer(frames, parallelism) {
   // Reconfigure between batches; changing settings never interrupts a running video.
   if (!inferencePool || poolPreference !== parallelism) {
     inferencePool?.stop(); poolPreference = parallelism;
-    inferencePool = createInferencePool({
-      createWorker: () => new Worker('/engine-worker.js?parallelism=' + encodeURIComponent(parallelism)),
-      concurrency: inferenceConcurrency({ isolated: globalThis.crossOriginIsolated && typeof SharedArrayBuffer !== 'undefined', cores: navigator.hardwareConcurrency, memoryGB: navigator.deviceMemory, parallelism }),
+    inferencePool = createNativeClient({ extension: isExtension, token,
       onState: state => localizedText($('#status'), state),
       onProgress: (current, total) => localizedText($('#status'), message('analysis.progress', { current, total }))
     });
   }
-  return inferencePool.infer(frames).then(async result => {
-    let serverMetrics = { hostMemory: null, serverMemory: null };
-    // Diagnostics are optional: an unavailable or older server must not discard tags.
-    if (!isExtension) { try { serverMetrics = await api('/api/runtime', { signal: AbortSignal.timeout(1500) }); } catch {} }
-    return { ...result, runtime: { ...result.runtime, parallelismLimit: parallelism, memory: memorySnapshot(), ...serverMetrics } };
+  return inferencePool.infer(frames, parallelism).then(result => {
+    return { ...result, runtime: { ...result.runtime, parallelismLimit: parallelism, memory: memorySnapshot() } };
   });
 }
 if (!isExtension && token) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', '/'); }
@@ -89,7 +84,7 @@ async function status() {
       fetch('/tags.txt').then(r => r.text()), fetch('/mapping.json').then(r => r.json()), fetch('/model/provenance.json').then(r => r.json()),
     ]);
     allTags = tagText.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean); mapping = map;
-    modelSignature = provenance.sha256 + JSON.stringify(map);
+    modelSignature = 'native-cpu-v1|' + provenance.sha256 + JSON.stringify(map);
     localizedText($('#status'), 'analysis.ready');
   } catch (e) { localizedText($('#status'), errorMessage(e)); }
 }

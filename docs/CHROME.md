@@ -1,8 +1,10 @@
 # Chrome extension
 
-Requires Chrome Desktop 120 or later. The model and inference runtime are bundled, so the extension does not need the standalone server.
+Requires Chrome Desktop 120 or later. The interface uses the local Cake Tagger server on Windows x64. Run `Start.cmd` before analysis.
 
 ## Load and update
+
+Run the local application's `Start.cmd` before analysis. Updating to the native backend requires loopback permission. Only port 8765 is used by the extension.
 
 1. Extract `outputs/Cake-Tagger-Chrome.zip`, use `outputs/chrome/` after a local build, or use `extensions/chrome/` from the full release.
 2. Open `chrome://extensions` and enable **Developer mode**.
@@ -23,9 +25,9 @@ Reselect files that were chosen before the extension was loaded. Transfers requi
 
 ## Development and validation
 
-`runtime/node.exe scripts/Build-Chrome.mjs` produces the unpacked folder and ZIP. Shared code, licensed dependencies and provenance are copied from a fixed list; large assets are checksum-verified. PNG icons are derived from the project's own SVG.
+`runtime/node.exe scripts/Build-Chrome.mjs` produces the unpacked folder and ZIP. Shared interface code, licenses and provenance are copied from a fixed list; native inference dependencies stay with the local server. PNG icons are derived from the project's own SVG.
 
-Chrome uses a module service worker with static imports. `webext-api.js` adapts async message listeners through `sendResponse`. Analysis runs in the visible extension document and its worker, so service worker suspension does not hold video data or interrupt inference.
+Chrome uses a module service worker with static imports. `webext-api.js` adapts async message listeners through `sendResponse`. Video decoding and review run in the extension document; inference runs in the local Node server. The background service worker retains no video data or inference session.
 
 Automated tests and local fixtures cover messages, settings, manifests and UI behavior. Installation and the real website flow must also be checked in Chrome. See [testing](TESTING.md) and [security](SECURITY.md).
 

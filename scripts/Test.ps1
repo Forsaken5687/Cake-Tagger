@@ -8,8 +8,12 @@ try {
         & $taggerNode --check $file
         if ($LASTEXITCODE -ne 0) { throw ('Syntax check failed: ' + $file) }
     }
+    foreach ($file in @('native-engine.mjs', 'native-worker.mjs', 'native-client.mjs')) {
+        & $taggerNode --check $file
+        if ($LASTEXITCODE -ne 0) { throw ('Syntax check failed: ' + $file) }
+    }
     $testFiles = @(Get-ChildItem -LiteralPath tests -Filter '*.test.mjs' | ForEach-Object { $_.FullName })
-    foreach ($file in @(Get-ChildItem -LiteralPath extension -File | Where-Object { $_.Extension -in '.js', '.mjs' }) + @(Get-ChildItem -LiteralPath scripts -Filter 'Build-*.mjs')) {
+    foreach ($file in @(Get-ChildItem -LiteralPath extension -File | Where-Object { $_.Extension -in '.js', '.mjs' }) + @(Get-ChildItem -LiteralPath scripts -Recurse -Filter '*.mjs')) {
         & $taggerNode --check $file.FullName
         if ($LASTEXITCODE -ne 0) { throw ('Syntax check failed: ' + $file.Name) }
     }

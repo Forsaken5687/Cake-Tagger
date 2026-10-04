@@ -24,13 +24,14 @@ test('tag plan preserves inherited tags, exclusions and deduplicates additions',
   assert.throws(() => planTags(['unknown'], [], [], allowed));
   assert.throws(() => planTags('glasses', [], [], allowed));
 });
-test('Firefox manifest confines page access and declares WASM CSP', () => {
+test('Firefox manifest confines page access and connects only to the local analysis service', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('../extension/manifest.json', import.meta.url)));
   assert.equal(manifest.manifest_version, 3);
-  assert.deepEqual(manifest.host_permissions, ['https://cake.ski/*']);
+  assert.deepEqual(manifest.host_permissions, ['https://cake.ski/*', 'http://127.0.0.1/*']);
   assert.ok(manifest.background.scripts.length);
   assert.equal(manifest.background.service_worker, undefined);
-  assert.ok(manifest.content_security_policy.extension_pages.includes("'wasm-unsafe-eval'"));
+  assert.ok(manifest.content_security_policy.extension_pages.includes('http://127.0.0.1:8765'));
+  assert.ok(!manifest.content_security_policy.extension_pages.includes('wasm-unsafe-eval'));
   assert.deepEqual(manifest.permissions, ['storage']);
   assert.equal(manifest.action.default_popup, undefined);
   assert.ok(!manifest.web_accessible_resources[0].resources.some(p => p.startsWith('model/') || p.startsWith('vendor/')));

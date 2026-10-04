@@ -8,6 +8,7 @@ import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { validateRecord, applyRecord, exportItem } from './corrections.mjs';
 import { validatedSessionURL } from './session-url.mjs';
+import { createNativeEngine } from './native-engine.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const token = randomBytes(24).toString('hex');
@@ -18,6 +19,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
 fs.mkdirSync(path.join(root, 'data'), { recursive: true });
 const tagList = fs.readFileSync(path.join(root, 'tags.txt'), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
 const downloads = new Map();
+const engine = createNativeEngine();
 function openBrowser(url) {
   // Pass the URL as data, never interpolate a session file into PowerShell code.
   spawn('powershell.exe', ['-NoProfile', '-Command', 'Start-Process -FilePath $env:CAKE_TAGGER_OPEN_URL'], {
@@ -28,9 +30,47 @@ function json(res, code, data) { res.writeHead(code, { 'Content-Type': 'applicat
 const server = http.createServer(async (req, res) => {
   // Reject cross-origin requests and alternative Host values, including DNS rebinding.
   const ownHost = '127.0.0.1:' + server.address().port;
-  if (req.headers.host !== ownHost || (req.headers.origin && req.headers.origin !== 'http://' + ownHost)) { res.writeHead(403); return res.end('Forbidden'); }
+  const extensionOrigin = /^(moz-extension:\/\/[a-f0-9-]{36}|chrome-extension:\/\/[a-p]{32})$/.test(req.headers.origin || '');
+  if (req.headers.host !== ownHost || (req.headers.origin && req.headers.origin !== 'http://' + ownHost && !extensionOrigin)) { res.writeHead(403); return res.end('Forbidden'); }
+  if (extensionOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Vary', 'Origin');
+  }
   let requested;
   try { requested = decodeURIComponent(new URL(req.url, 'http://' + ownHost).pathname); } catch { res.writeHead(400); return res.end(); }
+  if (req.method === 'OPTIONS' && extensionOrigin && ['/api/connect', '/api/infer'].includes(requested)) {
+    res.writeHead(204, { 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-Cake-Tagger-Client' });
+    return res.end();
+  }
+  // A website cannot send this custom header without an approved CORS preflight.
+  // Privileged extension fetches may omit Origin; local processes are trusted.
+  if (req.method === 'POST' && requested === '/api/connect') {
+    if (req.headers['x-cake-tagger-client'] !== 'extension' || (req.headers.origin && !extensionOrigin)) return json(res, 403, { error: 'error.nativeServer' });
+    return json(res, 200, { token });
+  }
+  if (req.method === 'POST' && requested === '/api/infer') {
+    if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'error.openUsingStart' });
+    const parallelism = new URL(req.url, 'http://' + ownHost).searchParams.get('parallelism') || 'auto';
+    if (!['auto', '1', '2', '4', '6', '8'].includes(parallelism)) return json(res, 400, { error: 'error.invalidAnalysisRuntime' });
+    if (req.headers['content-type'] !== 'application/octet-stream') return json(res, 415, { error: 'error.invalidModelInputImage' });
+    const controller = new AbortController();
+    const disconnected = () => { if (!res.writableEnded) controller.abort(); };
+    res.on('close', disconnected);
+    try {
+      const chunks = []; let size = 0;
+      for await (const chunk of req) { size += chunk.length; if (size > 448 * 448 * 4) return json(res, 413, { error: 'error.invalidModelInputImage' }); chunks.push(chunk); }
+      if (size !== 448 * 448 * 4) return json(res, 400, { error: 'error.invalidModelInputImage' });
+      const rgba = Uint8ClampedArray.from(Buffer.concat(chunks));
+      const result = await engine.infer(rgba, parallelism, controller.signal);
+      const memory = process.memoryUsage();
+      return json(res, 200, { ...result, scores: Array.from(result.scores), runtime: { ...result.runtime,
+        hostMemory: { totalBytes: os.totalmem(), freeBytes: os.freemem() },
+        serverMemory: { rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, heapTotalBytes: memory.heapTotal, externalBytes: memory.external, arrayBuffersBytes: memory.arrayBuffers } } });
+    } catch (error) {
+      if (!res.destroyed) return json(res, error.message === 'error.nativeBusy' ? 429 : 500, { error: error.message?.startsWith('error.') ? error.message : 'error.nativeInference' });
+    } finally { res.removeListener('close', disconnected); }
+    return;
+  }
   if (req.method === 'GET' && requested.startsWith('/api/download/')) {
     const id = requested.slice('/api/download/'.length), item = downloads.get(id);
     if (!item || item.expires < Date.now()) { downloads.delete(id); return json(res, 404, { error: 'error.downloadExpired' }); }
@@ -72,7 +112,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   if (requested === '/') requested = '/index.html';
-  if (!(/^\/(index\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|engine-worker\.js|compute-policy\.js|runtime-metrics\.mjs|inference-pool\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || requested === '/extension/auto-analysis.mjs' || /^\/assets\/logo\.svg$/.test(requested) || /^\/(vendor|model)\/[A-Za-z0-9._-]+$/.test(requested))) { res.writeHead(404); return res.end(); }
+  if (!(/^\/(index\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|native-client\.mjs|engine-worker\.js|compute-policy\.js|runtime-metrics\.mjs|inference-pool\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || requested === '/extension/auto-analysis.mjs' || /^\/assets\/logo\.svg$/.test(requested) || /^\/(vendor|model)\/[A-Za-z0-9._-]+$/.test(requested))) { res.writeHead(404); return res.end(); }
   const file = path.join(root, requested.slice(1));
   let stat;
   try { stat = fs.statSync(file); if (!stat.isFile()) throw Error(); } catch { res.writeHead(404); return res.end(); }

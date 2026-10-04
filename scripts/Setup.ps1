@@ -19,4 +19,6 @@ foreach ($asset in $manifest.assets) {
         if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary }
     }
 }
+& (Join-Path $taggerRoot 'runtime/node.exe') (Join-Path $PSScriptRoot 'Setup-Native.mjs')
+if ($LASTEXITCODE -ne 0) { throw 'Native runtime setup failed.' }
 Write-Host 'All dependencies are ready. Run Start.cmd to open the application.'

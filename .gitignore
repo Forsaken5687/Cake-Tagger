@@ -14,6 +14,7 @@
 # Large dependencies: restored by Setup.ps1 or included in the sharing package
 /model/*.onnx
 /runtime/node.exe
+/runtime/native/
 /vendor/*.wasm
 
 # Media must never enter the repository

@@ -1,23 +1,19 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export function buildExtension(target) {
   if (!['firefox', 'chrome'].includes(target)) throw Error('Unsupported browser.');
   const output = path.join(root, 'outputs', target);
   fs.mkdirSync(output, { recursive: true });
-  const files = ['index.html', 'webext-api.js', 'app.js', 'style.css', 'engine-worker.js', 'compute-policy.js', 'runtime-metrics.mjs', 'inference-pool.mjs', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'messages.mjs', 'corrections.mjs', 'sampling.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'tags.txt', 'THIRD_PARTY.md', 'scripts/assets.json', 'assets/logo.svg',
+  const files = ['index.html', 'webext-api.js', 'app.js', 'style.css', 'native-client.mjs', 'runtime-metrics.mjs', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'messages.mjs', 'corrections.mjs', 'sampling.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'tags.txt', 'THIRD_PARTY.md', 'scripts/assets.json', 'assets/logo.svg',
     'extension/background.js', 'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/auto-analysis.mjs', 'extension/site-theme.mjs', 'extension/message-contract.mjs', 'extension/upload-adapter.mjs', 'extension/integration.mjs',
     'extension/settings-background.mjs', '_locales/en/messages.json', '_locales/de/messages.json',
-    'model/LICENSE.txt', 'model/coverage.json', 'model/provenance.json', 'model/top_tags.txt',
-    'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt', 'vendor/ort-wasm-simd-threaded.mjs', 'vendor/ort.wasm.min.js'];
+    'model/LICENSE.txt', 'model/coverage.json', 'model/provenance.json', 'model/top_tags.txt'];
   if (target === 'chrome') files.push('extension/chrome-worker.mjs', ...[16,32,48,128].map(size => `assets/logo-${size}.png`));
-  const assets = JSON.parse(fs.readFileSync(path.join(root, 'scripts/assets.json'), 'utf8')).assets.filter(a => a.path.startsWith('model/') || a.path.startsWith('vendor/'));
-  for (const asset of assets) {
-    const data = fs.readFileSync(path.join(root, asset.path));
-    if (createHash('sha256').update(data).digest('hex') !== asset.sha256) throw Error('Checksum mismatch: ' + asset.path);
-    files.push(asset.path);
+  // Remove only known obsolete engine assets from earlier unpacked builds.
+  for (const obsolete of ['engine-worker.js', 'compute-policy.js', 'inference-pool.mjs', 'model/joytag-int8.onnx', 'vendor/ort-wasm-simd-threaded.wasm', 'vendor/ort-wasm-simd-threaded.mjs', 'vendor/ort.wasm.min.js', 'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt']) {
+    fs.rmSync(path.join(output, obsolete), { force: true });
   }
   const manifest = JSON.parse(fs.readFileSync(path.join(root, target === 'chrome' ? 'extension/manifest.chrome.json' : 'extension/manifest.json'), 'utf8'));
   const entries = [{ name: 'manifest.json', data: Buffer.from(JSON.stringify(manifest, null, 2)) }, { name: 'README.md', data: fs.readFileSync(path.join(root, target === 'chrome' ? 'docs/CHROME.md' : 'docs/FIREFOX.md')) }, ...files.map(name => ({ name, data: fs.readFileSync(path.join(root, name)) }))];

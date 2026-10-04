@@ -27,11 +27,14 @@ export function validateTimings(value) {
 // Optional diagnostics contain capabilities, not full user agents or machine identifiers.
 export function validateRuntime(value) {
   if (value == null) return null;
-  if (typeof value !== 'object' || Array.isArray(value) || value.provider !== 'wasm'
-    || !Number.isInteger(value.configuredWasmThreads) || value.configuredWasmThreads < 1 || value.configuredWasmThreads > 8
+  const native = value?.provider === 'native-cpu';
+  if (typeof value !== 'object' || Array.isArray(value) || !['wasm', 'native-cpu'].includes(value.provider)
+    || (native ? !Number.isInteger(value.configuredNativeThreads) || value.configuredNativeThreads < 1 || value.configuredNativeThreads > 8
+      || !/^\d+\.\d+\.\d+$/.test(value.runtimeVersion) || !/^[a-f0-9]{64}$/.test(value.modelSha256)
+      : !Number.isInteger(value.configuredWasmThreads) || value.configuredWasmThreads < 1 || value.configuredWasmThreads > 8)
     || !Number.isInteger(value.hardwareConcurrency) || value.hardwareConcurrency < 1 || value.hardwareConcurrency > 4096
-    || typeof value.crossOriginIsolated !== 'boolean' || typeof value.sharedArrayBufferAvailable !== 'boolean'
-    || !['firefox', 'chromium', 'other'].includes(value.browser)
+    || (!native && (typeof value.crossOriginIsolated !== 'boolean' || typeof value.sharedArrayBufferAvailable !== 'boolean'
+      || !['firefox', 'chromium', 'other'].includes(value.browser)))
     || (value.inferenceWorkers != null && (!Number.isInteger(value.inferenceWorkers) || value.inferenceWorkers < 1 || value.inferenceWorkers > 8))) throw messageError('error.invalidAnalysisRuntime');
   if (value.parallelismLimit != null && !['auto', '1', '2', '4', '6', '8'].includes(value.parallelismLimit)) throw messageError('error.invalidAnalysisRuntime');
   let memory;
@@ -50,7 +53,8 @@ export function validateRuntime(value) {
   const hostMemory = memoryFields(value.hostMemory, ['totalBytes', 'freeBytes']);
   const serverMemory = memoryFields(value.serverMemory, ['rssBytes', 'heapUsedBytes', 'heapTotalBytes', 'externalBytes', 'arrayBuffersBytes']);
   if (hostMemory && (hostMemory.totalBytes === 0 || hostMemory.freeBytes > hostMemory.totalBytes)) throw messageError('error.invalidAnalysisRuntime');
-  return { ...Object.fromEntries(['provider', 'configuredWasmThreads', 'crossOriginIsolated', 'sharedArrayBufferAvailable', 'hardwareConcurrency', 'browser'].map(key => [key, value[key]])),
+  return { ...Object.fromEntries((native ? ['provider', 'configuredNativeThreads', 'hardwareConcurrency', 'runtimeVersion', 'modelSha256']
+    : ['provider', 'configuredWasmThreads', 'crossOriginIsolated', 'sharedArrayBufferAvailable', 'hardwareConcurrency', 'browser']).map(key => [key, value[key]])),
     ...(value.inferenceWorkers != null ? { inferenceWorkers: value.inferenceWorkers } : {}),
     ...(value.parallelismLimit != null ? { parallelismLimit: value.parallelismLimit } : {}),
     ...(memory ? { memory } : {}),

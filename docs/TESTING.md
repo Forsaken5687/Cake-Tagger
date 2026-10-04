@@ -4,6 +4,8 @@ Run `scripts/Test.ps1` from a writable checkout with the bundled runtime availab
 
 ## Automated coverage
 
+Native checks cover shared-session queue limits, cancellation isolation, worker recovery, token refresh, chronological scores, provider metadata, origin boundaries and malformed input bodies. Also run a production API smoke check with restored native dependencies; mocked workers do not establish inference compatibility or speed. The optional native/WASM comparison tool checks synthetic score differences without personal media.
+
 - Frame sampling boundaries, tag aggregation and uncertain candidate scores.
 - Mapping coverage and manual-category exclusions.
 - Preference normalization, persistence and browser message relays.

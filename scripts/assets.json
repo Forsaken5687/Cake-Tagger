@@ -2,6 +2,16 @@
   "version": 1,
   "assets": [
     {
+      "path": "runtime/native/archives/onnxruntime-node.tgz",
+      "url": "https://registry.npmjs.org/onnxruntime-node/-/onnxruntime-node-1.30.0.tgz",
+      "sha256": "6e3390d6b783e7be946fad629292799da28d0b42f84856e50d2c1b0383291e75"
+    },
+    {
+      "path": "runtime/native/archives/onnxruntime-common.tgz",
+      "url": "https://registry.npmjs.org/onnxruntime-common/-/onnxruntime-common-1.30.0.tgz",
+      "sha256": "7906c439e0d3e0f4048caa23b64cdfadc0f455c377f579ce1ab2a4b778f07d5f"
+    },
+    {
       "path": "model/joytag-int8.onnx",
       "url": "https://huggingface.co/IamTheStormThatIsApproaching/joytag-onnx-Q8_0-quantized/resolve/9829c49ee97c55ad42f23c619a9925a77dabc54c/joytag-Q8_0.onnx",
       "sha256": "888419d6832b2e39404c6051842e04cacf71cf33f4ce0cb9096874e4f32eec01"

@@ -8,7 +8,7 @@ test('Chrome manifest uses a module service worker, PNG icons and limited permis
   assert.deepEqual(manifest.background, { service_worker: 'extension/chrome-worker.mjs', type: 'module' });
   assert.equal(manifest.browser_specific_settings, undefined);
   assert.deepEqual(manifest.permissions, ['storage']);
-  assert.deepEqual(manifest.host_permissions, ['https://cake.ski/*']);
+  assert.deepEqual(manifest.host_permissions, ['https://cake.ski/*', 'http://127.0.0.1/*']);
   assert.equal(manifest.content_scripts[0].js[0], 'webext-api.js');
   assert.equal(manifest.action.default_popup, undefined);
   for (const [size, icon] of Object.entries(manifest.icons)) {

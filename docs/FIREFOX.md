@@ -1,15 +1,17 @@
 # Firefox extension
 
-Requires Firefox Desktop 140 or later. The package contains the shared application, JoyTag model and ONNX Runtime Web. No local server is required.
+Requires Firefox Desktop 140 or later. The extension contains the interface and upload adapter. Inference requires the local Cake Tagger server on Windows x64, started with `Start.cmd`.
 
 ## Load and update
+
+Run the local application's `Start.cmd` before analysis. Updating to the native backend requires loopback permission. Only port 8765 is used by the extension.
 
 The development package is unsigned:
 
 1. Extract `outputs/Cake-Tagger-Firefox.zip`, or use `extensions/Cake-Tagger-Firefox.zip` from the full release.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Choose **Load Temporary Add-on** and select the extracted `manifest.json`.
-4. Allow access to `https://cake.ski` if requested, then reload any open cake.ski tab.
+4. Allow access to cake.ski and `127.0.0.1` if requested, then reload any open cake.ski tab.
 
 Firefox removes temporarily loaded add-ons after a restart. A permanent distribution requires signing; the project does not submit packages automatically.
 
@@ -32,7 +34,7 @@ The panel follows the connected page's colors and, in Automatic language mode, i
 
 ## Development and validation
 
-Run `runtime/node.exe scripts/Build-Firefox.mjs` to build `outputs/firefox/` and the ZIP. The builder uses a fixed file list and checks the large model/runtime assets against `scripts/assets.json`. Licenses and provenance are included; private files and the Node executable are excluded.
+Run `runtime/node.exe scripts/Build-Firefox.mjs` to build `outputs/firefox/` and the ZIP. The builder copies shared UI modules, licenses and asset provenance from a fixed file list. Model and inference binaries stay with the local server. Licenses and provenance are included; private files and the Node executable are excluded.
 
 Synthetic tests cover message boundaries, settings, filename matching, tag preservation and manifests. Local browser fixtures exercise the shared interface and upload adapter, but do not replace a complete Firefox test of installation, permissions, model inference and transfer. See [testing](TESTING.md).
 

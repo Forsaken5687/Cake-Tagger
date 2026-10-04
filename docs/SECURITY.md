@@ -4,7 +4,7 @@ Cake Tagger is a local application and browser extension under development. Code
 
 ## Data flow
 
-Video decoding, frame extraction and model inference run inside the browser. Analysis data is held in page memory. There is no tagging backend or project telemetry. Exported JSON contains filenames and content tags and can therefore contain private information.
+Video decoding and frame extraction run in the browser. Binary 448 × 448 RGBA samples are sent only to the local Node server for native CPU inference. The server does not accept file paths or save samples. Full videos and filenames are not sent for inference. Results stay in page memory; there is no project telemetry. Exported JSON contains filenames and content tags and can therefore contain private information.
 
 Settings persist in browser storage. The standalone server also writes an ignored `data/session.json` containing its random session token and process ID. Treat this file as private. Legacy corrections are not loaded or overwritten.
 
@@ -25,11 +25,11 @@ The extension's analysis does not upload videos, but cake.ski may stage Bulk dra
 
 ## Remaining trust and limitations
 
-The standalone `/api/runtime` endpoint requires the existing session token and rejects cross-origin requests. It reports system memory availability and the Node server's allocations; it does not inspect other processes. Extension pages do not contact this endpoint or request localhost access. Exported memory metrics are optional and distinguish their measurement scopes.
+`/api/infer` requires a bearer token, validates content type, frame size and thread settings, and uses a bounded queue. Extension pages request loopback access and acquire the token through a custom-header connection request. CORS permits extension origins and rejects unrelated website/null origins. Privileged extension requests may omit Origin. Installed extensions with loopback permission and local processes are inside the trust boundary; the handshake does not establish extension identity. Tokens stay in extension document memory and are never sent to cake.ski. Inference responses include optional system and Node memory snapshots with separate scopes. They do not inspect other processes or measure peak model RAM.
 
-The browser, local operating system, pinned Node runtime, ONNX Runtime Web, community-converted model and cake.ski page remain trusted components. Checksums establish artifact identity; they do not prove that an artifact is safe. This project does not sandbox other applications running under the same local account.
+The browser, local operating system, pinned Node runtime, ONNX Runtime Node, community-converted model and cake.ski page remain trusted components. Checksums establish artifact identity; they do not prove that an artifact is safe. This project does not sandbox other applications running under the same local account.
 
-Browsers decode media and execute WebAssembly; keep supported browsers updated. Large batches can consume substantial CPU and memory despite per-video limits. The model's semantic accuracy and frame-coverage heuristics need an independently reviewed dataset.
+Browsers decode media and Node loads native runtime binaries; keep supported browsers updated. Large batches can consume substantial CPU and memory despite per-video limits. The model's semantic accuracy and frame-coverage heuristics need an independently reviewed dataset.
 
 The adapter depends on a changing website DOM. Unsupported changes should stop transfer, but complete target-browser and real-site checks remain necessary. Only filenames link separate-view analyses to upload cards; the extension does not verify the site's uploaded bytes.
 

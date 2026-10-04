@@ -1,8 +1,12 @@
 // Stable message IDs keep wording and runtime data independent of each other.
 export const messages = {
+  'error.nativeServer': { en: 'Start Cake Tagger with Start.cmd to connect to the local analysis server.', de: 'Starte Cake Tagger mit Start.cmd, um den lokalen Analyseserver zu verbinden.' },
+  'error.nativeInference': { en: 'Local analysis failed. Check the server and run Setup.cmd if dependencies are missing.', de: 'Lokale Analyse fehlgeschlagen. Prüfe den Server und starte Setup.cmd, falls Abhängigkeiten fehlen.' },
+  'error.nativeBusy': { en: 'The local analysis server is busy. Try again shortly.', de: 'Der lokale Analyseserver ist ausgelastet. Versuche es gleich noch einmal.' },
+  'error.nativeModelChecksum': { en: 'Model checksum mismatch. Run Setup.cmd to restore the model.', de: 'Die Modell-Prüfsumme stimmt nicht. Stelle das Modell mit Setup.cmd wieder her.' },
   'settings.parallelism': { en: 'CPU parallelism', de: 'CPU-Parallelisierung' },
   'settings.parallelismCount': { en: 'Up to {count}', de: 'Bis zu {count}' },
-  'settings.parallelismHint': { en: 'Limited by reported CPU and memory capabilities. Higher limits can use more RAM and are not always faster. Automatic stays conservative when memory information is unavailable.', de: 'Wird an die gemeldete CPU und den Arbeitsspeicher angepasst. Höhere Limits können mehr RAM benötigen und sind nicht immer schneller. Automatisch bleibt bei fehlenden RAM-Angaben vorsichtig.' },
+  'settings.parallelismHint': { en: 'CPU thread limit for the local server. Automatic uses up to half the available logical processors, capped at eight. Higher limits are not always faster.', de: 'CPU-Thread-Limit für den lokalen Server. Automatisch nutzt bis zur Hälfte der verfügbaren logischen Prozessoren, höchstens acht. Höhere Limits sind nicht immer schneller.' },
   // Runtime diagnostics.
   'diagnostics.title': { en: 'Runtime diagnostics', de: 'Laufzeit-Diagnose' },
   'diagnostics.description': { en: 'Check CPU runtime settings and optionally measure one synthetic image. No videos are needed.', de: 'Prüfe die CPU-Laufzeit und miss optional ein künstliches Testbild. Dafür werden keine Videos benötigt.' },
