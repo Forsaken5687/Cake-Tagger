@@ -6,6 +6,7 @@ import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analy
 import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
 import { installSettings } from './settings-ui.mjs';
 import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
+import { createInferencePool, inferenceConcurrency } from './inference-pool.mjs';
 import { setLanguage, setSiteLanguage, t, translatePage, localizedText, localizedAttribute } from './i18n.mjs';
 const { isExtension, installIntegration, integrationButton } = ['moz-extension:', 'chrome-extension:'].includes(location.protocol)
   ? await import('./extension/integration.mjs')
@@ -16,7 +17,13 @@ let settings;
 try { settings = await settingsStore.load(); } catch { settings = settingsStore.get(); }
 setLanguage(settings); translatePage();
 let token = location.hash.slice(1), allTags = [], entries = [], running = false, controller, stopping = false;
-let mapping, modelSignature, worker, workerSeq = 0, workerJobs = new Map();
+let mapping, modelSignature;
+const inferencePool = createInferencePool({
+  createWorker: () => new Worker('/engine-worker.js'),
+  concurrency: inferenceConcurrency({ isolated: globalThis.crossOriginIsolated, cores: navigator.hardwareConcurrency, memoryGB: navigator.deviceMemory }),
+  onState: state => localizedText($('#status'), state),
+  onProgress: (current, total) => localizedText($('#status'), message('analysis.progress', { current, total }))
+});
 // Remove the legacy persistent analysis cache; current results live only in memory.
 indexedDB.deleteDatabase('cake-tagger-browser-v1');
 const sessionRecords = new Map(), sessionCache = new Map();
@@ -34,31 +41,10 @@ async function cached(key, value) {
   return sessionCache.get(key);
 }
 function terminateWorker() {
-  worker?.terminate(); worker = undefined;
-  for (const pending of workerJobs.values()) pending.reject(new DOMException('analysis.cancelled', 'AbortError'));
-  workerJobs.clear();
+  inferencePool.stop();
 }
 function infer(frames) {
-  // Keep the UI responsive and transfer RGBA buffers without copying them again.
-  if (!worker) {
-    worker = new Worker('/engine-worker.js');
-    worker.onmessage = ({ data }) => {
-      if (data.type === 'state') localizedText($('#status'), data.state);
-      if (data.type === 'progress') localizedText($('#status'), message('analysis.progress', { current: data.current, total: data.total }));
-      const pending = workerJobs.get(data.id);
-      if (pending) {
-        workerJobs.delete(data.id);
-        if (data.type === 'error') pending.reject(messageError(data.error)); else pending.resolve(data);
-      }
-    };
-    worker.onerror = () => {
-      for (const pending of workerJobs.values()) pending.reject(messageError('error.analysisStart'));
-      workerJobs.clear(); worker?.terminate(); worker = undefined;
-    };
-  }
-  return new Promise((resolve, reject) => {
-    const id = ++workerSeq; workerJobs.set(id, { resolve, reject }); worker.postMessage({ id, type: 'analyze', frames }, frames.map(frame => frame.buffer));
-  });
+  return inferencePool.infer(frames);
 }
 if (!isExtension && token) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', '/'); }
 else token = sessionStorage.getItem('cake-token') || '';

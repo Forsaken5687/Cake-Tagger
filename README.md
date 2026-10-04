@@ -53,6 +53,8 @@ The base threshold is fixed at 0.4. Most suggested tags require support in more 
 
 The displayed score is the average of the two strongest frame matches. It is not the proportion of the video showing a tag or the probability that the tag is correct. The JSON export preserves selections, original suggestions, scores, tag origins and analysis timings.
 
+The local server page uses up to four CPU threads in one model session. Extension views without shared-memory isolation process frames in up to four independent workers, depending on reported CPU and memory capabilities. This uses more RAM; model sessions are reused across videos and released when analysis is cancelled or fails. Parallel processing preserves frame order and tag scores.
+
 ## Limitations
 
 - Maximum 10 minutes and 250 MiB per video. Supported codecs depend on the browser; MP4/M4V with H.264 is a practical starting point.

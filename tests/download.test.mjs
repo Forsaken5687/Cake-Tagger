@@ -13,7 +13,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['static.mjs', 'diagnostics.html', 'diagnostics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
+  for (const name of ['static.mjs', 'diagnostics.html', 'diagnostics.mjs', 'inference-pool.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
   fs.mkdirSync(path.join(root, 'extension'));
   fs.copyFileSync(new URL('../extension/auto-analysis.mjs', import.meta.url), path.join(root, 'extension/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
@@ -33,6 +33,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.equal(diagnostics.headers.get('cross-origin-opener-policy'), 'same-origin');
     assert.equal(diagnostics.headers.get('cross-origin-embedder-policy'), 'require-corp');
     assert.equal((await fetch(url.origin + '/diagnostics.mjs')).status, 200);
+    assert.equal((await fetch(url.origin + '/inference-pool.mjs')).status, 200);
     const sha = 'a'.repeat(64);
     const record = { filename: 'synthetic.mp4', sha256: sha, tags: ['tattoos'], candidateTags: ['tattoos'], reviewed: true, originalSuggestionsKnown: true,
       result: { sha256: sha, tags: [{ tag: 'tattoos', confidence: 0.8, supportingFrames: 4 }], uncertain: [], sampledFrames: 4, threshold: 0.4, analysisPolicy: 'coverage-v5:majority:["hairy","watermark"]', model: 'JoyTag-INT8' } };

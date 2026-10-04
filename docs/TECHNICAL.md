@@ -4,7 +4,9 @@
 
 `app.js` reads local files, computes SHA-256 content hashes and samples frames through Video and Canvas APIs. Previews are JPEG images with a maximum edge of 640 pixels. Model input is prepared as 448 x 448 RGBA buffers, padded white to a square, and transferred directly to `engine-worker.js`; JPEG previews are not decoded again for inference.
 
-The worker runs JoyTag INT8 with ONNX Runtime Web on the WASM CPU provider. RGB channels use CLIP mean/std normalization. The model returns 5,813 logits; sigmoid converts them to per-label scores. Processing is sequential. Isolated contexts use up to four WASM threads, otherwise one. Browser resizing is not identical to Pillow bicubic resizing.
+The worker runs JoyTag INT8 with ONNX Runtime Web on the WASM CPU provider. RGB channels use CLIP mean/std normalization. The model returns 5,813 logits; sigmoid converts them to per-label scores. Frames are sequential within each session. Isolated contexts use one worker with up to four WASM threads. Other contexts use up to four independent single-threaded workers through `inference-pool.mjs`. Browser resizing is not identical to Pillow bicubic resizing.
+
+Pool size is limited by half the reported logical CPU count, a maximum of four, and reported device memory when available: one worker up to 2 GB, two up to 4 GB. Browsers that omit device memory use the CPU limit. Frames are distributed round-robin and restored to chronological order before aggregation. Model sessions remain reusable for subsequent videos, costing additional RAM per worker. Cancellation or any worker failure terminates all sessions and rejects the batch; partial results are never aggregated. No browser protection is disabled. Firefox extension isolation restrictions are tracked in [Mozilla bug 1673477](https://bugzilla.mozilla.org/show_bug.cgi?id=1673477).
 
 `sampling.mjs` distributes samples at bin midpoints and limits videos to 600 seconds. Automatic counts are 8/12/16/24/32/48 at duration boundaries 15/30/60/120/300/600 seconds; fixed counts remain available. Files above 250 MiB are rejected before hashing or sampling.
 
@@ -32,9 +34,9 @@ The standalone server holds up to three download snapshots, each with a five-min
 
 ## Timing metadata
 
-`timings` includes `samplingSeconds`, `modelLoadSeconds`, `preprocessSeconds`, `inferenceSeconds` and `totalSeconds`. Transfer and administration overhead means components need not sum exactly to the total. Timings do not include export. Legacy results may lack timings.
+`timings` includes `samplingSeconds`, `modelLoadSeconds`, `preprocessSeconds`, `inferenceSeconds` and `totalSeconds`. With multiple workers, each model-stage value is the maximum duration reported by a worker, rather than summed CPU time. Stages overlap, so their individual maxima need not describe the same worker. `totalSeconds` measures application wall time including sampling. Transfer and administration overhead also means components need not sum exactly to the total. Timings do not include export. Legacy results may lack timings.
 
-New results also include optional `runtime` metadata: WASM provider, configured thread count after session initialization, isolation and shared-memory capabilities, reported logical CPU count, and a coarse browser family. The export excludes full user agents and system identifiers. The setting is not proof of worker utilization or achieved speed. Legacy results remain valid without this metadata.
+New results also include optional `runtime` metadata: WASM provider, configured thread count per session after initialization, `inferenceWorkers`, isolation and shared-memory capabilities, reported logical CPU count, and a coarse browser family. The export excludes full user agents and system identifiers. The settings are not proof of worker utilization or achieved speed. Legacy results remain valid without this metadata.
 
 The standalone `/diagnostics.html` page loads the same worker and model. Its optional benchmark times one constant synthetic RGBA image after model initialization, validates the normal 5,813-label output and offers a JSON report download. It does not access videos, account tokens or existing corrections. Timing depends on browser behavior, CPU scheduling and background load; synthetic runs do not predict video recognition quality.
 

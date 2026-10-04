@@ -31,6 +31,8 @@ export function validateRuntime(value) {
     || !Number.isInteger(value.configuredWasmThreads) || value.configuredWasmThreads < 1 || value.configuredWasmThreads > 4
     || !Number.isInteger(value.hardwareConcurrency) || value.hardwareConcurrency < 1 || value.hardwareConcurrency > 4096
     || typeof value.crossOriginIsolated !== 'boolean' || typeof value.sharedArrayBufferAvailable !== 'boolean'
-    || !['firefox', 'chromium', 'other'].includes(value.browser)) throw messageError('error.invalidAnalysisRuntime');
-  return Object.fromEntries(['provider', 'configuredWasmThreads', 'crossOriginIsolated', 'sharedArrayBufferAvailable', 'hardwareConcurrency', 'browser'].map(key => [key, value[key]]));
+    || !['firefox', 'chromium', 'other'].includes(value.browser)
+    || (value.inferenceWorkers != null && (!Number.isInteger(value.inferenceWorkers) || value.inferenceWorkers < 1 || value.inferenceWorkers > 4))) throw messageError('error.invalidAnalysisRuntime');
+  return { ...Object.fromEntries(['provider', 'configuredWasmThreads', 'crossOriginIsolated', 'sharedArrayBufferAvailable', 'hardwareConcurrency', 'browser'].map(key => [key, value[key]])),
+    ...(value.inferenceWorkers != null ? { inferenceWorkers: value.inferenceWorkers } : {}) };
 }

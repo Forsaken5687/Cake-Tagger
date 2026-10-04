@@ -16,11 +16,11 @@ test('fixed defaults and timing metadata survive persistence and export', () => 
 });
 
 test('runtime diagnostics survive correction export without retaining arbitrary machine details', () => {
-  const runtime = { provider: 'wasm', configuredWasmThreads: 4, hardwareConcurrency: 24, crossOriginIsolated: true, sharedArrayBufferAvailable: true, browser: 'firefox' };
+  const runtime = { provider: 'wasm', configuredWasmThreads: 1, inferenceWorkers: 4, hardwareConcurrency: 24, crossOriginIsolated: false, sharedArrayBufferAvailable: false, browser: 'firefox' };
   const entry = { file: { name: 'synthetic.mp4' }, selected: new Map([['solo', true]]), reviewed: false,
     result: { sha256: 'e'.repeat(64), tags: [{ tag: 'solo', confidence: 0.8 }], uncertain: [], sampledFrames: 8, model: 'JoyTag-INT8', runtime: { ...runtime, userAgent: 'private details' } } };
   const record = validateRecord(makeRecord(entry), ['solo']);
   assert.deepEqual(exportItem(applyRecord({ file: entry.file }, record)).runtime, runtime);
   assert.equal(validateRuntime(undefined), null);
-  for (const broken of [{}, { ...runtime, configuredWasmThreads: 0 }, { ...runtime, configuredWasmThreads: 1.5 }, { ...runtime, hardwareConcurrency: '24' }, { ...runtime, crossOriginIsolated: 'true' }, { ...runtime, browser: 'unknown' }]) assert.throws(() => validateRuntime(broken));
+  for (const broken of [{}, { ...runtime, configuredWasmThreads: 0 }, { ...runtime, configuredWasmThreads: 1.5 }, { ...runtime, inferenceWorkers: 5 }, { ...runtime, hardwareConcurrency: '24' }, { ...runtime, crossOriginIsolated: 'true' }, { ...runtime, browser: 'unknown' }]) assert.throws(() => validateRuntime(broken));
 });
