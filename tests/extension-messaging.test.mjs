@@ -99,9 +99,9 @@ test('popup Quit calls the local shutdown service and never closes a tab instead
 test('native upload settings use the background API and reject unrelated senders',async()=>{
  const {listener,calls}=await background();
  const sender={id:'fixture',url:'https://cake.ski/',tab:{id:42}};
- const settings={uploadLayout:'sidebar'};
+ const settings={showScores:false};
  const reply=await listener({type:'cake-tagger:settings-save',settings},sender);
- assert.equal(reply.settings.uploadLayout,'sidebar');assert.equal(calls[0].saved,settings);
+ assert.equal(reply.settings.showScores,false);assert.equal(calls[0].saved,settings);
  assert.equal((await listener({type:'cake-tagger:capabilities'},sender)).testMaximum,24);
  assert.equal(listener({type:'cake-tagger:settings-save',settings},{...sender,id:'other'}),undefined);
 });

@@ -11,7 +11,7 @@ The Firefox and Chrome extensions provide the interface and upload integration. 
 - [Firefox installation and usage](docs/FIREFOX.md)
 - [Chrome installation and usage](docs/CHROME.md)
 
-Select videos in the cake.ski upload area. By default, new files are analyzed automatically. Suggestions appear directly on the upload cards or in a sticky side panel, selected in Settings. Review the suggestions, then use **Apply tags** for each video. Existing tags and per-card exclusions are preserved. The extension does not submit or publish posts.
+Select videos in the cake.ski upload area. By default, new files are analyzed automatically. Suggestions appear directly on the upload cards. Review the suggestions, then use **Apply tags** for each video. Existing tags and per-card exclusions are preserved. The extension does not submit or publish posts.
 
 **Important:** cake.ski itself can upload Bulk files as drafts as soon as you select them. Local analysis does not change that behavior.
 
@@ -26,7 +26,7 @@ Requires Windows x64 and a current Firefox or Chrome browser with video decoding
 1. Extract the complete release into a writable folder.
 2. Run `Start.cmd` to start the local server.
 3. Open cake.ski's upload area with the extension installed and select videos.
-4. Review suggestions on the cards or in the side panel, then apply them or download JSON.
+4. Review suggestions on the cards, then apply them or download JSON.
 
 The separate analysis window has been removed. Direct Localhost navigation redirects to cake.ski. No standalone tagging or service interface is served. Results are kept only for the current upload-page session. Download anything you want to retain before closing or reloading it. **Quit** cancels unfinished work, waits for the native worker to stop, and shuts down the local server. It is available on the upload toolbar and extension menu.
 
@@ -34,9 +34,8 @@ A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned
 
 ## Settings
 
-**Settings** is available on the upload toolbar. Both use one configuration on the local server.
+**Settings** is available on the upload toolbar. Preferences are stored on the local server.
 
-- Upload layout: suggestions directly on each upload card (default), or a sticky side panel with a clickable video list and Next video control. Layout changes retain selections.
 - Language: Automatic, German or English. Automatic follows cake.ski in upload views and the browser language in the extension menu. Tag names are unchanged.
 - Automatically analyze upload videos: enabled by default; applies only to the embedded upload workflow.
 - Images per video: automatic by duration, or a fixed count from 4 to 48.
@@ -50,7 +49,7 @@ A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned
 
 Automatic sampling uses 8/12/16/24/32/48 frames for videos up to 15/30/60/120/300/600 seconds. The integration uses the website's existing video players instead of duplicating preview images.
 
-The base threshold is fixed at 0.4. Most suggested tags require support in more than half of the sampled frames. Selected clothing, accessory and object tags require at least a quarter of the frames, with a minimum of two and a score of at least 0.65. `dance` also requires a threshold of at least 0.65. Uncertain candidates are unchecked and grouped under **Other suggestions** by default.
+The base threshold is fixed at 0.4. Most suggested tags require support in more than half of the sampled frames. Selected clothing, accessory and object tags require at least a quarter of the frames, with a minimum of two and a score of at least 0.65. `dance` also requires a threshold of at least 0.65. Uncertain candidates are unchecked and displayed beside selected suggestions by default.
 
 The displayed score is the average of the two strongest frame matches. It is not the proportion of the video showing a tag or the probability that the tag is correct. The JSON export preserves selections, original suggestions, scores, tag origins and analysis timings.
 

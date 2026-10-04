@@ -21,7 +21,7 @@ export function validateTimings(value) {
   if (value == null) return null;
   const keys = ['samplingSeconds', 'modelLoadSeconds', 'preprocessSeconds', 'inferenceSeconds', 'totalSeconds'];
   if (typeof value !== 'object' || Array.isArray(value) || keys.some(key => !Number.isFinite(value[key]) || value[key] < 0 || value[key] > 86400)) throw messageError('error.invalidAnalysisTimings');
-  const optional = ['queueSeconds', 'cpuSeconds', 'workerWallSeconds'];
+  const optional = ['queueSeconds', 'cpuSeconds', 'workerWallSeconds', 'requestSeconds', 'transportSeconds'];
   if (optional.some(key => value[key] != null && (!Number.isFinite(value[key]) || value[key] < 0 || value[key] > 86400))) throw messageError('error.invalidAnalysisTimings');
   return Object.fromEntries([...keys, ...optional.filter(key => value[key] != null)].map(key => [key, value[key]]));
 }
@@ -45,6 +45,7 @@ export function validateRuntime(value) {
     || !['auto','single'].includes(value.imageParallelism) || !Number.isInteger(value.residentSessions) || value.residentSessions < value.inferenceWorkers || value.residentSessions > 2)) throw messageError('error.invalidAnalysisRuntime');
   if (native && ((value.threadSpinning != null && typeof value.threadSpinning !== 'boolean')
     || (value.processPriority != null && !['below-normal', 'normal', 'other', 'unknown'].includes(value.processPriority)))) throw messageError('error.invalidAnalysisRuntime');
+  if (value.clientBrowser != null && (!value.clientBrowser || !['firefox','chromium','other'].includes(value.clientBrowser.family) || !['visible','hidden'].includes(value.clientBrowser.visibilityState))) throw messageError('error.invalidAnalysisRuntime');
   let memory;
   if (value.memory != null) {
     const keys = ['reportedDeviceMemoryGB', 'pageJsHeapUsedBytes', 'pageJsHeapTotalBytes', 'pageJsHeapLimitBytes'];
@@ -69,6 +70,7 @@ export function validateRuntime(value) {
     ...(native && value.threadsPerSession != null ? { threadsPerSession: [...value.threadsPerSession], imageParallelism:value.imageParallelism, residentSessions:value.residentSessions } : {}),
     ...(native && value.threadSpinning != null ? { threadSpinning: value.threadSpinning } : {}),
     ...(native && value.processPriority != null ? { processPriority: value.processPriority } : {}),
+    ...(value.clientBrowser ? {clientBrowser:{family:value.clientBrowser.family,visibilityState:value.clientBrowser.visibilityState}} : {}),
     ...(memory ? { memory } : {}),
     ...(Object.hasOwn(value, 'hostMemory') ? { hostMemory } : {}),
     ...(Object.hasOwn(value, 'serverMemory') ? { serverMemory } : {}) };

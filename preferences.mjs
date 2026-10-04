@@ -1,12 +1,11 @@
 export const SETTINGS_KEY = 'cake-tagger-settings-v1';
-export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', uploadLayout: 'cards', frames: 'auto', parallelism: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, autoAnalyzeEmbed: true });
+export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', frames: 'auto', parallelism: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, autoAnalyzeEmbed: true });
 export function normalizeSettings(value = {}) {
   // This allowlist is also the persistence boundary: unrelated fields are discarded.
   if (!value || typeof value !== 'object' || Array.isArray(value)) value = {};
   const frames = String(value.frames ?? 'auto');
   return {
     language: ['auto', 'de', 'en'].includes(value.language) ? value.language : 'auto',
-    uploadLayout: ['cards','sidebar'].includes(value.uploadLayout) ? value.uploadLayout : 'cards',
     frames: ['auto', '4', '6', '8', '12', '16', '24', '32', '48'].includes(frames) ? frames : 'auto',
     parallelism: /^[1-9]\d*$/.test(String(value.parallelism)) && Number.isSafeInteger(Number(value.parallelism)) ? String(value.parallelism) : 'auto',
     excludedTags: Array.isArray(value.excludedTags) ? [...new Set(value.excludedTags.filter(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.trim().length <= 80).map(tag => tag.trim().toLowerCase()))].slice(0, 258) : [...DEFAULT_SETTINGS.excludedTags],

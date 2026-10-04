@@ -54,3 +54,29 @@ test('manual analysis delays automatic work; the toggle defaults on and persists
   const store = createSettingsStore({ request }); await store.save({ autoAnalyzeEmbed: false });
   assert.equal((await createSettingsStore({ request }).load()).autoAnalyzeEmbed, false);
 });
+
+
+test('cancel during preparation prevents autostart; new selections can start later', async () => {
+  const started = deferred(), finish = deferred(), calls = []; let preparations = 0;
+  const a = file('a.mp4'), b = file('b.mp4');
+  const queue = createUploadAutoAnalysis({ busy: () => false, enabled: () => true,
+    prepare: async files => { if (++preparations === 1) { started.resolve(); await finish.promise; } return files.map(file => ({file})); },
+    analyze: async entries => calls.push(entries.map(entry => entry.file.name)) });
+  const run = queue.receive([a]); await started.promise;
+  await queue.receive([a,b]); queue.cancel(); finish.resolve(); await run;
+  assert.deepEqual(calls, []);
+  await queue.receive([a,b]); assert.deepEqual(calls, []);
+  await queue.receive([a,b,file('c.mp4')]); assert.deepEqual(calls, [['c.mp4']]);
+});
+
+test('cancel during analysis drops queued batches without retrying cancelled files', async () => {
+  const started = deferred(), finish = deferred(), calls = [], selections = [];
+  const a = file('a.mp4'), b = file('b.mp4');
+  const queue = createUploadAutoAnalysis({ busy: () => false, enabled: () => true,
+    prepare: async files => {selections.push(files.map(file => file.name));return files.map(file => ({file}));},
+    analyze: async entries => { calls.push(entries.map(entry => entry.file.name)); started.resolve(); await finish.promise; } });
+  const run = queue.receive([a]); await started.promise;
+  await queue.receive([a,b]); queue.cancel(); finish.resolve(); await run; await queue.drain();
+  assert.deepEqual(calls, [['a.mp4']]);
+  assert.deepEqual(selections, [['a.mp4'], ['a.mp4','b.mp4']]);
+});

@@ -44,6 +44,11 @@ async function cached(key, value) {
   if (value) sessionCache.set(key, value);
   return sessionCache.get(key);
 }
+function cancelAnalysis() {
+  uploadAuto.cancel();
+  controller?.abort();
+  cancelInference();
+}
 function cancelInference() {
   nativeClient?.stop();
 }
@@ -102,22 +107,29 @@ function textElement(name, text, cls, localize = true) {
 function render() { summary(); publishUploadView(); }
 async function setFiles(files) {
   if (running || preparing) return;
-  preparing = true; summary(); showMessage('analysis.preparing');
+  preparing = true; const batch = new AbortController(); controller = batch;
+  summary(); showMessage('analysis.preparing');
   try {
-    const next = [...files].filter(f => /\.(mp4|m4v|webm|mov)$/i.test(f.name)).map((file, index) => ({ file, index, hasFile: true, state: 'analysis.waiting', selected: new Map() }));
+    const next = [...files].filter(f => /\.(mp4|m4v|webm|mov)$/i.test(f.name)).map((file, index) => {
+      const old = entries.find(entry => entry.file.name === file.name && entry.file.size === file.size && entry.file.lastModified === file.lastModified);
+      return old ? { ...old, file, index } : { file, index, hasFile: true, state: 'analysis.waiting', selected: new Map() };
+    });
+    // Keep the selection available for a manual retry if hashing is cancelled.
+    const previous = entries; entries = next;
     for (let i = 0; i < next.length; i++) {
+      if (batch.signal.aborted) break;
       const entry = next[i];
       try {
         entry.sha256 = await hashFile(entry.file);
-        const existing = entries.find(old => old.sha256 === entry.sha256);
+        const existing = previous.find(old => old.sha256 === entry.sha256);
         if (existing) { next[i] = { ...existing, file: entry.file, index: entry.index }; continue; }
         const record = sessionRecords.get(entry.sha256); if (record) await restore(entry, record);
       }
       catch (e) { entry.error = errorMessage(e); }
     }
     entries = next;
-    showMessage('');
-  } finally { preparing = false; render(); }
+    showMessage(batch.signal.aborted ? 'analysis.cancelledHint' : '');
+  } finally { preparing = false; if(controller === batch)controller = undefined; render(); }
   return entries;
 }
 $('#files').onchange = e => receiveFiles(e.target.files);
@@ -166,34 +178,36 @@ async function sample(file, setting, signal, knownHash) {
 }
 async function analyze(targets = entries, automatic = false) {
   if (running || preparing || !mapping) return;
-  running = true; summary();
-  try { settings = await settingsStore.load(); } catch (error) { running = false; summary(); showMessage(errorMessage(error)); drainEmbeddedFiles(); return; }
-  if (automatic && !settings.autoAnalyzeEmbed) { running = false; summary(); return; }
-  controller = new AbortController(); $('#files').disabled = true; $('#cancel').hidden = false; showMessage(''); summary();
-  const setting = settings.frames;
-  const threshold = DEFAULT_THRESHOLD;
-  const analysisSettings = { ...settings, excludedTags: [...settings.excludedTags] };
-  // Freeze preferences for this batch; later changes apply to subsequent analyses.
-  const coverage = DEFAULT_COVERAGE, analysisPolicy = ANALYSIS_VERSION + ':' + coverage + ':' + suggestionPolicy(analysisSettings);
+  // Allocate the cancellation signal before the first asynchronous step.
+  const batch = new AbortController(); controller = batch;
+  running = true; $('#files').disabled = true; $('#cancel').hidden = false; showMessage(''); render();
   try {
+    settings = await settingsStore.load(); batch.signal.throwIfAborted();
+    if (automatic && !settings.autoAnalyzeEmbed) return;
+    const setting = settings.frames, threshold = DEFAULT_THRESHOLD;
+    const analysisSettings = { ...settings, excludedTags: [...settings.excludedTags] };
+    // Freeze preferences for this batch; later changes apply to subsequent analyses.
+    const coverage = DEFAULT_COVERAGE, analysisPolicy = ANALYSIS_VERSION + ':' + coverage + ':' + suggestionPolicy(analysisSettings);
     for (const entry of targets) {
       if (!entry.hasFile) continue;
       const expectedCount = setting === 'auto' ? (entry.result?.durationSeconds ? samplingPlan(entry.result.durationSeconds).count : null) : Number(setting);
       if (entry.result && entry.frames && entry.result.sampledFrames === expectedCount && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy) continue;
-      controller.signal.throwIfAborted(); entry.state = 'analysis.sampling'; entry.error = ''; render();
+      batch.signal.throwIfAborted(); entry.state = 'analysis.sampling'; entry.error = ''; render();
       try {
         const started = performance.now();
-        const sampleData = await sample(entry.file, setting, controller.signal, entry.sha256);
+        const sampleData = await sample(entry.file, setting, batch.signal, entry.sha256);
         const samplingSeconds = (performance.now() - started) / 1000;
-        const count = sampleData.sampledFrames;
+        const count = sampleData.sampledFrames; entry.sha256 = sampleData.sha256;
         entry.frames = sampleData.frames; entry.state = message('analysis.frameProgress', { count }); render();
         const key = analysisKey(sampleData.sha256, count, threshold, analysisPolicy);
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
         else {
+          const requestStarted = performance.now();
           const inference = await infer(sampleData.inputs, analysisSettings.parallelism, analysisSettings.excludedTags);
-          controller.signal.throwIfAborted();
-          result = { filename: entry.file.name, sha256: sampleData.sha256, ...inference.analysis, sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', runtime: inference.runtime, seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
+          const requestSeconds = (performance.now() - requestStarted) / 1000;
+          batch.signal.throwIfAborted();
+          result = { filename: entry.file.name, sha256: sampleData.sha256, ...inference.analysis, sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-INT8', runtime: { ...inference.runtime, clientBrowser: { family: /Firefox\//.test(navigator.userAgent) ? 'firefox' : /(?:Chrome|Chromium)\//.test(navigator.userAgent) ? 'chromium' : 'other', visibilityState: document.visibilityState } }, seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, requestSeconds, transportSeconds: Math.max(0, requestSeconds - (inference.timings.queueSeconds + inference.timings.workerWallSeconds)), totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
           await cached(key, result);
         }
         result = { ...result, sampledFrames: count, samplingMode: sampleData.samplingMode, durationSeconds: sampleData.durationSeconds };
@@ -209,10 +223,10 @@ async function analyze(targets = entries, automatic = false) {
       render();
     }
   } catch (e) { showMessage(e.name === 'AbortError' ? 'analysis.cancelledHint' : errorMessage(e)); }
-  finally { running = false; $('#files').disabled = false; $('#cancel').hidden = true; render(); if (!stopping) { localizedText($('#status'), 'analysis.ready'); drainEmbeddedFiles(); } }
+  finally { if(controller === batch)controller = undefined; running = false; $('#files').disabled = false; $('#cancel').hidden = true; render(); if (!stopping) { localizedText($('#status'), 'analysis.ready'); drainEmbeddedFiles(); } }
 }
 $('#analyze').onclick = () => analyze();
-$('#cancel').onclick = () => { controller?.abort(); cancelInference(); };
+$('#cancel').onclick = cancelAnalysis;
 $('#export').onclick = async () => {
   $('#export').disabled = true;
   try {
@@ -223,7 +237,7 @@ $('#export').onclick = async () => {
   finally { render(); }
 };
 $('#quit').onclick = async () => {
-  controller?.abort(); cancelInference(); stopping = true;
+  cancelAnalysis(); stopping = true;
     $('#quit').disabled = true;
     try { if (!(await api('/api/stop', { method: 'POST' })).stopped) throw messageError('error.stopFailed'); localizedText($('#status'), 'analysis.stopped'); showMessage('page.stoppedHint'); $('#analyze').disabled = $('#files').disabled = $('#export').disabled = true; document.querySelectorAll('.settings-open').forEach(button => { button.disabled = true; }); }
     catch (e) { stopping = false; $('#quit').disabled = false; showMessage(e instanceof TypeError ? 'error.stopFailed' : errorMessage(e)); }
@@ -261,7 +275,7 @@ window.addEventListener('cake-tagger:upload-message', async event=>{
  const entry=entries.find(e=>e.file.name===data.filename && e.sha256===data.sha256);
  switch(data.action){
   case 'analyze': if(!stopping) await analyze();break;
-  case 'cancel': controller?.abort();cancelInference();break;
+  case 'cancel': cancelAnalysis();break;
   case 'export': if(entries.some(e=>e.result)) await $('#export').onclick();break;
   case 'quit': await $('#quit').onclick();break;
   case 'tag': if(entry?.result && entry.selected.has(data.tag) && typeof data.selected==='boolean'){entry.selected.set(data.tag,data.selected);changed(entry);render();}break;

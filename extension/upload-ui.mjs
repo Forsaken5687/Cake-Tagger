@@ -5,8 +5,8 @@ import { inspectUploads } from './upload-adapter.mjs';
 // These controls render only public tag metadata. The isolated local document
 // owns files, corrections, inference and export; commands never contain tokens.
 export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
- let view, focus='', sections=new Map(), sidebar, workspace, signature='';
- const roots=new WeakMap(), expanded=new Set();let nextRoot=0;
+ let view, sections=new Map(), signature='';
+ const roots=new WeakMap();let nextRoot=0;
  const el=(tag,text,cls)=>{const n=doc.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
  const trusted=event=>event instanceof doc.defaultView.Event && event.isTrusted;
  const t=(key,params)=>translate(key,view?.language || 'en',params);
@@ -33,7 +33,7 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   settingsDialog.addEventListener('click',event=>{if(trusted(event)&&event.target===settingsDialog)settingsDialog.close();});
   settingsDialog.addEventListener('close',()=>{settingsDialog.remove();settingsDialog=undefined;});doc.body.append(settingsDialog);settingsDialog.showModal();
  }
- function detachLayout(){sidebar?.remove();sidebar=undefined;if(workspace){workspace.before(mount);workspace.remove();workspace=undefined;}for(const n of sections.values())n.remove();sections.clear();}
+ function detachLayout(){for(const n of sections.values())n.remove();sections.clear();}
  function content(section,entry){
   // Preserve an in-progress manual tag search while another video finishes.
   if(section.contains(doc.activeElement) && doc.activeElement.tagName==='INPUT' && doc.activeElement.type==='text')return;
@@ -42,7 +42,7 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   if(entry.error)section.append(el('p',entry.error,'cake-tagger-message'));
   if(!entry.complete)return;
   const area=el('div','','cake-tagger-tag-area');section.append(area);
-  const chips=el('div','','cake-tagger-tags'), other=el('div','','cake-tagger-tags');
+  const chips=el('div','','cake-tagger-tags');
   for(const row of entry.tags){
    if(row.uncertain && !row.selected && !view.settings.showUncertain)continue;
    const label=el('label','','cake-tagger-chip'),box=el('input');box.type='checkbox';box.checked=row.selected;
@@ -50,10 +50,9 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
    label.title=t(row.source==='manual'?'tags.manualOrigin':'tags.modelOrigin');
    box.onchange=event=>{if(trusted(event))command('tag',entry,{tag:row.tag,selected:box.checked});};label.append(box,el('span',row.tag));
    if(view.settings.showScores && row.source==='suggestion' && Number.isFinite(row.confidence))label.append(el('small',Math.round(row.confidence*100)+'%'));
-   (row.uncertain && !row.selected ? other : chips).append(label);
+   chips.append(label);
   }
   area.append(chips);
-  if(other.childElementCount){const details=el('details','','cake-tagger-other');details.open=expanded.has(entry.filename);details.append(el('summary',t('embed.otherSuggestions',{count:other.childElementCount})),other);details.ontoggle=()=>{if(details.open)expanded.add(entry.filename);else expanded.delete(entry.filename);};area.append(details);}
   const add=el('form','','cake-tagger-add'),input=el('input'),list=el('datalist');
   input.placeholder=t('tags.search');input.setAttribute('aria-label',t('tags.addForFile',{filename:entry.filename}));
   list.id='cake-tagger-search-'+Math.random().toString(36).slice(2);input.setAttribute('list',list.id);
@@ -61,37 +60,21 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   const addButton=button('tags.add',()=>{});add.onsubmit=event=>{event.preventDefault();if(trusted(event))command('add',entry,{tag:input.value.trim().toLowerCase()});};addButton.type='submit';
   add.append(input,list,addButton);section.append(add);
   const actions=el('div','','cake-tagger-result-actions');actions.append(el('small',t('tags.selectedCount',{count:entry.tags.filter(row=>row.selected).length})),button('transfer.apply',()=>command('apply',entry),'cake-tagger-primary'));
-  if(sidebar && view.entries.length>1)actions.append(button('embed.next',()=>{const index=view.entries.findIndex(row=>row.filename===focus);focus=view.entries[(index+1)%view.entries.length].filename;paint(true);const target=inspectUploads(doc).find(row=>row.filename===focus);target?.root.scrollIntoView({block:'nearest',behavior:'smooth'});}));
   section.append(actions);
  }
  function paint(force=false){
   if(!view)return;
   const targets=inspectUploads(doc).filter(row=>mount.contains(row.root));
   const targetKeys=targets.map(row=>{if(!roots.has(row.root))roots.set(row.root,++nextRoot);return roots.get(row.root);});
-  const next=JSON.stringify({entries:view.entries,settings:view.settings,language:view.language,targetKeys,attached:[...sections.values()].map(n=>n.isConnected),sidebarAttached:sidebar?.isConnected});if(!force&&next===signature)return;signature=next;
-  const layout=view.settings.uploadLayout || 'cards';
-  if((layout==='sidebar')!==!!sidebar || (sidebar && !sidebar.isConnected)){detachLayout();if(layout==='sidebar'){
-   workspace=el('div','','cake-tagger-workspace');mount.before(workspace);workspace.append(mount);sidebar=el('aside','','cake-tagger-sidebar');workspace.append(sidebar);
-  }}
-  if(sidebar){
-   const selected=view.entries.find(row=>row.filename===focus)||view.entries[0];focus=selected?.filename || '';
-   if(sidebar.contains(doc.activeElement)&&doc.activeElement.type==='text')return;
-   sidebar.replaceChildren();const heading=el('div','','cake-tagger-result-heading');heading.append(el('strong',t('embed.suggestions')));sidebar.append(heading);
-   const navigation=el('nav','','cake-tagger-video-list');navigation.setAttribute('aria-label',t('results.title'));
-   view.entries.forEach((entry,index)=>{const pick=button('',()=>{focus=entry.filename;paint(true);targets.find(row=>row.filename===focus)?.root.scrollIntoView({block:'nearest',behavior:'smooth'});});pick.textContent=String(index+1).padStart(2,'0')+' · '+entry.filename;pick.title=entry.filename;pick.setAttribute('aria-current',String(entry.filename===focus));navigation.append(pick);});sidebar.append(navigation);
-   if(selected){const section=el('section');sidebar.append(section);content(section,selected);}
-   for(const target of targets)target.root.classList.toggle('cake-tagger-focused',target.filename===focus);
-  }else{
-   const used=new Set();
-   for(const entry of view.entries){const matches=targets.filter(row=>row.filename===entry.filename);if(matches.length!==1)continue;
-    const target=matches[0];used.add(target.root);let section=sections.get(target.root);
-    if(!section){section=el('section','','cake-tagger-suggestions');sections.set(target.root,section);}
-    if(!section.isConnected){if(target.root.matches('.stok-bulk-card'))target.root.append(section);else {const step=target.root.querySelector('.stok-up-step');if(step)step.after(section);else target.root.append(section);}}
-    content(section,entry);
-   }
-   for(const [root,section] of sections)if(!used.has(root)){section.remove();sections.delete(root);}
-   for(const target of targets)target.root.classList.remove('cake-tagger-focused');
+  const next=JSON.stringify({entries:view.entries,settings:view.settings,language:view.language,targetKeys,attached:[...sections.values()].map(n=>n.isConnected)});if(!force&&next===signature)return;signature=next;
+  const used=new Set();
+  for(const entry of view.entries){const matches=targets.filter(row=>row.filename===entry.filename);if(matches.length!==1)continue;
+   const target=matches[0];used.add(target.root);let section=sections.get(target.root);
+   if(!section){section=el('section','','cake-tagger-suggestions');sections.set(target.root,section);}
+   if(!section.isConnected){if(target.root.matches('.stok-bulk-card'))target.root.append(section);else {const step=target.root.querySelector('.stok-up-step');if(step)step.after(section);else target.root.append(section);}}
+   content(section,entry);
   }
+  for(const [root,section] of sections)if(!used.has(root)){section.remove();sections.delete(root);}
  }
  function update(value){
   if(!validUploadView(value))return;view=value;
@@ -101,11 +84,11 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   exportButton.disabled=view.stopped||!view.entries.some(entry=>entry.complete);settings.disabled=quit.disabled=view.stopped;
   paint();
  }
- const onBlur=event=>{if(view && event.target.type==='text' && event.target.closest('.cake-tagger-suggestions,.cake-tagger-sidebar'))setTimeout(()=>paint(true),0);};doc.addEventListener('focusout',onBlur);
+ const onBlur=event=>{if(view && event.target.type==='text' && event.target.closest('.cake-tagger-suggestions'))setTimeout(()=>paint(true),0);};doc.addEventListener('focusout',onBlur);
  return {update,error(message){note.textContent=message;note.hidden=false;},refresh:()=>paint(),dispose(){doc.removeEventListener('focusout',onBlur);settingsDialog?.remove();detachLayout();}};
 }
 export function validUploadView(value){
- return !!value && ['en','de'].includes(value.language) && value.settings && ['cards','sidebar'].includes(value.settings.uploadLayout)
+ return !!value && ['en','de'].includes(value.language) && value.settings && typeof value.settings.showUncertain==='boolean'
   && typeof value.status==='string' && typeof value.message==='string' && Array.isArray(value.allTags) && value.allTags.length<=258 && value.allTags.every(tag=>typeof tag==='string' && tag.length<=80)
   && Array.isArray(value.entries) && value.entries.length<=1000 && value.entries.every(entry=>typeof entry.filename==='string' && entry.filename.length<=1024 && typeof entry.state==='string' && Array.isArray(entry.tags) && entry.tags.length<=258 && entry.tags.every(row=>typeof row.tag==='string' && row.tag.length<=80 && typeof row.selected==='boolean'));
 }

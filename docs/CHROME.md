@@ -17,7 +17,7 @@ To update, replace the package files, reload the extension on `chrome://extensio
 
 Select videos in cake.ski's upload area. Bulk selection can create server-side drafts immediately. New videos are analyzed automatically by default; disable **Automatically analyze upload videos** in Settings to use **Suggest tags** manually.
 
-In Settings, choose **Suggestions on upload cards** or **Side panel**. Both Single and Bulk uploads are supported. Review tags next to the existing video players, deselect incorrect tags and add missing ones. Expand **Other suggestions** to inspect uncertain candidates. Use **Apply tags** for each video; only selected tags are added, respecting existing tags, inherited Bulk tags and per-card exclusions.
+Both Single and Bulk uploads are supported. Review tags next to the existing video players, deselect incorrect tags and add missing ones. Uncertain candidates appear beside selected suggestions and remain unchecked. Use **Apply tags** for each video; only selected tags are added, respecting existing tags, inherited Bulk tags and per-card exclusions.
 
 The upload toolbar provides **Download JSON**, **Settings** and **Quit**. The extension menu provides **Open upload** and **Quit**. Quit shuts down the local program, including unfinished tasks; it does not merely close a tab. Download session results before quitting or reloading. The separate analysis window is removed; direct Localhost navigation redirects to cake.ski.
 

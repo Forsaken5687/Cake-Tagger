@@ -60,9 +60,9 @@ The extension background acquires a token with a custom-header POST to `/api/con
 
 ## Extension integration
 
-`extension/embedded-upload.mjs` keeps an offscreen extension bridge outside the changing Single/Bulk renderer. Its child iframe loads the Localhost application solely for decoding and session state. `upload-ui.mjs` renders tag metadata beside uniquely matched native upload fields or in a sticky side panel. It never receives model buffers, files or session tokens. A shared upload toolbar owns analysis, export, settings and Quit actions. Changing layouts preserves the analysis document and selections. Settings renders a native dialog directly on the upload page, outside the processing frames. The background relays preferences and hardware capabilities to the authenticated local API. File references are tied to their upload mount and captured from trusted selection/drop events.
+`extension/embedded-upload.mjs` keeps an offscreen extension bridge outside the changing Single/Bulk renderer. Its child iframe loads the Localhost application solely for decoding and session state. `upload-ui.mjs` renders tag metadata beside uniquely matched native upload fields. It never receives model buffers, files or session tokens. A shared upload toolbar owns analysis, export, settings and Quit actions. Settings renders a native dialog directly on the upload page, outside the processing frames. The background relays preferences and hardware capabilities to the authenticated local API. File references are tied to their upload mount and captured from trusted selection/drop events.
 
-The native settings dialog and uniform Bulk tag areas avoid frame-based modal rendering and varying action positions. Single suggestions occupy a dedicated section between video selection and description. The fixed-height sidebar uses a scrollable video list and tag area.
+The native settings dialog and uniform Bulk tag areas avoid frame-based modal rendering and varying action positions. Single suggestions occupy a dedicated section between video selection and description.
 
 UI commands travel through the isolated content script and background runtime, bound to their originating tab and channel, then into the local document. Website postMessage can deliver trusted file/theme events, but cannot issue Quit, export or tag commands. The extension popup uses the same local shutdown service and opens the site's upload area instead of a separate analysis window. Root and former index URLs redirect to cake.ski. Only the hidden analysis.html frame remains for decoding and session state.
 
@@ -72,7 +72,7 @@ Firefox uses background scripts; Chrome uses `chrome-worker.mjs` with static imp
 
 ## Preferences and automatic analysis
 
-`preferences.mjs` normalizes language, frame count, CPU parallelism, tag exclusions, display flags, `uploadLayout` and `autoAnalyzeEmbed`. Every view loads/saves the same authenticated `/api/settings` API. Node persists preferences atomically in ignored `data/preferences.json`. Legacy localStorage and extension storage.local settings migrate only if no server configuration exists; originals are preserved. Unknown fields are discarded. Thread overrides are validated against the actual server hardware.
+`preferences.mjs` normalizes language, frame count, CPU parallelism, tag exclusions, display flags and `autoAnalyzeEmbed`. Every view loads/saves the same authenticated `/api/settings` API. Node persists preferences atomically in ignored `data/preferences.json`. Legacy localStorage and extension storage.local settings migrate only if no server configuration exists; originals are preserved. Unknown fields are discarded. Thread overrides are validated against the actual server hardware.
 
 `settings-ui.mjs` renders a shared modal form. Save applies the draft; Defaults resets only the form. Exclusions affect subsequent analyses and form part of the cache key. An active batch uses an immutable settings snapshot. Display changes preserve selected tags and underlying scores.
 
@@ -95,3 +95,5 @@ Native modal dialogs provide focus containment for settings. The inline logo fol
 Dependencies are pinned in `scripts/assets.json` and provenance metadata. Large artifacts are SHA-256 verified. Third-party licenses must remain unchanged. `Build-Extension.mjs` uses a fixed file list and produces both browsers' packages; `Package.ps1` builds a runtime-only release from scripts/release-files.json and verified assets, including Firefox ZIP and Chrome folder.
 
 CPU inference is the supported path. A GPU provider would require compatibility, timing and output comparisons for this quantized model and should not be enabled merely because WebGPU is available. See [ONNX Runtime WebGPU](https://onnxruntime.ai/docs/tutorials/web/ep-webgpu.html).
+
+Cancel stops preparation or decoding, disconnects the active native request and clears pending automatic batches. The current native call finishes safely; subsequent frames are cancelled. Completed selections survive. Exports separate browser sampling, request time, server phases and estimated transport overhead, with browser identity and frame visibility for cross-browser comparisons.

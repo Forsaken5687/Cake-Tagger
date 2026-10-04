@@ -10,7 +10,7 @@ test('preferences normalize corrupt storage and ignore unrelated private fields'
   const settings = normalizeSettings({ language: 'fr', frames: 1000, excludedTags: [' Hairy ', 'hairy', null, '', 'x'.repeat(81)], showScores: false, token: 'private', items: [{ filename: 'private.mp4' }] });
   assert.equal(settings.language, 'auto'); assert.equal(settings.frames, 'auto');
   assert.equal(settings.parallelism, 'auto');
-  assert.equal(settings.uploadLayout,'cards');assert.equal(normalizeSettings({uploadLayout:'sidebar'}).uploadLayout,'sidebar');assert.equal(normalizeSettings({uploadLayout:'unsafe'}).uploadLayout,'cards');
+  assert.equal(normalizeSettings({uploadLayout:'sidebar',excludedTags:['tattoos']}).uploadLayout,undefined);
   assert.equal(normalizeSettings({ parallelism: 8 }).parallelism, '8');
   assert.equal(normalizeSettings({ parallelism: 1000 }).parallelism, '1000');
   assert.deepEqual(settings.excludedTags, ['hairy']); assert.equal(settings.showScores, false);
