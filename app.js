@@ -8,13 +8,12 @@ import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analy
 import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
 import { installSettings } from './settings-ui.mjs';
 import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
-import { setLanguage, setSiteLanguage, t, translatePage } from './i18n.mjs';
+import { setLanguage, setSiteLanguage, t, translatePage, localizedText } from './i18n.mjs';
 const $ = s => document.querySelector(s);
 const settingsStore = createSettingsStore(isExtension ? { runtime: browser.runtime } : { storage: localStorage, events: window });
 let settings;
 try { settings = await settingsStore.load(); } catch { settings = settingsStore.get(); }
 setLanguage(settings); translatePage();
-$('#status').removeAttribute('data-i18n');
 let token = location.hash.slice(1), allTags = [], entries = [], running = false, controller, stopping = false;
 let mapping, modelSignature, worker, workerSeq = 0, workerJobs = new Map();
 // Remove the legacy persistent analysis cache; current results live only in memory.
@@ -27,7 +26,7 @@ const uploadAuto = createUploadAutoAnalysis({
   prepare: setFiles,
   analyze: targets => analyze(targets, true)
 });
-function receiveEmbeddedFiles(files) { return uploadAuto.receive(files); }
+function receiveFiles(files) { return uploadAuto.receive(files).catch(error => message(error.message)); }
 function drainEmbeddedFiles() { void uploadAuto.drain(); }
 async function cached(key, value) {
   if (value) sessionCache.set(key, value);
@@ -35,15 +34,16 @@ async function cached(key, value) {
 }
 function terminateWorker() {
   worker?.terminate(); worker = undefined;
-  for (const pending of workerJobs.values()) pending.reject(new DOMException('Abgebrochen', 'AbortError'));
+  for (const pending of workerJobs.values()) pending.reject(new DOMException('Cancelled', 'AbortError'));
   workerJobs.clear();
 }
 function infer(frames) {
+  // Keep the UI responsive and transfer RGBA buffers without copying them again.
   if (!worker) {
     worker = new Worker('/engine-worker.js');
     worker.onmessage = ({ data }) => {
-      if (data.type === 'state') $('#status').textContent = t(data.state);
-      if (data.type === 'progress') $('#status').textContent = t(`Analysiere Bild ${data.current} / ${data.total} …`);
+      if (data.type === 'state') localizedText($('#status'), data.state);
+      if (data.type === 'progress') localizedText($('#status'), `Analyzing image ${data.current} / ${data.total} …`);
       const pending = workerJobs.get(data.id);
       if (pending) {
         workerJobs.delete(data.id);
@@ -51,7 +51,7 @@ function infer(frames) {
       }
     };
     worker.onerror = () => {
-      for (const pending of workerJobs.values()) pending.reject(new Error('Browser-Erkennung konnte nicht starten.'));
+      for (const pending of workerJobs.values()) pending.reject(new Error('Browser analysis could not start.'));
       workerJobs.clear(); worker?.terminate(); worker = undefined;
     };
   }
@@ -64,10 +64,10 @@ else token = sessionStorage.getItem('cake-token') || '';
 const api = async (url, options = {}) => {
   const r = await fetch(url, { ...options, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', ...options.headers } });
   const data = await r.json();
-  if (!r.ok) throw new Error(data.error || 'Anfrage fehlgeschlagen.');
+  if (!r.ok) throw new Error(data.error || 'Request failed.');
   return data;
 };
-function message(text) { $('#message').textContent = t(text); }
+function message(text) { localizedText($('#message'), text); }
 function remember(entry) {
   sessionRecords.set(entry.result.sha256, makeRecord(entry));
 }
@@ -78,10 +78,11 @@ function changed(entry, resetReview = true) {
 function analysisKey(sha256, count, threshold, policy = '', preprocess = PREPROCESS_VERSION) { return sha256 + '|' + count + '|' + threshold + '|' + modelSignature + '|' + preprocess + (policy ? '|' + policy : ''); }
 async function restore(entry, record) {
   applyRecord(entry, record);
-  entry.state = 'Auswahl aus dieser Sitzung übernommen';
+  entry.state = 'Selection restored from this session';
 }
 async function hashFile(file) {
-  if (file.size > 250 * 1024 * 1024) throw new Error('Pro Video sind maximal 250 MB möglich.');
+  // Match session results by content, independently of a file's display name.
+  if (file.size > 250 * 1024 * 1024) throw new Error('Each video can be up to 250 MB.');
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()))].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 async function status() {
@@ -92,17 +93,19 @@ async function status() {
     ]);
     allTags = tagText.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean); mapping = map;
     modelSignature = provenance.sha256 + JSON.stringify(map);
-    $('#status').textContent = t('Bereit');
-  } catch (e) { $('#status').textContent = e.message; }
+    localizedText($('#status'), 'Ready');
+  } catch (e) { localizedText($('#status'), e.message); }
 }
 function summary() {
   const complete = entries.filter(e => e.result).length;
-  $('#summary').textContent = t(`${entries.length} Videos · ${complete} analysiert`);
+  localizedText($('#summary'), `${entries.length} videos · ${complete} analyzed`);
   $('#analyze').disabled = running || preparing || !entries.some(e => e.hasFile) || !mapping;
   $('#export').disabled = !complete;
 }
-function textElement(name, text, cls) {
-  const e = document.createElement(name); e.textContent = t(text); if (cls) e.className = cls; return e;
+function textElement(name, text, cls, localize = true) {
+  const e = document.createElement(name);
+  if (localize && text) localizedText(e, text); else e.textContent = text;
+  if (cls) e.className = cls; return e;
 }
 const previewDialog = $('#preview-dialog');
 let enlargedPreview;
@@ -110,7 +113,8 @@ function showPreview() {
   const { frames, index, filename } = enlargedPreview;
   $('#preview-title').textContent = filename;
   $('#preview-image').src = frames[index];
-  $('#preview-image').alt = t(`Vorschaubild ${index + 1} von ${frames.length}`);
+  $('#preview-image').dataset.i18nAlt = `Preview ${index + 1} of ${frames.length}`;
+  $('#preview-image').alt = t($('#preview-image').dataset.i18nAlt);
   $('#preview-position').textContent = `${index + 1} / ${frames.length}`;
   $('#preview-prev').disabled = index === 0;
   $('#preview-next').disabled = index === frames.length - 1;
@@ -138,14 +142,14 @@ function render() {
   $('#results').replaceChildren();
   if (!entries.length) {
     const empty = textElement('div', '', 'empty-state');
-    const hint = document.body.classList.contains('embedded') ? 'Wähle Videos im Upload-Bereich aus.' : 'Wähle Videos aus, um deine Tag-Auswahl zusammenzustellen.';
-    empty.append(textElement('span', '▤', 'empty-icon'), textElement('h3', 'Noch keine Videos'), textElement('p', hint));
+    const hint = document.body.classList.contains('embedded') ? 'Choose videos in the upload area.' : 'Choose videos to create your tag selection.';
+    empty.append(textElement('span', '▤', 'empty-icon'), textElement('h3', 'No videos yet'), textElement('p', hint));
     $('#results').append(empty);
   }
   for (const entry of entries) {
     const card = textElement('article', '', 'card');
     const heading = textElement('div', '', 'card-heading'), identity = textElement('div', '', 'card-identity');
-    const filename = textElement('h2', entry.file.name); filename.title = entry.file.name;
+    const filename = textElement('h2', entry.file.name, '', false); filename.title = entry.file.name;
     identity.append(textElement('span', String(entry.index + 1).padStart(2, '0'), 'video-number'), filename);
     heading.append(identity);
     card.append(heading, textElement('p', entry.state, 'card-state'));
@@ -153,15 +157,15 @@ function render() {
       const previews = textElement('div', '', 'previews');
       entry.frames.forEach((src, i) => {
         const button = textElement('button', '', 'preview-thumb'), img = document.createElement('img');
-        button.type = 'button'; button.setAttribute('aria-label', t(`Vorschaubild ${i + 1} vergrößern`));
-        img.src = src; img.alt = t(`Vorschaubild ${i + 1}`);
+        button.type = 'button'; button.setAttribute('aria-label', t(`Enlarge preview ${i + 1}`));
+        img.src = src; img.alt = t(`Preview ${i + 1}`);
         button.append(img); button.onclick = () => openPreview(entry.frames, i, entry.file.name); previews.append(button);
       });
       card.append(previews);
     }
     if (entry.result) {
       const tagHeading = textElement('div', '', 'tag-heading');
-      tagHeading.append(textElement('h3', 'Tag-Auswahl'), textElement('span', `${[...entry.selected.values()].filter(Boolean).length} ausgewählt`));
+      tagHeading.append(textElement('h3', 'Tag selection'), textElement('span', `${[...entry.selected.values()].filter(Boolean).length} selected`));
       card.append(tagHeading);
       const chips = textElement('div', '', 'tags');
       for (const tag of entry.selected.keys()) {
@@ -170,30 +174,30 @@ function render() {
         box.type = 'checkbox'; box.checked = entry.selected.get(tag);
         const original = entry.result.tags.find(row => row.tag === tag) || entry.result.uncertainScores?.find(row => row.tag === tag);
         const source = tagSource(entry, tag), isUncertain = source === 'suggestion' && entry.result.uncertain.includes(tag);
-        const origin = source === 'unknown' ? 'Unbekannt' : source === 'suggestion' ? isUncertain ? 'Unsicher' : 'Vorschlag' : 'Ergänzt';
+        const origin = source === 'unknown' ? 'Unknown' : source === 'suggestion' ? isUncertain ? 'Uncertain' : 'Suggested' : 'Added';
         label.classList.toggle('uncertain', isUncertain);
-        label.classList.toggle('manual', origin === 'Ergänzt');
-        label.title = t(origin === 'Ergänzt' ? 'Manuell ergänzt' : origin === 'Unbekannt' ? 'Herkunft im alten Ergebnis nicht dokumentiert' : 'Ursprünglicher Modellvorschlag');
-        if (original?.supportingFrames) label.title += t(` · erkannt in ${original.supportingFrames} von ${entry.result.sampledFrames} Vorschaubildern`);
+        label.classList.toggle('manual', origin === 'Added');
+        label.title = t(origin === 'Added' ? 'Added manually' : origin === 'Unknown' ? 'Origin not recorded in the old result' : 'Original model suggestion');
+        if (original?.supportingFrames) label.title += t(` · detected in ${original.supportingFrames} of ${entry.result.sampledFrames} preview images`);
         box.addEventListener('change', () => { entry.selected.set(tag, box.checked); changed(entry); render(); });
-        label.append(box, textElement('span', tag), textElement('span', origin, 'tag-origin')); chips.append(label);
+        label.append(box, textElement('span', tag, '', false), textElement('span', origin, 'tag-origin')); chips.append(label);
         if (settings.showScores && source === 'suggestion' && entry.originalSuggestionsKnown !== false && Number.isFinite(original?.confidence)) {
           const score = textElement('span', `Score ${Math.round(original.confidence * 100)} %`, 'tag-score');
-          score.title = 'Modellscore: Durchschnitt der zwei stärksten Bildtreffer. Keine gemessene Wahrscheinlichkeit für einen richtigen Tag.';
+          score.title = 'Model score: average of the two strongest image matches. This is not a measured probability that the tag is correct.';
           score.title = t(score.title);
           label.append(score);
         }
       }
       card.append(chips);
-      if (!entry.result.tags.length && entry.originalSuggestionsKnown !== false) card.append(textElement('p', 'Keine ausreichend klaren Tags gefunden. Bitte manuell prüfen.'));
-      if (entry.originalSuggestionsKnown === false) card.append(textElement('p', 'Aus altem Export übernommen. Ursprüngliche Vorschläge und Scores sind hier nicht vollständig bekannt.'));
+      if (!entry.result.tags.length && entry.originalSuggestionsKnown !== false) card.append(textElement('p', 'No sufficiently clear tags found. Please review manually.'));
+      if (entry.originalSuggestionsKnown === false) card.append(textElement('p', 'Restored from an old export. Original suggestions and scores are not fully known.'));
       const add = textElement('div', '', 'tag-add'), input = document.createElement('input'), list = document.createElement('datalist');
       list.id = 'tags-' + entry.index; allTags.forEach(t => { const o = document.createElement('option'); o.value = t; list.append(o); });
-      input.type = 'text'; input.placeholder = t('Weiteren Tag suchen …'); input.setAttribute('list', list.id); input.setAttribute('aria-label', t('Tag ergänzen für ' + entry.file.name));
-      const button = textElement('button', 'Ergänzen', 'quiet');
+      input.type = 'text'; input.placeholder = t('Search for another tag …'); input.setAttribute('list', list.id); input.setAttribute('aria-label', t('Add tag for ' + entry.file.name));
+      const button = textElement('button', 'Add', 'quiet');
       const addTag = () => {
         const found = allTags.find(t => t.toLowerCase() === input.value.trim().toLowerCase());
-        if (!found) return message('Bitte einen Tag aus deiner vorhandenen Liste wählen.');
+        if (!found) return message('Please choose a tag from the available list.');
         if (!entry.selected.has(found)) { entry.tagSources ||= {}; entry.tagSources[found] = 'manual'; }
         entry.selected.set(found, true); changed(entry); message(''); render();
       };
@@ -209,9 +213,9 @@ function render() {
 }
 async function setFiles(files) {
   if (running || preparing) return;
-  preparing = true; summary(); message('Videos werden vorbereitet …');
+  preparing = true; summary(); message('Preparing videos …');
   try {
-      const next = [...files].filter(f => /\.(mp4|m4v|webm|mov)$/i.test(f.name)).map((file, index) => ({ file, index, hasFile: true, state: 'Wartet auf Analyse', selected: new Map() }));
+      const next = [...files].filter(f => /\.(mp4|m4v|webm|mov)$/i.test(f.name)).map((file, index) => ({ file, index, hasFile: true, state: 'Waiting for analysis', selected: new Map() }));
     for (let i = 0; i < next.length; i++) {
       const entry = next[i];
       try {
@@ -227,29 +231,29 @@ async function setFiles(files) {
   } finally { preparing = false; render(); }
   return entries;
 }
-$('#files').onchange = e => setFiles(e.target.files);
+$('#files').onchange = e => receiveFiles(e.target.files);
 $('#drop').ondragover = e => { e.preventDefault(); $('#drop').classList.add('over'); };
 $('#drop').ondragleave = () => $('#drop').classList.remove('over');
-$('#drop').ondrop = e => { e.preventDefault(); $('#drop').classList.remove('over'); setFiles(e.dataTransfer.files); };
+$('#drop').ondrop = e => { e.preventDefault(); $('#drop').classList.remove('over'); receiveFiles(e.dataTransfer.files); };
 function waitEvent(target, name, action, signal, timeout = 20000) {
   return new Promise((resolve, reject) => {
     const cleanup = () => { clearTimeout(timer); target.removeEventListener(name, ok); target.removeEventListener('error', fail); signal?.removeEventListener('abort', abort); };
     const ok = () => { cleanup(); resolve(); };
-    const fail = () => { cleanup(); reject(new Error('Das Video lässt sich im Browser nicht lesen.')); };
-    const abort = () => { cleanup(); reject(new DOMException('Abgebrochen', 'AbortError')); };
-    const timer = setTimeout(() => { cleanup(); reject(new Error('Das Lesen des Videos dauert zu lange.')); }, timeout);
+    const fail = () => { cleanup(); reject(new Error('The browser cannot read this video.')); };
+    const abort = () => { cleanup(); reject(new DOMException('Cancelled', 'AbortError')); };
+    const timer = setTimeout(() => { cleanup(); reject(new Error('Reading the video took too long.')); }, timeout);
     target.addEventListener(name, ok, { once: true }); target.addEventListener('error', fail, { once: true }); signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) return abort();
     try { action(); } catch(e) { cleanup(); reject(e); }
   });
 }
 async function sample(file, setting, signal, knownHash) {
-  if (file.size > 250 * 1024 * 1024) throw new Error('Pro Video sind maximal 250 MB möglich.');
+  if (file.size > 250 * 1024 * 1024) throw new Error('Each video can be up to 250 MB.');
   const video = document.createElement('video'); video.muted = true; video.preload = 'auto'; video.playsInline = true;
   const url = URL.createObjectURL(file);
   try {
     await waitEvent(video, 'loadeddata', () => { video.src = url; video.load(); }, signal);
-    if (!Number.isFinite(video.duration) || video.duration <= 0 || !video.videoWidth) throw new Error('Ungültige Videolänge oder Auflösung.');
+    if (!Number.isFinite(video.duration) || video.duration <= 0 || !video.videoWidth) throw new Error('Invalid video duration or resolution.');
     const plan = samplingPlan(video.duration, setting);
     const canvas = document.createElement('canvas');
     const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
@@ -274,25 +278,26 @@ async function sample(file, setting, signal, knownHash) {
 async function analyze(targets = entries, automatic = false) {
   if (running || preparing || !mapping) return;
   running = true; summary();
-  try { settings = await settingsStore.load(); } catch (error) { running = false; summary(); message(error.message); return; }
+  try { settings = await settingsStore.load(); } catch (error) { running = false; summary(); message(error.message); drainEmbeddedFiles(); return; }
   if (automatic && !settings.autoAnalyzeEmbed) { running = false; summary(); return; }
   running = true; controller = new AbortController(); $('#files').disabled = true; $('#cancel').hidden = false; message(''); summary();
   const setting = settings.frames;
   const threshold = DEFAULT_THRESHOLD;
   const analysisSettings = { ...settings, excludedTags: [...settings.excludedTags] };
+  // Freeze preferences for this batch; later changes apply to subsequent analyses.
   const coverage = DEFAULT_COVERAGE, analysisPolicy = ANALYSIS_VERSION + ':' + coverage + ':' + suggestionPolicy(analysisSettings);
   try {
     for (const entry of targets) {
       if (!entry.hasFile) continue;
       const expectedCount = setting === 'auto' ? (entry.result?.durationSeconds ? samplingPlan(entry.result.durationSeconds).count : null) : Number(setting);
       if (entry.result && entry.frames && entry.result.sampledFrames === expectedCount && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy) continue;
-      controller.signal.throwIfAborted(); entry.state = 'Vorschaubilder werden gelesen …'; entry.error = ''; render();
+      controller.signal.throwIfAborted(); entry.state = 'Reading preview images …'; entry.error = ''; render();
       try {
         const started = performance.now();
         const sampleData = await sample(entry.file, setting, controller.signal, entry.sha256);
         const samplingSeconds = (performance.now() - started) / 1000;
         const count = sampleData.sampledFrames;
-        entry.frames = sampleData.frames; entry.state = `${count} Vorschaubilder werden analysiert …`; render();
+        entry.frames = sampleData.frames; entry.state = `Analyzing ${count} preview images …`; render();
         const key = analysisKey(sampleData.sha256, count, threshold, analysisPolicy);
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
@@ -307,15 +312,15 @@ async function analyze(targets = entries, automatic = false) {
         if (previous) applyRecord(entry, { ...previous, originalSuggestionsKnown: true }, result);
         else { entry.result = result; entry.selected = new Map([...result.tags.map(t => [t.tag, true]), ...result.uncertain.map(tag => [tag, false])]); entry.tagSources = Object.fromEntries([...entry.selected.keys()].map(tag => [tag, 'suggestion'])); entry.reviewed = false; entry.originalSuggestionsKnown = true; }
         entry.updatedAt = entry.updatedAt || new Date().toISOString(); await remember(entry);
-        entry.state = result.cached ? `Gespeichertes Ergebnis geladen · ${count} Bilder · bitte prüfen` : `Analyse abgeschlossen · ${count} Bilder · ${result.seconds} s · bitte prüfen`;
+        entry.state = result.cached ? `Cached result loaded · ${count} images · please review` : `Analysis complete · ${count} images · ${result.seconds} s · please review`;
       } catch (e) {
-        if (e.name === 'AbortError') { entry.state = 'Abgebrochen'; throw e; }
-        entry.error = e.message; entry.state = 'Analyse fehlgeschlagen';
+        if (e.name === 'AbortError') { entry.state = 'Cancelled'; throw e; }
+        entry.error = e.message; entry.state = 'Analysis failed';
       }
       render();
     }
-  } catch (e) { message(e.name === 'AbortError' ? 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.' : e.message); }
-  finally { running = false; $('#files').disabled = false; $('#cancel').hidden = true; render(); $('#status').textContent = t('Bereit'); drainEmbeddedFiles(); }
+  } catch (e) { message(e.name === 'AbortError' ? 'Analysis cancelled. Completed results are preserved.' : e.message); }
+  finally { running = false; $('#files').disabled = false; $('#cancel').hidden = true; render(); localizedText($('#status'), 'Ready'); drainEmbeddedFiles(); }
 }
 $('#analyze').onclick = () => analyze();
 $('#cancel').onclick = () => { controller?.abort(); terminateWorker(); };
@@ -331,23 +336,23 @@ $('#export').onclick = async () => {
     const output = await api('/api/export', { method: 'POST', body: JSON.stringify({ items: entries.filter(e => e.result).map(makeRecord) }) });
     message('');
     const link = document.createElement('a'); link.href = output.download; link.download = 'cake-tags.json'; document.body.append(link); link.click(); link.remove();
-  } catch (e) { message('Export fehlgeschlagen: ' + e.message); }
+  } catch (e) { message('Export failed: ' + e.message); }
   finally { render(); }
 };
 $('#quit').onclick = async () => {
   controller?.abort(); terminateWorker(); stopping = true;
-  try { await api('/api/stop', { method: 'POST' }); $('#status').textContent = t('Programm beendet'); message('Du kannst dieses Fenster schließen.'); $('#analyze').disabled = true; } catch (e) { stopping = false; message(e.message); }
+  try { await api('/api/stop', { method: 'POST' }); localizedText($('#status'), 'Stopped'); message('You can close this window.'); $('#analyze').disabled = true; } catch (e) { stopping = false; message(e.message); }
 };
 await status();
-installIntegration(receiveEmbeddedFiles, theme => {
+installIntegration(receiveFiles, theme => {
   setSiteLanguage(theme.language); translatePage();
-  if (!running && mapping) $('#status').textContent = t('Bereit');
+  if (!running && mapping) localizedText($('#status'), 'Ready');
   render();
 });
 installSettings(settingsStore, allTags, document.body.classList.contains('embedded'));
 settingsStore.subscribe(next => {
   settings = next; setLanguage(settings); translatePage();
-  if (!running && mapping) $('#status').textContent = t('Bereit');
+  if (!running && mapping) localizedText($('#status'), 'Ready');
   render();
 });
 window.addEventListener('focus', () => { void settingsStore.load().catch(() => {}); });

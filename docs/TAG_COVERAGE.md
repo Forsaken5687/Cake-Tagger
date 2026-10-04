@@ -1,10 +1,10 @@
-# Tag-Abdeckung
+# Tag coverage
 
-Bei den Standardeinstellungen haben 159 von 258 Tags eine automatische Modellzuordnung. Das beschreibt die Abdeckung, nicht die Erkennungsgenauigkeit.
+Under default settings, 159 of 258 tags have an automatic model mapping. This describes coverage, not recognition accuracy.
 
-## Bei Standardeinstellungen nur manuell
+## Manual-only under default settings
 
-Diese Tags haben entweder keine ausreichend passende Modellzuordnung oder sind bewusst von automatischen Vorschlägen ausgeschlossen. Alle bleiben manuell auswählbar.
+These tags either lack a suitable mapping or are deliberately excluded from automatic suggestions. All remain available for manual selection.
 
 - vertical
 - hd
@@ -106,8 +106,8 @@ Diese Tags haben entweder keine ausreichend passende Modellzuordnung oder sind b
 - gilf
 - degrading
 
-`hairy` und `watermark` sind wegen wiederholter Fehlzuordnungen standardmäßig von automatischen und unsicheren Treffern ausgeschlossen. Diese beiden Ausschlüsse können in den Einstellungen entfernt werden; weitere benutzerdefinierte Ausschlüsse verringern die automatische Abdeckung. Kontext- und Identitätsangaben sowie technische Tags der Upload-Seite werden ebenfalls nicht aus Bildern abgeleitet.
+`hairy` and `watermark` are excluded by default because of repeated mismatches. These two exclusions can be removed in Settings; additional custom exclusions reduce automatic coverage. Context-dependent and identity-related categories, and technical tags assigned by the website, are not inferred from images.
 
-## Aktualisieren
+## Regenerate
 
-Nach Änderungen an der Tagliste, Zuordnung oder Ausschlusspolitik: `runtime/node.exe scripts/Update-Coverage.mjs`.
+After changing the taxonomy, mapping or exclusion policy, run `runtime/node.exe scripts/Update-Coverage.mjs`.

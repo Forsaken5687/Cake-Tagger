@@ -3,16 +3,16 @@ let session;
 const mean = [0.48145466, 0.4578275, 0.40821073], std = [0.26862954, 0.26130258, 0.27577711];
 async function load() {
   if (session) return session;
-  postMessage({ type: 'state', state: 'Kleines Tagging-Modell wird geladen …' });
+  postMessage({ type: 'state', state: 'Loading tagging model …' });
   ort.env.wasm.wasmPaths = '/vendor/';
   ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
   session = await ort.InferenceSession.create('/model/joytag-int8.onnx', { executionProviders: ['wasm'], graphOptimizationLevel: 'all', intraOpNumThreads: 4 });
-  postMessage({ type: 'state', state: 'Bereit' });
+  postMessage({ type: 'state', state: 'Ready' });
   return session;
 }
 function tensorFor(rgba) {
   const size = 448, n = size * size, data = new Float32Array(3 * n);
-  if (!(rgba instanceof Uint8ClampedArray) || rgba.length !== 4 * n) throw new Error('Ungültiges Modellbild.');
+  if (!(rgba instanceof Uint8ClampedArray) || rgba.length !== 4 * n) throw new Error('Invalid model input image.');
   for (let i = 0; i < n; i++) for (let c = 0; c < 3; c++) data[c * n + i] = (rgba[i * 4 + c] / 255 - mean[c]) / std[c];
   return new ort.Tensor('float32', data, [1, 3, size, size]);
 }
@@ -35,7 +35,7 @@ self.onmessage = async ({ data }) => {
       finally { input.dispose(); }
       timings.inferenceSeconds += (performance.now() - inferenceStarted) / 1000;
       const raw = output[s.outputNames[0]].data;
-      if (raw.length !== 5813) { Object.values(output).forEach(t => t.dispose()); throw new Error('Modellausgabe passt nicht zur Tagliste.'); }
+      if (raw.length !== 5813) { Object.values(output).forEach(t => t.dispose()); throw new Error('Model output does not match the tag list.'); }
       // Verified from the ONNX graph: its output is logits, so sigmoid is necessary.
       const scores = Float32Array.from(raw, x => 1 / (1 + Math.exp(-x)));
       all.push(scores);

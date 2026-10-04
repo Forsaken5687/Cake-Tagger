@@ -1,38 +1,32 @@
-# Chrome-Erweiterung
+# Chrome extension
 
-Voraussetzung: Chrome Desktop ab Version 120. Das Paket enthält Modell und Runtime und arbeitet ohne lokalen Dienst.
+Requires Chrome Desktop 120 or later. The model and inference runtime are bundled, so the extension does not need the standalone server.
 
-## Laden
+## Load and update
 
-1. `outputs/Cake-Tagger-Chrome.zip` entpacken. Bei einer lokalen Entwicklung ist `outputs/chrome/` bereits entpackt.
-2. `chrome://extensions` öffnen und **Entwicklermodus** einschalten.
-3. **Entpackte Erweiterung laden** anklicken und den Ordner mit der `manifest.json` auswählen.
-4. Den cake.ski-Tab neu laden und den Upload-Bereich öffnen.
+1. Extract `outputs/Cake-Tagger-Chrome.zip`, use `outputs/chrome/` after a local build, or use `extensions/chrome/` from the full release.
+2. Open `chrome://extensions` and enable **Developer mode**.
+3. Click **Load unpacked** and select the folder containing `manifest.json`.
+4. Reload cake.ski and open its upload area.
 
-Bei einem Update zuerst die Paketdateien ersetzen, dann die Erweiterung auf `chrome://extensions` neu laden und cake.ski neu laden. Auswahlen in einer laufenden Analyse gehen beim Neuladen verloren. Gespeicherte Einstellungen bleiben erhalten.
+To update, replace the package files, reload the extension on `chrome://extensions`, and reload cake.ski. Page results are session-only and are lost on reload. Saved preferences remain.
 
-## Verwenden
+## Use
 
-1. Videos im Upload-Bereich auf cake.ski auswählen. Bulk kann dabei bereits Upload-Entwürfe erstellen.
-2. Bei Cake Tagger **Öffnen** anklicken, dann **Tags vorschlagen**.
-3. Vorschläge prüfen und bei jeder Datei **Tags auf cake.ski ergänzen** anklicken.
+Select videos in the upload area. New files automatically open the embedded analysis panel and start analysis by default. Settings includes **Automatically analyze upload videos** to disable this behavior. When disabled, use **Open** and **Suggest tags** manually.
 
-Single und Bulk werden unterstützt. Die Erweiterung ergänzt ausgewählte Tags; vorhandene Tags und gemeinsame Tag-Ausschlüsse bleiben erhalten. Sie betätigt keine Veröffentlichungsbuttons. Der Website-Upload selbst bleibt Teil des normalen cake.ski-Ablaufs.
+Review the results, then click **Apply tags** on each video's card. Single and Bulk are supported. Existing tags and per-card exclusions are preserved. The extension does not submit posts, answer upload questions, change performers or transfer video files to the site. cake.ski itself may upload Bulk drafts immediately when files are selected.
 
-Das Erweiterungssymbol öffnet direkt eine separate Analyseansicht mit JSON-Download. **Einstellungen** ist dort und im eingebetteten Upload-Bereich verfügbar. Beide Ansichten teilen Sprache, Bildanzahl, Tag-Ausschlüsse und Anzeigeoptionen. Chrome und Firefox verwalten ihre Einstellungen getrennt.
+The toolbar icon opens a separate analysis view with JSON export. The separate and embedded views share settings within Chrome; Firefox has its own storage. Both connected views follow the selected cake.ski tab's colors and optional Automatic language setting.
 
-Dateien, die vor dem Laden der Erweiterung ausgewählt wurden, erneut auswählen. Die Zuordnung zum Upload-Feld erfolgt über den exakten Dateinamen. Bei doppelten Namen stoppt die Übernahme. Bilder-Sets werden nicht unterstützt.
+Reselect files that were chosen before the extension was loaded. Transfers require a unique exact filename. Image sets are unsupported.
 
-## Entwicklung und Prüfung
+## Development and validation
 
-`runtime/node.exe scripts/Build-Chrome.mjs` erstellt den entpackten Ordner und das ZIP-Paket. Der gemeinsame Paketbau kontrolliert Modell und Runtime anhand der festgelegten Prüfsummen und übernimmt ausschließlich freigegebene Dateien einschließlich Lizenzhinweisen. Die PNG-Icons sind aus dem eigenen SVG-Logo abgeleitet.
+`runtime/node.exe scripts/Build-Chrome.mjs` produces the unpacked folder and ZIP. Shared code, licensed dependencies and provenance are copied from a fixed list; large assets are checksum-verified. PNG icons are derived from the project's own SVG.
 
-Chrome verwendet einen Modul-Service-Worker mit statischen Imports. Eine kleine gemeinsame API-Anpassung überbrückt asynchrone Antworten über `sendResponse`, ohne von der Chrome-Version für Promise-Rückgaben in Nachrichten-Listenern abhängig zu sein. Analyse und Videoverarbeitung laufen in der sichtbaren Erweiterungsansicht und ihrem Worker; ein ruhender Hintergrunddienst unterbricht die Analyse nicht.
+Chrome uses a module service worker with static imports. `webext-api.js` adapts async message listeners through `sendResponse`. Analysis runs in the visible extension document and its worker, so service worker suspension does not hold video data or interrupt inference.
 
-Automatische Tests prüfen Nachrichten, Absendergrenzen, Einstellungen und Manifest. Eine lokale Browserprüfung ersetzt nicht das Laden der Erweiterung in Chrome mit der realen Website.
+Automated tests and local fixtures cover messages, settings, manifests and UI behavior. Installation and the real website flow must also be checked in Chrome. See [testing](TESTING.md) and [security](SECURITY.md).
 
-Referenzen: [Chrome-Service-Worker](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics), [Nachrichtenübertragung](https://developer.chrome.com/docs/extensions/develop/concepts/messaging), [PNG-Icons](https://developer.chrome.com/docs/extensions/reference/manifest/icons).
-
-Die Erweiterungsansicht übernimmt die Farben des verbundenen cake.ski-Tabs. Änderungen der Akzentfarbe werden ohne Neuladen übernommen, auch in Einstellungen und Tag-Auswahl. Bei automatischer Sprache folgt die Erweiterung cake.ski; die eigenständige Anwendung verwendet die Browsersprache.
-
-Neue Upload-Videos werden standardmäßig automatisch analysiert. Die eingebettete Ansicht öffnet sich bei der ersten Dateiauswahl. **Upload-Videos automatisch analysieren** in den Einstellungen schaltet diesen Ablauf aus. Bereits analysierte Videos und vorhandene Korrekturen bleiben erhalten; neue Dateien während einer laufenden Analyse werden anschließend verarbeitet. Tags werden weiterhin über **Tags übernehmen** eingetragen.
+References: [service workers](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics), [messaging](https://developer.chrome.com/docs/extensions/develop/concepts/messaging).

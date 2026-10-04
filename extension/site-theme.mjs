@@ -7,6 +7,7 @@ export const THEME_VARIABLES = {
   '--accent-score': '--cake-accent-2', '--mint': '--cake-online'
 };
 export function normalizeTheme(value) {
+  // Accept color values only; never import arbitrary CSS or external resource URLs.
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const colors = {};
   for (const key of Object.keys(THEME_VARIABLES)) {
@@ -14,7 +15,7 @@ export function normalizeTheme(value) {
     if (typeof color !== 'string' || color.length > 80) continue;
     if (/^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i.test(color) || /^rgba?\(\s*\d{1,3}(?:\.\d+)?\s*,\s*\d{1,3}(?:\.\d+)?\s*,\s*\d{1,3}(?:\.\d+)?(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/i.test(color)) colors[key] = color;
   }
-  return { colors, language: value.language === 'de' ? 'de' : 'en' };
+  return { colors, language: /^de(?:-|$)/i.test(value.language || '') ? 'de' : 'en' };
 }
 export function readSiteTheme(doc) {
   const root = doc.querySelector('.stok-root') || doc.documentElement;

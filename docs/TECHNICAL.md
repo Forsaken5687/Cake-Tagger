@@ -1,96 +1,71 @@
-# Technischer Aufbau
+# Architecture
 
-## Verarbeitung
+## Processing pipeline
 
-`app.js` liest lokale Dateien, berechnet deren SHA-256-Prüfsumme und entnimmt Bilder über Video- und Canvas-APIs. Die 448 × 448 Pixel großen Modellbilder werden direkt als RGBA-Puffer an den Worker übertragen. JPEG-Vorschaubilder dienen ausschließlich der Anzeige; sie werden für die Erkennung nicht erneut dekodiert. `engine-worker.js` führt JoyTag INT8 mit ONNX Runtime Web in einem Worker aus. Die Verarbeitung erfolgt nacheinander und verwendet bis zu vier CPU-Threads.
+`app.js` reads local files, computes SHA-256 content hashes and samples frames through Video and Canvas APIs. Previews are JPEG images with a maximum edge of 640 pixels. Model input is prepared as 448 x 448 RGBA buffers, padded white to a square, and transferred directly to `engine-worker.js`; JPEG previews are not decoded again for inference.
 
-Eingabe: 448 × 448 Pixel, RGB, quadratisch mit weißem Rand aufgefüllt und mit CLIP-Farbwerten normalisiert. Ausgabe: 5.813 Logits, aus denen Sigmoid-Scores berechnet werden. Die Browser-Skalierung ist nicht identisch mit Pillow-Bicubic.
+The worker runs JoyTag INT8 with ONNX Runtime Web on the WASM CPU provider. RGB channels use CLIP mean/std normalization. The model returns 5,813 logits; sigmoid converts them to per-label scores. Processing is sequential. Isolated contexts use up to four WASM threads, otherwise one. Browser resizing is not identical to Pillow bicubic resizing.
 
-`sampling.mjs` plant die Bildanzahl nach der dekodierten Videolänge: bis 15/30/60/120/300/600 Sekunden werden 8/12/16/24/32/48 Bilder entnommen. Eine feste Anzahl bleibt möglich. Videos über 600 Sekunden werden vor der Bilderkennung zurückgewiesen. Die Entnahmepunkte liegen gleichmäßig im Inneren des Clips; Anfang und Ende werden nicht direkt getroffen.
+`sampling.mjs` distributes samples at bin midpoints and limits videos to 600 seconds. Automatic counts are 8/12/16/24/32/48 at duration boundaries 15/30/60/120/300/600 seconds; fixed counts remain available. Files above 250 MiB are rejected before hashing or sampling.
 
-`tagging.mjs` ordnet Modellausgaben über `mapping.json` der Tagliste zu. Im ausgewogenen Modus benötigen die meisten Tags Treffer in mehr als der Hälfte aller Bilder. Eine ausdrücklich aufgeführte Gruppe von Kleidungs-, Accessoire- und Objekttags benötigt mindestens ein Viertel der Bilder, mindestens zwei, bei einem Score von mindestens 0,65. Damit können klare, vorübergehend sichtbare Details relevant bleiben, ohne einen einzelnen Treffer auszuwählen. Die Oberfläche verwendet fest die Schwelle 0,4 und den ausgewogenen Modus. Ältere gespeicherte Ergebnisse aus dem Modus für kurze Szenen bleiben lesbar. Diese Regeln sind nicht statistisch kalibriert.
+## Tag aggregation
 
-Weniger häufige oder schwächere Treffer bleiben im Ergebnis als `uncertain` gespeichert, erscheinen als zunächst nicht ausgewählte Tag-Chips mit der Kennzeichnung „Unsicher“. `hairy` und `watermark` werden standardmäßig weder automatisch noch als unsichere Treffer vorgeschlagen. Diese beiden Ausschlüsse und weitere benutzerdefinierte Ausschlüsse sind über die Einstellungen änderbar; andere manuelle Kategorien bleiben fest ausgeschlossen. Die aktuelle automatische Zuordnungsabdeckung steht in `model/coverage.json`; sie ist keine Genauigkeitsmessung. `piercings` berücksichtigt zusätzlich spezifische Modell-Tags für Nasen-, Lippen-, Zungen-, Nabel- und Brustwarzenpiercings. Ohrpiercing wird nicht zusätzlich als Synonym aufgenommen. `tag-policy.mjs` setzt die ausgeschlossenen Kategorien bei jeder Analyse durch. `docs/TAG_COVERAGE.md` listet die verbleibenden manuellen Tags; `scripts/Update-Coverage.mjs` aktualisiert diese Übersicht und die Abdeckungsdatei. `dance` benötigt in beiden Modi mindestens einen Score von 0,65. Die Zuordnung verwendet das Einzelbild-Label `dancing`; sie bestätigt keinen Bewegungsablauf.
+`mapping.json` maps model label indices to the bundled taxonomy. `tagging.mjs` takes the maximum of mapped label scores for each tag and each sampled frame. Most tags require more than half the frames to pass the base threshold of 0.4, with at least two supporting frames.
 
-## Sitzung und Download
+An explicit detail-tag set uses a threshold of at least 0.65 and requires a quarter of the sampled frames, with a minimum of two. `dance` also has a threshold of at least 0.65. These are heuristics, not calibrated classifiers or motion recognition.
 
-Ergebnisse, Tag-Auswahlen und der Ergebnis-Cache befinden sich ausschließlich im Arbeitsspeicher von `app.js`. Identische Dateiinhalte werden innerhalb derselben Sitzung anhand ihrer SHA-256-Prüfsumme zugeordnet. Neue Seitenaufrufe beginnen ohne Ergebnisse. Der frühere IndexedDB-Ergebniscache wird entfernt; alte Korrekturdateien werden nicht geladen oder weitergeschrieben.
+The displayed `confidence` is the average of the two strongest frame scores. Temporal support is recorded separately as `supportingFrames`. At most 20 selected suggestions and 15 unchecked uncertain candidates are returned. `uncertainScores` preserves candidate scores and support; missing legacy scores are not invented.
 
-`corrections.mjs` validiert Ergebnisobjekte und erzeugt die Exportfelder. `static.mjs` nimmt diese über einen authentifizierten lokalen Endpunkt an und erzeugt einen JSON-Snapshot im Arbeitsspeicher. Ein zufälliger Download-Link liefert ihn als Browser-Anhang. Höchstens drei Snapshots bleiben für jeweils fünf Minuten verfügbar. Der Export schreibt keine Ergebnisdatei in den Projektordner. Der Download-Link gewährt Zugriff auf den Snapshot und sollte wie die JSON-Datei behandelt werden.
+`tag-policy.mjs` keeps context-dependent, identity-related and website-assigned categories manual-only. `hairy` and `watermark` are configurable default exclusions. `piercings` maps additional specific piercing labels; ear piercing is not added as an extra synonym. `scripts/Update-Coverage.mjs` regenerates the coverage report without changing mappings.
 
-`data/session.json` enthält nur den Start-Token und die Prozesskennung des lokalen Diensts; nicht weitergeben. Der Token wird beim Start im URL-Fragment übergeben. Host und Origin werden geprüft; das Erstellen von Download-Snapshots benötigt den Token. Der alte Endpunkt `/api/corrections` ist entfernt.
+## Session state and exports
 
-Der Export in Version 2 enthält Dateinamen, Prüfsummen, ausgewählte Tags, Prüfstatus, Ausgangsvorschläge, ergänzte und entfernte Tags, `tagSources`, unsichere Kandidaten mit `uncertainScores`, Bildanzahl, Analyseregel, Modell und Laufzeitmessungen. Manuelle Ergänzungen erhalten keine erfundenen Modell-Scores. `tagSources` bleibt bei erneuter Analyse derselben Datei innerhalb der Sitzung erhalten. Der Ergebnis-Cache berücksichtigt Modell, Zuordnung, Bildanzahl und `preprocess-v2`.
+Results, selections, corrections, previews and caches are held in page memory. Hashes match identical file content within a session. Cache keys include model provenance, mapping, sample count, threshold, coverage/exclusion policy and `preprocess-v2`. Cached results retain the original inference timings.
 
-## Abhängigkeiten
+`corrections.mjs` preserves tag origins and manual selections when a new baseline is analyzed. JSON exports contain selected tags, original suggestions, added/removed/deselected tags, scores and timings. The legacy `reviewed` field remains for format compatibility and has no current UI control. Corrections do not train the model.
 
-Modellquelle, Revision und Laufzeitversion stehen in `model/provenance.json`. `scripts/assets.json` enthält Download-Adressen und SHA-256-Werte der drei großen, nicht versionierten Dateien. `Setup.cmd` stellt diese bei Bedarf wieder her. Der Download ersetzt eine vorhandene Datei erst nach erfolgreicher Prüfsummenprüfung.
+Current analysis policies include a JSON exclusion snapshot after `coverage-v5:majority`. Validation also accepts older v2-v5 coverage keys. Arrays, scores, support counts, durations and timing fields are validated before a standalone export is created.
 
-Die Anwendung hat keine npm-Installation und keinen Build-Schritt. Node.js dient als lokaler Dateiserver. Browser-Laufzeit und Lizenztexte liegen unter `vendor/`, Modellinformationen unter `model/` und Node.js unter `runtime/`.
+Old correction files are not loaded or overwritten. The legacy IndexedDB result cache is removed on page initialization. Settings remain persisted separately.
 
-## Offene Funktionen
+The standalone server holds up to three download snapshots, each with a five-minute access window. Expired snapshots are inaccessible and removed on later export/download operations or process exit; there is no background expiry timer. Extension exports use a Blob URL and do not need the server.
 
-Automatisches Eintragen in cake.ski, eine Userscript-Anbindung und der Abruf von Redgifs-Metadaten sind nicht implementiert. Eine systematisch bewertete Testmenge für die Erkennungsqualität fehlt ebenfalls.
+## Timing metadata
 
-## Laufzeitmessung
+`timings` includes `samplingSeconds`, `modelLoadSeconds`, `preprocessSeconds`, `inferenceSeconds` and `totalSeconds`. Transfer and administration overhead means components need not sum exactly to the total. Timings do not include export. Legacy results may lack timings.
 
-Neue Analysen enthalten `timings`: Bildentnahme und Aufbereitung (`samplingSeconds`), Modellinitialisierung (`modelLoadSeconds`), Normalisierung im Worker (`preprocessSeconds`), Modellberechnung (`inferenceSeconds`) und Gesamtzeit bis zur Aggregation (`totalSeconds`). Gesamtzeit enthält zusätzliche Übergabe- und Verwaltungsarbeit; die Teilzeiten müssen sich nicht exakt dazu addieren. Export und dauerhafte Speicherung sind nicht enthalten. Bei einem Cache-Treffer stammen die Analysezeiten aus der ursprünglichen Berechnung. Ältere Datensätze enthalten keine Messung.
+## Local server
 
-Die neue verlustfreie Bildübergabe verwendet `preprocess-v2` im Cache-Schlüssel. Wegen des entfallenen JPEG-Schritts können Scores gegenüber früheren Analysen leicht abweichen. Auswahlen und Prüfmarkierungen bleiben bei einer erneuten Analyse innerhalb derselben Sitzung erhalten.
+`static.mjs` binds to `127.0.0.1`, default port 8765. Protected endpoints require a fresh random session token. The token initially travels in a URL fragment, is moved to session storage and removed from the address bar. Host/Origin validation, a static path allowlist and a restrictive CSP separate the service from unrelated websites and private project files.
 
-## GPU-Unterstützung
+`session-url.mjs` validates saved loopback session URLs before reopening an existing server. PowerShell receives a URL through an environment variable rather than interpolated command text. The standalone server is not a LAN service and must not be exposed as one without redesigning authentication and deployment.
 
-Die Anwendung verwendet weiterhin den WASM-Provider auf der CPU. Das INT8-Modell enthält `DynamicQuantizeLinear`, `ConvInteger` und `MatMulInteger`; diese Operationen fehlen in der WebGPU-Operatorliste der verwendeten Laufzeit. Ein WebGPU-Start kann dennoch über die interne CPU-Ausführung einzelner Operationen gelingen. Gemischte Ausführung und Datenübertragungen können den Gewinn aufheben. Ein GPU-Provider sollte erst nach einem Modellkompatibilitäts-, Geschwindigkeits- und Ergebnisvergleich aktiviert werden. Eine andere Modellpräzision wäre eine gesonderte Änderung mit zusätzlichen Download- und Speicheranforderungen.
+## Extension integration
 
-Referenzen: [WebGPU](https://onnxruntime.ai/docs/tutorials/web/ep-webgpu.html), [Operatorunterstützung](https://github.com/microsoft/onnxruntime/blob/main/js/web/docs/webgpu-operators.md).
+`extension/embedded-upload.mjs` mounts an extension-origin iframe outside the changing Single/Bulk renderer. Closing hides it without destroying the session. File references are tied to their upload mount and captured from trusted file selection/drop events.
 
-## Anzeige der Modell-Scores
+`message-contract.mjs` checks parent window, Cake origin, session channel and File objects. Extension pages communicate through the background relay, which verifies the sender and target host. Embedded views cannot address another tab. `content.js` accepts transfer commands only from the extension background. The adapter validates filename matching and tag membership and confirms additions against live pills.
 
-Vorgeschlagene Tags mit bekannter Ausgangsanalyse zeigen ihren gespeicherten `confidence`-Wert als gerundeten Prozentwert unter der Bezeichnung „Score“. Er ist der Durchschnitt der zwei stärksten Bildtreffer und beschreibt weder den Anteil passender Videobilder noch eine kalibrierte Wahrscheinlichkeit für die Richtigkeit des Tags. Die zeitliche Abdeckung wird weiterhin separat über `supportingFrames` geprüft. Manuelle Ergänzungen, unbekannte Ausgangsvorschläge und Vorschläge ohne gespeicherten Score erhalten keinen erfundenen Prozentwert. Die Darstellung ändert keine gespeicherten Werte oder Auswahlregeln.
+Firefox uses background scripts; Chrome uses `chrome-worker.mjs` with static imports. `webext-api.js` adapts Promise-style listeners to Chrome's response callback, keeps async response channels open, and ignores unhandled messages. Neither background implementation retains video or inference state.
 
-Neue Analysen speichern zusätzlich `uncertainScores` mit dem Modellscore (Durchschnitt der zwei stärksten Bildtreffer) und der Anzahl unterstützender Bilder je unsicherem Kandidaten. Diese Angaben bleiben während der Sitzung und im Download erhalten. Ältere Datensätze können hier nur Tagnamen enthalten; die Oberfläche zeigt für sie keinen erfundenen Score. Die neue Cache-Regel v5 fordert für neue Analysen echte Scores an; bestehende Auswahlen bleiben erhalten. Unsichere Kandidaten werden nicht automatisch in die ausgewählten Export-Tags aufgenommen.
+## Preferences and automatic analysis
 
-## Vorschauansicht
+`preferences.mjs` normalizes only language, frame count, tag exclusions, display flags and `autoAnalyzeEmbed`. Standalone settings use `localStorage`; extension settings use `storage.local` through `settings-background.mjs`. Unknown message types and unrelated data fields cannot write preferences.
 
-Vorschaubilder sind als zugängliche Schaltflächen umgesetzt. Ein natives modales `dialog` zeigt das gewählte Bild vergrößert, hält den Tastaturfokus in der Ansicht und ermöglicht die Navigation mit Pfeiltasten oder Schaltflächen. Escape, die Schließen-Schaltfläche und ein Klick auf den Hintergrund schließen die Ansicht. Beim Schließen wird die Bildreferenz freigegeben. Die Ansicht verwendet die vorhandene Vorschau mit maximal 640 Pixeln Kantenlänge; sie ist keine zusätzliche Extraktion in Originalauflösung. Der Prüfstatus bleibt aus Kompatibilitätsgründen im Exportformat, hat aber keine Bedienelemente mehr in der Oberfläche.
+`settings-ui.mjs` renders a shared modal form. Save applies the draft; Defaults resets only the form. Exclusions affect subsequent analyses and form part of the cache key. An active batch uses an immutable settings snapshot. Display changes preserve selected tags and underlying scores.
 
-## Logo
+`extension/auto-analysis.mjs` serializes selection preparation and automatic batches. It keeps the latest pending selection, analyzes only new files without existing results or preparation errors, and does not automatically retry cancellation/failure. Standalone file selections use the same queue with automatic analysis disabled. New embedded videos open the panel automatically when enabled.
 
-Das eigenständige SVG-Zeichen liegt unter `assets/logo.svg`. Die Oberfläche bettet es direkt im Seitenkopf ein; das SVG-Favicon verweist auf dieselbe Asset-Datei. Es benötigt keine externen Schriftarten oder Bilddienste.
-## Firefox-Integration
+## Language, theme and previews
 
-Die eingebettete Ansicht verwendet neutrale dunkle Flächen und den cake.ski-Akzent `#fe2c55`. Hauptseite, separate Analyseansicht, Einstellungen und eingebettete Ansicht verwenden gemeinsam dieses Farbschema. Primäre Schaltflächen haben weiße Schrift auf Pink, sekundäre Schaltflächen neutrale Grautöne; Fokus- und Auswahlzustände verwenden denselben Akzent.
+`i18n.mjs` supports German and English. UI source messages are English. The shared `messages.mjs` catalog translates static and parameterized messages, with legacy German keys accepted for compatibility. Visible statuses and errors retain source messages so a language change can refresh them without changing selections. Automatic uses the connected site's language or the standalone browser language. Explicit preferences take priority and tag names remain unchanged.
 
-`embedded-upload.mjs` fügt eine Analyseansicht vor der Upload-Mount ein und beobachtet Single-/Bulk-Wechsel. Die Ansicht liegt als eingebettetes Erweiterungsdokument auf dem Erweiterungsursprung. Vertrauenswürdige Datei- und Drop-Ereignisse liefern lokale File-Objekte; nur Dateien mit sichtbaren Upload-Zielen werden per strukturiertem Klonen an das eingebettete Dokument übergeben. Der Empfang prüft Elternfenster, cake.ski-Ursprung, Nachrichtentyp, Sitzungskanal und File-Typ. Die ursprünglichen Datei-Ereignisse werden nicht unterbrochen. Es werden weder zusätzliche Uploads noch zusätzliche Dateiauswahldialoge ausgelöst.
+`site-theme.mjs` reads known `--cake-*` variables from `.stok-root`. Only validated color values cross the frame boundary. Style/class/language changes update the palette without persistence; separate views receive updates from their selected tab. Playback control updates do not delay root theme synchronization.
 
-Die Einbettung bleibt außerhalb der wechselnden Single-/Bulk-Renderer erhalten. Schließen blendet das Dokument nur aus. Unveränderte Dateien behalten beim Aktualisieren der Auswahl ihre Analyse und Korrekturen anhand des Inhalts-Hashes. Änderungen während einer Analyse werden vorgemerkt und danach übernommen. File-Referenzen sind der jeweiligen Upload-Mount zugeordnet; gleichnamige Upload-Karten bleiben eine unklare Zuordnung und werden bei der Tag-Übernahme abgewiesen.
+Native modal dialogs provide focus containment for settings and enlarged previews. Previews use existing images, not a second full-resolution extraction. Escape and arrow-key navigation are supported. The inline logo follows theme tokens; browser icons retain their packaged artwork.
 
-Die Erweiterung verwendet die gemeinsame Oberfläche, Engine und Tag-Regeln. `app.js` lädt die Erweiterungsanbindung nur unter `moz-extension:`; die eigenständige Anwendung bleibt unabhängig. Der Download in der Erweiterung verwendet einen Blob statt des lokalen Export-Endpunkts. `engine-worker.js` verwendet mehrere WASM-Threads nur in einem isolierten Kontext, ansonsten einen Thread. Die Erweiterungs-CSP erlaubt WebAssembly und beschränkt Verbindungen auf eigene Ressourcen.
+## Dependencies and packaging
 
-Die Analyseansicht verwendet ausschließlich `runtime.sendMessage` für Tab-Auswahl und Tag-Übernahme. Der Hintergrundteil prüft Absender, Nachrichtendaten und den cake.ski-Ursprung des Ziel-Tabs; eingebettete Ansichten dürfen nur ihren eigenen Upload-Tab ansprechen. Erst der Hintergrundteil verwendet `tabs.sendMessage`, da die eingebettete Firefox-Ansicht keinen Zugriff auf `browser.tabs` hat.
+Dependencies are pinned in `scripts/assets.json` and provenance metadata. Large artifacts are SHA-256 verified. Third-party licenses must remain unchanged. `Build-Extension.mjs` uses a fixed file list and produces both browsers' packages; `Package.ps1` builds a full release from tracked files and verified assets, including Firefox ZIP and Chrome folder.
 
-`extension/content.js` nimmt Übernahmen nur vom eigenen Hintergrundteil an. `upload-adapter.mjs` identifiziert sichtbare Upload-Felder, prüft Dateinamen und ergänzt erlaubte Tags über den Enter-Eingabeweg. Jede Übernahme wird anhand der sichtbaren Tag-Pills bestätigt. Bei Fehlern bleiben bereits ergänzte und bestehende Tags erhalten; es gibt keinen automatischen Rollback. Der Adapter schreibt weder Dateien noch Captions, Performer, Bestätigungen oder Veröffentlichungszustände.
-
-Das Firefox-Paket verwendet ein Manifest-V3-Hintergrundskript und enthält Modell, WASM-Runtime, Lizenzen und Herkunftsmetadaten. Der Paketbau nutzt eine feste Dateiliste und prüft die großen Assets vor dem Kopieren. Installation und Testgrenzen stehen unter [Firefox](FIREFOX.md).
-
-## Einstellungen und Sprache
-
-`preferences.mjs` normalisiert ausschließlich Sprache, Bildanzahl, benutzerdefinierte Tag-Ausschlüsse und zwei Anzeigeoptionen. Die eigenständige Anwendung speichert diesen kleinen Datensatz unter `cake-tagger-settings-v1` in `localStorage`. Die Erweiterungsansichten verwenden `runtime.sendMessage`; `settings-background.mjs` liest und schreibt denselben Schlüssel in `storage.local` und verteilt Änderungen an Erweiterungsansichten und cake.ski-Content-Scripts. Website-Content-Scripts dürfen Einstellungen lesen, aber nicht speichern. Die zusätzliche Firefox-Berechtigung `storage` dient nur diesen Einstellungen. Videos, Ergebnisse, Korrekturen und Tokens sind nicht Bestandteil des Datensatzes.
-
-`settings-ui.mjs` rendert dasselbe Formular in der Hauptseite und der eingebetteten Analyse. Die Bildanzahl wird ausschließlich im Einstellungsmenü ausgewählt; der Analysebereich enthält nur die Analyseaktionen. Die Formulardaten werden erst mit Speichern übernommen. Standardwerte setzt nur den Entwurf zurück. Anzeigeoptionen wirken auf bestehende Ergebnisse, ohne Auswahlen oder Scores zu ändern; ausgeblendete unsichere Kandidaten bleiben im Export erhalten. Bereits ausgewählte unsichere Tags bleiben sichtbar. Ausschlüsse wirken bei der nächsten Analyse und sind Teil des Cache-Schlüssels. Ein laufender Analyse-Durchgang verwendet einen unveränderlichen Einstellungssnapshot. Frühere manuelle Korrekturen werden beim erneuten Analysieren weiterhin übernommen.
-
-`i18n.mjs` übersetzt Bedienelemente und Analysezustände in Deutsch oder Englisch; die automatische Auswahl folgt der Browsersprache (Deutsch bei `de`, sonst Englisch). Tagnamen bleiben unverändert. Die Standalone- und Erweiterungsspeicher sind getrennt.
-
-## Chrome-Integration
-
-`webext-api.js` stellt in Chrome eine kleine gemeinsame API bereit. Asynchrone Nachrichten-Listener halten den Antwortkanal mit `return true` offen und antworten über `sendResponse`. Nicht behandelte Nachrichten werden ignoriert. Die Anpassung ist in Firefox und in der eigenständigen Anwendung inaktiv. `chrome-worker.mjs` registriert den gemeinsamen Hintergrundcode beim Start und importiert die Einstellungsverwaltung statisch; dynamische Imports werden im Chrome-Service-Worker nicht verwendet. Der Hintergrunddienst hält weder Videos noch Analysezustände. Einstellungen liegen in `storage.local`, daher überleben sie das Ruhen des Hintergrunddienstes.
-
-Die Manifest-Dateien begrenzen den Zugriff auf cake.ski und die Speicherberechtigung. Chrome verwendet PNG-Icons. `Build-Extension.mjs` erzeugt beide Pakete aus derselben festen Dateiliste und prüft die großen Assets. `Build-Firefox.mjs` und `Build-Chrome.mjs` sind die jeweiligen Einstiegspunkte. Das Chrome-Paket enthält keine Firefox-spezifischen Manifest-Schlüssel.
-
-## Seitendesign
-
-Das Content-Script liest die freigegebenen `--cake-*` Farbvariablen aus `.stok-root` und beobachtet Änderungen an Stil, Klassen und Seitensprache. Das eingebettete Dokument erhält die Palette über Nachrichten mit geprüftem Ursprung, Fenster und Sitzungskanal. Die separate Erweiterungsansicht fragt den ausgewählten Tab über den Hintergrundprozess ab und erhält dessen Änderungen. Nur bekannte Farbtokens werden übernommen; die Palette wird nicht gespeichert. Benutzerdefinierte Spracheinstellungen haben Vorrang vor der Seitensprache.
-
-## Automatische Upload-Analyse
-
-`autoAnalyzeEmbed` ist eine gespeicherte, standardmäßig aktive Einstellung und gilt ausschließlich für eingebettete Upload-Ansichten. Die Upload-Auswahl öffnet bei Bedarf das Analyse-Dokument. `extension/auto-analysis.mjs` bündelt Auswahländerungen während Vorbereitung und Analyse und verarbeitet nur neue Dateien ohne Ergebnis oder Vorbereitungsfehler. Die neueste Auswahl ersetzt ältere wartende Auswahlen. Bestehende Ergebnisse und Korrekturen werden weiterverwendet. Abbruch oder Fehler lösen keine automatischen Wiederholungen aus; der manuelle Analysestart bleibt verfügbar.
+CPU inference is the supported path. A GPU provider would require compatibility, timing and output comparisons for this quantized model and should not be enabled merely because WebGPU is available. See [ONNX Runtime WebGPU](https://onnxruntime.ai/docs/tutorials/web/ep-webgpu.html).

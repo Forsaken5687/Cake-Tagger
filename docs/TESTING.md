@@ -1,22 +1,43 @@
-# Prüfung
+# Testing
 
-`scripts/Test.ps1` prüft die JavaScript-Syntax und führt synthetische Tests für Tag-Aggregation, Zuordnung, Bildanzahl, Ergebnisvalidierung, Herkunft und Export aus. Der Download-Test startet einen isolierten Dienst unter `work/` auf einem freien Port: Export-Zugriffe ohne Token müssen abgewiesen werden, ein gültiger Snapshot muss als Anhang verfügbar sein, und es dürfen keine Ergebnisdateien entstehen. Alte Korrekturdateien dürfen nicht eingelesen oder verändert werden.
+Run `scripts/Test.ps1` from a writable checkout with the bundled runtime available. It syntax-checks JavaScript modules and runs all `tests/*.test.mjs` through Node's test runner. Tests use synthetic data and ignored `work/` directories.
 
-## Browser-Prüfung
+## Automated coverage
 
-1. Leere Startansicht, Upload-Bereich und automatische Bildanzahl prüfen.
-2. Videos auswählen und analysieren; Vorschläge, Scores und zunächst nicht ausgewählte unsichere Kandidaten prüfen.
-3. Tags ergänzen und abwählen; der Auswahlzähler muss folgen.
-4. Dieselbe Datei innerhalb der Sitzung erneut auswählen: Die Auswahl bleibt erhalten.
-5. JSON herunterladen; Auswahl, Modell-Scores und Laufzeitangaben prüfen. Im Projekt darf keine neue Ergebnisdatei entstehen.
-6. Seite neu laden: Ergebnisse dürfen nicht wiederhergestellt werden.
-7. Abbruch, ungültige Dateien und die Darstellung auf schmalen Bildschirmen prüfen.
+- Frame sampling boundaries, tag aggregation and uncertain candidate scores.
+- Mapping coverage and manual-category exclusions.
+- Preference normalization, persistence and browser message relays.
+- Automatic analysis queues, latest-selection behavior, disabling, failures and retained corrections.
+- Export validation, tag origins, legacy policies and current exclusion snapshots.
+- File message parent/origin/channel checks, sender boundaries, target matching and inherited tags.
+- Theme token validation and automatic/explicit language behavior.
+- Saved session URL validation and rejection of command-shaped payloads.
+- An isolated local server: authenticated export, attachment download, Host/Origin rejection, private-path restrictions and preservation of legacy correction files.
 
-Automatisierte Tests messen keine Erkennungsgenauigkeit. Dafür ist eine separat bewertete Testmenge erforderlich. Persönliche Testberichte und Videodaten gehören nicht in Git oder das Weitergabepaket.
+Tests do not measure model accuracy or certify third-party binaries. They do not replace installing the extensions in their target browsers.
 
-Vorschaubild mit Maus und Tastatur öffnen, zum nächsten und vorherigen Bild wechseln, Escape und die Schließen-Schaltfläche prüfen. Die ursprüngliche Seite muss dabei unverändert bleiben und anschließend wieder bedienbar sein.
-## Firefox-Integration
+## Standalone browser checks
 
-Für die eingebettete Ansicht prüfen die automatisierten Tests den Nachrichtenvertrag einschließlich Ursprung, Elternfenster, Sitzung und File-Typ. Die lokale Browserprüfung verwendet getrennte Ursprünge für Upload-Kopie und Analysefenster und prüft Dateiauswahl, Analyse, Rückübernahme, Wechsel zu Bulk sowie Schließen/Wiederöffnen. Die WebExtension-Nachrichten werden in dieser Kopie nachgebildet; die echte Firefox-Einbettung ist zusätzlich zu prüfen.
+1. Start the application and check the empty state and Settings dialog in both languages.
+2. Select supported synthetic videos, analyze them, and review suggested/uncertain tags and scores.
+3. Add and deselect tags; verify counters and origins.
+4. Change file selection during preparation and verify the newest selection is retained.
+5. Reselect identical file content during the session; corrections must remain.
+6. Download JSON with default and custom exclusions; inspect filenames, selected tags, scores, policy and timings.
+7. Reload the page; results must not return. Settings must persist.
+8. Check cancellation, invalid codecs, size/duration limits and narrow layouts.
+9. Open previews with mouse/keyboard, navigate, close with Escape, and verify focus recovery.
 
-Die automatisierten Prüfungen decken eindeutige Dateizuordnung, Abweisung doppelter Namen, Tag-Deduplizierung, Erhalt gemeinsamer Tags und Ausschlüsse sowie die Manifest-Beschränkungen ab. Die Browserprüfung verwendet die originale Typeahead-Komponente mit lokalen API-Antworten und synthetischen Enter-Ereignissen. Die vollständige Firefox-Erweiterung einschließlich Berechtigungen, Content-Script und Modell-Worker ist zusätzlich direkt in Firefox zu prüfen. Dabei nur selbst ausgewählte Testdateien verwenden; cake.ski überträgt Bulk-Dateien bereits beim Auswählen als Entwürfe.
+## Extension browser checks
+
+Use local fixtures when no upload is permitted. Real cake.ski Bulk selection may upload drafts immediately.
+
+Check Firefox and Chrome independently: installation, permissions, single/bulk views, automatic start and disabled mode, adding/removing files while busy, retained results, separate analysis/JSON download, unique filename matching and existing/per-card excluded tags. Test member-role search as well as maintainer Enter selection.
+
+Change the site's accent color while the panel and Settings are open. Check buttons, focus, scores and selected chips. Verify Automatic language follows the page while explicit German/English stays selected.
+
+Local fixtures can replace WebExtension APIs and intercept website calls, but cannot prove target-browser permissions, codec behavior, service worker lifecycle or full inference. Keep personal media and review reports outside Git and release packages.
+
+## Release checks
+
+Run the test suite, build both extensions, then run `scripts/Package.ps1`. Verify both manifest versions, required modules, dependency checksums and license notices. Confirm that the release contains the Firefox ZIP and unpacked Chrome directory, and no `data/`, `work/`, videos, session tokens or Git history.

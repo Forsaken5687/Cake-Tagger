@@ -1,6 +1,7 @@
 export const SETTINGS_KEY = 'cake-tagger-settings-v1';
 export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', frames: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, autoAnalyzeEmbed: true });
 export function normalizeSettings(value = {}) {
+  // This allowlist is also the persistence boundary: unrelated fields are discarded.
   if (!value || typeof value !== 'object' || Array.isArray(value)) value = {};
   const frames = String(value.frames ?? 'auto');
   return {
@@ -28,7 +29,7 @@ export function createSettingsStore({ runtime, storage, events } = {}) {
   async function load() {
     if (runtime) {
       const response = await runtime.sendMessage({ type: 'cake-tagger:settings-get' });
-      if (!response || response.error) throw Error(response?.error || 'Einstellungen nicht erreichbar.');
+      if (!response || response.error) throw Error(response?.error || 'Settings unavailable.');
       accept(response.settings);
     } else {
       let value; try { value = JSON.parse(storage.getItem(SETTINGS_KEY) || 'null'); } catch { value = null; }
@@ -40,7 +41,7 @@ export function createSettingsStore({ runtime, storage, events } = {}) {
     const next = normalizeSettings(value);
     if (runtime) {
       const response = await runtime.sendMessage({ type: 'cake-tagger:settings-set', settings: next });
-      if (!response || response.error) throw Error(response?.error || 'Einstellungen konnten nicht gespeichert werden.');
+      if (!response || response.error) throw Error(response?.error || 'Settings could not be saved.');
       accept(response.settings);
     } else { storage.setItem(SETTINGS_KEY, JSON.stringify(next)); accept(next); }
     return normalizeSettings(current);

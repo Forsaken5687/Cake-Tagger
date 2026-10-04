@@ -3,13 +3,14 @@ let nextId = 0;
 const normalize = text => String(text).replace(/^#/, '').trim().toLowerCase();
 
 export function chooseTarget(targets, filename) {
+  // Never guess by card order when a filename is missing or ambiguous.
   const matches = targets.filter(target => target.filename === filename);
-  if (matches.length !== 1) throw Error(matches.length ? 'Mehrere Uploads haben diesen Dateinamen. Bitte einzeln übernehmen.' : 'Keine passende Datei im Upload-Formular gefunden.');
+  if (matches.length !== 1) throw Error(matches.length ? 'Multiple uploads have this filename. Apply tags individually.' : 'No matching file found in the upload form.');
   return matches[0];
 }
 
 export function planTags(requested, present, excluded, allowed) {
-  if (!Array.isArray(requested) || requested.length > 258 || requested.some(t => typeof t !== 'string' || !allowed.has(t))) throw Error('Ungültige Tag-Auswahl.');
+  if (!Array.isArray(requested) || requested.length > 258 || requested.some(t => typeof t !== 'string' || !allowed.has(t))) throw Error('Invalid tag selection.');
   const existing = new Set(present.map(normalize)), blocked = new Set(excluded.map(normalize));
   const add = [], skipped = [];
   for (const tag of new Set(requested)) {
@@ -63,22 +64,23 @@ export function inspectUploads(doc) {
 }
 
 export async function appendTags(doc, filename, tags, allowed) {
+  // Re-check the live form for every tag so removed cards and user edits stop transfer.
   const initial = chooseTarget(inspectUploads(doc), filename);
-  if (initial.input.value.trim()) throw Error('Im Tag-Feld steht noch eine Eingabe. Bitte zuerst übernehmen oder leeren.');
+  if (initial.input.value.trim()) throw Error('The tag field contains unfinished input. Apply or clear it first.');
   const plan = planTags(tags, initial.tags, initial.excluded, allowed), added = [];
   for (const tag of plan.add) {
     const current = chooseTarget(inspectUploads(doc), filename);
-    if (current.id !== initial.id || !visible(current.input)) throw Error('Das Upload-Formular wurde während der Übernahme geändert.');
+    if (current.id !== initial.id || !visible(current.input)) throw Error('The upload form changed during tag transfer.');
     if (!planTags([tag], current.tags, current.excluded, allowed).add.length) continue;
     const input = current.input, view = doc.defaultView;
-    if (input.value.trim()) throw Error('Die Tag-Eingabe wurde während der Übernahme geändert.');
+    if (input.value.trim()) throw Error('The tag input changed during tag transfer.');
     input.dispatchEvent(new view.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     const setter = Object.getOwnPropertyDescriptor(view.HTMLInputElement.prototype, 'value').set;
     setter.call(input, tag);
     input.dispatchEvent(new view.KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true, cancelable: true }));
     const started = Date.now();
     while (!pillNames(input.closest('.stok-pillfield')).some(name => normalize(name) === normalize(tag))) {
-      if (Date.now() - started > 4000 || !visible(input)) return { added, skipped: plan.skipped, error: `„${tag}“ wurde von der Seite nicht übernommen. Bereits ergänzte Tags bleiben erhalten.` };
+      if (Date.now() - started > 4000 || !visible(input)) return { added, skipped: plan.skipped, error: `"${tag}" was not accepted by the site. Previously added tags are preserved.` };
       await new Promise(resolve => setTimeout(resolve, 50));
     }
     added.push(tag);

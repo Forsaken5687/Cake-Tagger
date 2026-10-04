@@ -2,7 +2,7 @@ import { excluded } from './tag-policy.mjs';
 export const ANALYSIS_VERSION = 'coverage-v5';
 const details = new Set(['glasses', 'choker', 'collar', 'cat ears', 'bunny ears', 'maid outfit', 'skirt', 'underwear', 'lingerie', 'bikini', 'swimsuit', 'bra', 'panties', 'thigh highs', 'knee high socks', 'pantyhose', 'fishnet', 'high heels', 'hoodie', 'mask', 'earrings', 'piercings', 'hat', 'gag', 'blindfold', 'handcuffs', 'butt plug', 'dildo', 'vibrator', 'sex toy']);
 export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'majority', options = {}) {
-  if (!['majority', 'brief'].includes(coverage)) throw Error('Ungültige zeitliche Abdeckung.');
+  if (!['majority', 'brief'].includes(coverage)) throw Error('Invalid temporal coverage.');
   const required = coverage === 'majority' ? Math.max(2, Math.floor(frameScores.length / 2) + 1) : 2;
   const predicted = [], uncertain = [];
   const userExcluded = new Set(options.excludedTags ?? ['hairy', 'watermark']);

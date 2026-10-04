@@ -7,12 +7,13 @@
   mountUploadPanel(document, browser.runtime);
   let busy = false;
   browser.runtime.onMessage.addListener((message, sender) => {
+    // Website scripts cannot directly invoke this listener; also verify our sender.
     const trustedBackground = !sender.url || [browser.runtime.getURL('extension/background.js'), browser.runtime.getURL('extension/chrome-worker.mjs'), browser.runtime.getURL('_generated_background_page.html')].includes(sender.url);
     if (sender.id !== browser.runtime.id || !trustedBackground) return;
     if (message?.type === 'cake-tagger:theme-request') return Promise.resolve(readSiteTheme(document));
     if (message?.type === 'cake-tagger:inspect') return Promise.resolve(inspectUploads(document).map(({ id, filename, tags }) => ({ id, filename, tags })));
     if (message?.type !== 'cake-tagger:append' || typeof message.filename !== 'string') return;
-    if (busy) return Promise.resolve({ error: 'Eine Tag-Übernahme läuft bereits.' });
+    if (busy) return Promise.resolve({ error: 'A tag transfer is already in progress.' });
     busy = true;
     return appendTags(document, message.filename, message.tags, allowed)
       .catch(e => ({ error: e.message }))

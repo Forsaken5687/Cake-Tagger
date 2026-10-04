@@ -6,19 +6,19 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 Push-Location $taggerRoot
 try {
     $tracked = if ($IncludeUncommitted) { @(& git -c core.quotepath=false ls-files --cached --others --exclude-standard) } else { @(& git -c core.quotepath=false ls-files) }
-    if ($LASTEXITCODE -ne 0 -or $tracked.Count -eq 0) { throw 'Keine versionierten Projektdateien gefunden.' }
+    if ($LASTEXITCODE -ne 0 -or $tracked.Count -eq 0) { throw 'No tracked project files found.' }
     # Use the versioned allowlist, never copy the working folder recursively.
     $forbidden = '^(data|outputs|work|feedback|\.git|\.codex|\.agents)/|\.(mp4|m4v|webm|mov|mkv|avi|bak|log|tmp)$'
-    if ($tracked | Where-Object { $_ -match $forbidden }) { throw 'Private oder generierte Dateien im Git-Index. Paket abgebrochen.' }
+    if ($tracked | Where-Object { $_ -match $forbidden }) { throw 'Private or generated files found in the Git index. Packaging stopped.' }
     $manifest = Get-Content -Raw -LiteralPath 'scripts/assets.json' | ConvertFrom-Json
     foreach ($asset in $manifest.assets) {
         $source = Join-Path $taggerRoot $asset.path
-        if (-not (Test-Path -LiteralPath $source) -or (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -ne $asset.sha256) { throw ('Abhängigkeit fehlt oder wurde verändert: ' + $asset.path + '. Bitte Setup.cmd ausführen.') }
+        if (-not (Test-Path -LiteralPath $source) -or (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -ne $asset.sha256) { throw ('Dependency missing or modified: ' + $asset.path + '. Run Setup.cmd first.') }
     }
     $taggerNode = Join-Path $taggerRoot 'runtime/node.exe'
     foreach ($builder in @('scripts/Build-Firefox.mjs', 'scripts/Build-Chrome.mjs')) {
         & $taggerNode $builder
-        if ($LASTEXITCODE -ne 0) { throw ('Erweiterungspaket konnte nicht erstellt werden: ' + $builder) }
+        if ($LASTEXITCODE -ne 0) { throw ('Could not build extension package: ' + $builder) }
     }
     New-Item -ItemType Directory -Force -Path 'outputs' | Out-Null
     $output = Join-Path $taggerRoot 'outputs/Cake-Tagger.zip'
@@ -35,7 +35,7 @@ try {
         $chromeArchive = [IO.Compression.ZipFile]::OpenRead((Join-Path $taggerRoot 'outputs/Cake-Tagger-Chrome.zip'))
         try {
             foreach ($chromeFile in $chromeArchive.Entries) {
-                if ($chromeFile.FullName -match '(^/|\\|(^|/)\.\.(/|$))') { throw 'Ungültiger Pfad im Chrome-Paket.' }
+                if ($chromeFile.FullName -match '(^/|\\|(^|/)\.\.(/|$))') { throw 'Invalid Chrome package path.' }
                 $chromeEntry = $archive.CreateEntry(('Cake-Tagger/extensions/chrome/' + $chromeFile.FullName), [IO.Compression.CompressionLevel]::Optimal)
                 $sourceStream = $chromeFile.Open()
                 $targetStream = $chromeEntry.Open()
@@ -44,5 +44,5 @@ try {
         } finally { $chromeArchive.Dispose() }
     } finally { $archive.Dispose(); $stream.Dispose() }
     Move-Item -LiteralPath $temporary -Destination $output -Force
-    Write-Host ('Paket erstellt: ' + $output)
+    Write-Host ('Package created: ' + $output)
 } finally { Pop-Location }

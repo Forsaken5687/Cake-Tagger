@@ -7,7 +7,7 @@ export function buildExtension(target) {
   if (!['firefox', 'chrome'].includes(target)) throw Error('Unsupported browser.');
   const output = path.join(root, 'outputs', target);
   fs.mkdirSync(output, { recursive: true });
-  const files = ['index.html', 'webext-api.js', 'app.js', 'style.css', 'engine-worker.js', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'corrections.mjs', 'sampling.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'tags.txt', 'THIRD_PARTY.md', 'scripts/assets.json', 'assets/logo.svg',
+  const files = ['index.html', 'webext-api.js', 'app.js', 'style.css', 'engine-worker.js', 'analysis-settings.mjs', 'preferences.mjs', 'settings-ui.mjs', 'i18n.mjs', 'messages.mjs', 'corrections.mjs', 'sampling.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'tags.txt', 'THIRD_PARTY.md', 'scripts/assets.json', 'assets/logo.svg',
     'extension/background.js', 'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/auto-analysis.mjs', 'extension/site-theme.mjs', 'extension/message-contract.mjs', 'extension/upload-adapter.mjs', 'extension/integration.mjs',
     'extension/settings-background.mjs',
     'model/LICENSE.txt', 'model/coverage.json', 'model/provenance.json', 'model/top_tags.txt',
@@ -16,7 +16,7 @@ export function buildExtension(target) {
   const assets = JSON.parse(fs.readFileSync(path.join(root, 'scripts/assets.json'), 'utf8')).assets.filter(a => a.path.startsWith('model/') || a.path.startsWith('vendor/'));
   for (const asset of assets) {
     const data = fs.readFileSync(path.join(root, asset.path));
-    if (createHash('sha256').update(data).digest('hex') !== asset.sha256) throw Error('Prüfsumme stimmt nicht: ' + asset.path);
+    if (createHash('sha256').update(data).digest('hex') !== asset.sha256) throw Error('Checksum mismatch: ' + asset.path);
     files.push(asset.path);
   }
   const manifest = JSON.parse(fs.readFileSync(path.join(root, target === 'chrome' ? 'extension/manifest.chrome.json' : 'extension/manifest.json'), 'utf8'));
@@ -36,6 +36,6 @@ export function buildExtension(target) {
   const directory = Buffer.concat(central), end = Buffer.alloc(22);
   end.writeUInt32LE(0x06054b50); end.writeUInt16LE(entries.length, 8); end.writeUInt16LE(entries.length, 10); end.writeUInt32LE(directory.length, 12); end.writeUInt32LE(offset, 16);
   fs.writeFileSync(path.join(root, `outputs/Cake-Tagger-${target === 'chrome' ? 'Chrome' : 'Firefox'}.zip`), Buffer.concat([...blocks, directory, end]));
-  console.log(`${target}-Paket erstellt: outputs/Cake-Tagger-${target === 'chrome' ? 'Chrome' : 'Firefox'}.zip`);
+  console.log(`${target}-Package created: outputs/Cake-Tagger-${target === 'chrome' ? 'Chrome' : 'Firefox'}.zip`);
 
 }

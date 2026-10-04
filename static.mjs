@@ -5,36 +5,44 @@ import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { validateRecord, applyRecord, exportItem } from './corrections.mjs';
+import { validatedSessionURL } from './session-url.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const token = randomBytes(24).toString('hex');
 const showBrowser = !process.argv.includes('--no-browser') && process.env.CAKE_TAGGER_NO_BROWSER !== '1';
 const port = Number(process.env.CAKE_TAGGER_PORT ?? 8765);
-if (!Number.isInteger(port) || port < 0 || port > 65535) throw Error('Ungültiger Port.');
+if (!Number.isInteger(port) || port < 0 || port > 65535) throw Error('Invalid port.');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.onnx': 'application/octet-stream' };
 fs.mkdirSync(path.join(root, 'data'), { recursive: true });
 const tagList = fs.readFileSync(path.join(root, 'tags.txt'), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
 const downloads = new Map();
+function openBrowser(url) {
+  // Pass the URL as data, never interpolate a session file into PowerShell code.
+  spawn('powershell.exe', ['-NoProfile', '-Command', 'Start-Process -FilePath $env:CAKE_TAGGER_OPEN_URL'], {
+    env: { ...process.env, CAKE_TAGGER_OPEN_URL: url }, windowsHide: true, stdio: 'ignore'
+  }).on('error', error => console.error(error.message));
+}
 function json(res, code, data) { res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(data)); }
 const server = http.createServer(async (req, res) => {
+  // Reject cross-origin requests and alternative Host values, including DNS rebinding.
   const ownHost = '127.0.0.1:' + server.address().port;
   if (req.headers.host !== ownHost || (req.headers.origin && req.headers.origin !== 'http://' + ownHost)) { res.writeHead(403); return res.end('Forbidden'); }
   let requested;
   try { requested = decodeURIComponent(new URL(req.url, 'http://' + ownHost).pathname); } catch { res.writeHead(400); return res.end(); }
   if (req.method === 'GET' && requested.startsWith('/api/download/')) {
     const id = requested.slice('/api/download/'.length), item = downloads.get(id);
-    if (!item || item.expires < Date.now()) { downloads.delete(id); return json(res, 404, { error: 'Download abgelaufen. Bitte den Download erneut erstellen.' }); }
+    if (!item || item.expires < Date.now()) { downloads.delete(id); return json(res, 404, { error: 'Download expired. Please create it again.' }); }
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': 'attachment; filename="cake-tags.json"', 'Content-Length': item.data.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
     return res.end(item.data);
   }
   if (requested === '/api/export' && req.method === 'POST') {
-    if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'Bitte die Oberfläche über Start.cmd öffnen.' });
+    if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'Please open the application using Start.cmd.' });
     try {
-      if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'JSON erwartet.' });
+      if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'Expected JSON.' });
       const chunks = []; let size = 0;
-      for await (const chunk of req) { size += chunk.length; if (size > 16000000) throw Error('Export zu groß.'); chunks.push(chunk); }
+      for await (const chunk of req) { size += chunk.length; if (size > 16000000) throw Error('Export is too large.'); chunks.push(chunk); }
       const input = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-      if (!Array.isArray(input.items) || !input.items.length || input.items.length > 10000) throw Error('Keine gültigen Ergebnisse.');
+      if (!Array.isArray(input.items) || !input.items.length || input.items.length > 10000) throw Error('No valid results.');
       const items = input.items.map(item => { const record = validateRecord(item, tagList); return exportItem(applyRecord({ file: { name: record.filename } }, record)); });
       const snapshot = Buffer.from(JSON.stringify({ version: 2, source: 'cake-tagger-local', createdAt: new Date().toISOString(), items }, null, 2), 'utf8');
       for (const [id, item] of downloads) if (item.expires < Date.now()) downloads.delete(id);
@@ -55,7 +63,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   if (requested === '/') requested = '/index.html';
-  if (!(/^\/(index\.html|webext-api\.js|app\.js|style\.css|engine-worker\.js|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || requested === '/extension/auto-analysis.mjs' || /^\/assets\/logo\.svg$/.test(requested) || /^\/(vendor|model)\/[A-Za-z0-9._-]+$/.test(requested))) { res.writeHead(404); return res.end(); }
+  if (!(/^\/(index\.html|webext-api\.js|app\.js|style\.css|engine-worker\.js|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || requested === '/extension/auto-analysis.mjs' || /^\/assets\/logo\.svg$/.test(requested) || /^\/(vendor|model)\/[A-Za-z0-9._-]+$/.test(requested))) { res.writeHead(404); return res.end(); }
   const file = path.join(root, requested.slice(1));
   let stat;
   try { stat = fs.statSync(file); if (!stat.isFile()) throw Error(); } catch { res.writeHead(404); return res.end(); }
@@ -72,11 +80,10 @@ server.once('error', async e => {
   if (e.code === 'EADDRINUSE') {
     try {
       const previous = JSON.parse(fs.readFileSync(path.join(root, 'data/session.json'), 'utf8'));
-      const address = new URL(previous.url);
-      if (address.origin !== 'http://127.0.0.1:' + port) throw Error();
+      const address = validatedSessionURL(previous.url, port);
       const response = await fetch(address.origin + '/api/status', { headers: { Authorization: 'Bearer ' + address.hash.slice(1) }, signal: AbortSignal.timeout(1500) });
       if ((await response.json()).app !== 'cake-tagger-browser-v1') throw Error();
-      if (showBrowser) spawn('powershell.exe', ['-NoProfile', '-Command', `Start-Process '${previous.url}'`], { windowsHide: true, stdio: 'ignore' });
+      if (showBrowser) openBrowser(address.href);
       return;
     } catch {}
   }
@@ -85,7 +92,7 @@ server.once('error', async e => {
 server.listen(port, '127.0.0.1', () => {
   const url = `http://127.0.0.1:${server.address().port}/#${token}`;
   fs.writeFileSync(path.join(root, 'data/session.json'), JSON.stringify({ url, pid: process.pid }));
-  console.log('Cake Tagger bereit.');
-  if (showBrowser) spawn('powershell.exe', ['-NoProfile', '-Command', `Start-Process '${url}'`], { windowsHide: true, stdio: 'ignore' });
+  console.log('Cake Tagger is ready.');
+  if (showBrowser) openBrowser(url);
 });
 

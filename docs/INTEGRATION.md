@@ -1,45 +1,41 @@
-# Browser-Integration
+# Browser integration
 
-Eine erste Firefox-Erweiterung ist implementiert. Einrichtung und Grenzen stehen unter [Firefox](FIREFOX.md). Die vollständige Prüfung in Firefox steht noch aus; Eine Chrome-Fassung mit demselben Analysecode und einem Modul-Service-Worker ist verfügbar; Einrichtung und Prüfgrenzen stehen unter [Chrome](CHROME.md). Die eigenständige Oberfläche bleibt verfügbar.
+Firefox and Chrome share the same UI, analysis engine and upload adapter. Extensions run without the local HTTP server; the standalone interface remains optional.
 
-## Upload-Ansichten
+## Upload contract
 
-Die folgenden Schnittstellen wurden anhand der Upload-Oberfläche und des öffentlich ausgelieferten Seitencodes geprüft. Sie sind keine stabile API und müssen bei Änderungen der Seite erneut geprüft werden.
+The adapter uses the website's rendered DOM rather than a stable public API. Recheck selectors and behavior whenever cake.ski changes its upload interface.
 
-| Ansicht | Tag-Ziel | Besonderheiten |
+| View | Tag target | Matching |
 | --- | --- | --- |
-| Single | `.stok-up .stok-pillfield` für Tags | Ein Video oder bis zu zehn Bilder als ein Beitrag; zusätzliche Fragen ergänzen Tags. Performer-Feld getrennt behandeln. |
-| Bulk | Tag-Feld innerhalb jeder `.stok-bulk-card` | `.stok-bulk-name` zeigt den Dateinamen. Gemeinsame Tags und Performer stehen außerhalb der Karten. |
+| Single | Tag input inside `.stok-up .stok-pillfield` | Filename from `.stok-up-drop.has-file`; image strips are excluded. |
+| Bulk | Tag input inside each `.stok-bulk-card` | Exact `.stok-bulk-name` text; completed and hidden cards are excluded. |
 
-Die Eingaben sind Typeahead-Felder mit der Klasse `.stok-ta-input`. Die tatsächliche Auswahl liegt im Zustand der Seite; allein das Setzen des Eingabewerts übernimmt keinen Tag. Tags müssen über den vorgesehenen Eingabe-/Auswahlweg hinzugefügt und anhand der sichtbaren Pills bestätigt werden. Mitglieder wählen bestehende Tags; höhere Rollen können Tags direkt übernehmen. Beide Wege benötigen getrennte Prüfungen.
+Shared Bulk tags and performers live outside individual cards. Tag controls use `.stok-ta-input`; assigning text alone does not update the website's selected tags. The adapter invokes the Enter selection path and waits for visible tag pills to confirm each addition. Search behavior can differ between member and maintainer roles.
 
-Single wechselt bei mehreren ausgewählten Dateien mit mindestens einem Video automatisch zu Bulk. Bis zu zehn reine Bilddateien bleiben zunächst ein gemeinsamer Beitrag.
+The site changes from Single to Bulk when multiple selected files include a video. Image-only sets follow a separate workflow and are not supported by this analyzer.
 
-**Bulk überträgt Dateien bereits nach der Auswahl als Server-Entwürfe.** Der abschließende Veröffentlichungsbutton ist nicht der Beginn der Dateiübertragung. Eine Prüfung ohne Upload darf deshalb keine Dateien im echten Bulk-Formular auswählen.
+**Bulk file selection can already upload server-side drafts.** A test requiring no upload must use a local fixture, not select files on the live site.
 
-## Vorgesehener Ablauf
+## Workflow and boundaries
 
-1. Upload-Dateiauswahl in die eingebettete Erweiterungsansicht übernehmen und lokal mit der vorhandenen Engine analysieren.
-2. Vorschläge prüfen und auswählen.
-3. Ausgewählte Tags dem passenden Single-Feld oder der passenden Bulk-Karte zuordnen.
-4. Bestehende Tags erhalten und doppelte Einträge vermeiden. Gemeinsame Bulk-Tags bei jeder Karte berücksichtigen. Ausdrücklich für eine Karte entfernte gemeinsame Tags nicht automatisch wieder ergänzen.
+1. The content script captures user-selected video File references in the active upload mount.
+2. A separate extension-origin iframe receives files through a checked parent/origin/session channel.
+3. New files are analyzed automatically when enabled. Busy selection changes are queued; existing content hashes retain results and corrections.
+4. The user reviews the suggestions and explicitly applies selected tags.
+5. The background relay checks the sender and target tab. Embedded views can address only their own Cake tab.
+6. The adapter requires a unique filename, validates tags against the bundled list, and rechecks the live target for each addition.
 
-Die Erweiterung soll weder Dateien an die Website übergeben noch Upload-, Veröffentlichungs- oder Bestätigungsbuttons bedienen. Die Dateiauswahl auf cake.ski bleibt eine bewusste Handlung des Nutzers. Bei doppelten Dateinamen, fehlenden Karten oder unklarer Zuordnung ist eine Auswahl erforderlich; Tags dürfen nicht anhand der Reihenfolge geraten werden.
+Inherited Bulk tags count as present. A shared tag explicitly removed from one card remains excluded for that card. Duplicate tags are skipped. If a card disappears or an input is edited during transfer, the adapter stops. Previously added tags remain; there is no rollback.
 
-## Firefox
+The extension does not submit files, captions, performers, upload questions, confirmations or publishing actions. Filename matching does not verify content identity between the analysis file and upload card.
 
-Modell, Runtime und Tag-Regeln sollen dieselben festgelegten Versionen wie die eigenständige Anwendung verwenden. Analysecode und Modell gehören zur Erweiterung, nicht zum Seitencode. Das Modell wird nicht pro Video heruntergeladen. Die Firefox-Fassung soll keine Chrome-spezifischen Offscreen-APIs voraussetzen.
+## Settings, theme and browser differences
 
-Firefox unterstützt bei Manifest V3 Hintergrundskripte statt Chrome-Service-Worker. Für WebAssembly ist eine entsprechende Erweiterungs-CSP erforderlich. Die endgültige Architektur und Leistung müssen in Firefox geprüft werden; eine Prüfung im In-App-Browser ersetzt dies nicht.
+Preferences are relayed through the extension background and stored in `storage.local`. Content scripts can read them but cannot save them. Theme updates carry only known color tokens and page language; they are not persisted.
 
-Referenzen: [Mozilla: Hintergrundskripte](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/background), [Mozilla: Content Security Policy](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/content_security_policy).
+Firefox uses a Manifest V3 background script. Chrome uses a module service worker and an async messaging adapter. The extension document uses `runtime.sendMessage` rather than direct tab APIs, including in Firefox's embedded context.
 
-## Prüfung ohne Upload
+## Validation
 
-Eine lokale Prüfansicht verwendet die Upload-Renderer des ausgelieferten Seitencodes mit ersetzten API-Aufrufen und Hilfsfunktionen. Ihre CSP sperrt externe Verbindungen und Formularübermittlungen. Künstliche Dateien dienen ausschließlich der Prüfung von Single-/Bulk-Wechsel und getrennten Tag-Feldern. Seitencode und Versuchsdateien bleiben unter ignoriertem `work/`; sie werden nicht mit dem Projekt ausgeliefert.
-
-Geprüft: Eine Datei bleibt Single, eine zweite Videodatei erzeugt zwei Bulk-Karten. Ein gemeinsamer Tag erscheint bei beiden Karten; ein zusätzlicher Kartentag nur bei seiner Karte.
-
-Dies wurde zusätzlich im echten Upload-Formular mit der Maintainer-Rolle bestätigt: Enter übernimmt einen Tag in die Auswahl und aktualisiert den Zähler. Zwei Videodateien wechseln automatisch auf Bulk und werden bereits vor dem Veröffentlichen als Entwürfe übertragen. Ein gemeinsamer Tag lässt sich für eine einzelne Karte entfernen, ohne die zweite Karte zu ändern. Die Test-Entwürfe wurden über die Entfernen-Schaltflächen verworfen und die Ansicht anschließend in den leeren Single-Zustand zurückgesetzt. Es wurde nichts veröffentlicht.
-
-Der Adapter wurde zusätzlich mit synthetischen Enter-Ereignissen gegen die originale Typeahead-Komponente in einer lokalen Kopie geprüft. Single und Bulk übernehmen Tags; erneute Übernahme erzeugt keine Duplikate, und gemeinsame Tag-Ausschlüsse werden erhalten. Doppelte Dateinamen werden als unklare Zuordnung abgewiesen. Noch offen: die vollständige Firefox-Prüfung mit Content-Script, eingebundener Analyse-Engine und Mitgliederrolle.
+Synthetic tests cover sender boundaries, file message channels, target ambiguity, tag plans and manifests. Local fixtures use isolated upload and analysis origins and intercepted APIs. Real-browser checks are still needed for permissions, codecs, full model inference, member-role search and DOM changes. See [testing](TESTING.md).
