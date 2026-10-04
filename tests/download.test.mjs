@@ -13,7 +13,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['static.mjs', 'native-policy.mjs', 'preferences.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'native-engine.mjs', 'native-client.mjs', 'diagnostics.html', 'diagnostics.mjs', 'runtime-metrics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
+  for (const name of ['static.mjs', 'native-policy.mjs', 'preferences.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'native-engine.mjs', 'native-client.mjs', 'local-session.mjs', 'diagnostics.html', 'diagnostics.mjs', 'runtime-metrics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
   fs.mkdirSync(path.join(root, 'extension'));
   fs.copyFileSync(new URL('../extension/auto-analysis.mjs', import.meta.url), path.join(root, 'extension/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
@@ -33,6 +33,10 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     const connected = await fetch(url.origin + '/api/connect', { method: 'POST', headers: { Origin: extensionOrigin, 'X-Cake-Tagger-Client': 'extension' } });
     assert.equal(connected.headers.get('access-control-allow-origin'), extensionOrigin);
     assert.equal((await connected.json()).token, url.hash.slice(1));
+    assert.equal((await fetch(url.origin+'/api/connect',{method:'POST',headers:{'X-Cake-Tagger-Client':'local'}})).status,403);
+    assert.equal((await fetch(url.origin+'/api/connect',{method:'POST',headers:{Origin:'https://cake.ski','X-Cake-Tagger-Client':'local'}})).status,403);
+    const local=await fetch(url.origin+'/api/connect',{method:'POST',headers:{Origin:url.origin,'X-Cake-Tagger-Client':'local'}});
+    assert.equal(local.status,200);assert.equal((await local.json()).token,url.hash.slice(1));
     assert.equal((await fetch(url.origin + '/api/infer', { method: 'POST' })).status, 401);
     assert.equal((await fetch(url.origin + '/api/infer?parallelism=100', { method: 'POST', headers })).status, 400);
     assert.equal((await fetch(url.origin + '/api/infer', { method: 'POST', headers: { ...headers, 'Content-Type': 'application/octet-stream' }, body: new Uint8Array(4) })).status, 400);

@@ -8,7 +8,7 @@ try {
         & $taggerNode --check $file
         if ($LASTEXITCODE -ne 0) { throw ('Syntax check failed: ' + $file) }
     }
-    foreach ($file in @('native-engine.mjs', 'native-worker.mjs', 'native-client.mjs', 'native-policy.mjs', 'page-bridge.mjs')) {
+    foreach ($file in @('native-engine.mjs', 'native-worker.mjs', 'native-client.mjs', 'local-session.mjs', 'native-policy.mjs', 'page-bridge.mjs')) {
         & $taggerNode --check $file
         if ($LASTEXITCODE -ne 0) { throw ('Syntax check failed: ' + $file) }
     }

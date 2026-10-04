@@ -89,7 +89,7 @@ export const messages = {
   'error.noSelectedTags': { en: 'Please select at least one tag.', de: 'Bitte mindestens einen Tag auswählen.' },
   'error.noValidResults': { en: 'No valid results.', de: 'Keine gültigen Ergebnisse.' },
   'error.noVideosSelected': { en: 'No videos selected.', de: 'Keine Videos ausgewählt.' },
-  'error.openUsingStart': { en: 'Please open the application using Start.cmd.', de: 'Bitte die Oberfläche über Start.cmd öffnen.' },
+  'error.openUsingStart': { en: 'Could not connect to the local application.', de: 'Die Verbindung zum lokalen Programm konnte nicht hergestellt werden.' },
   'error.reloadUploadForm': {
     en: 'Upload form unavailable. Reload cake.ski after loading the extension.',
     de: 'Upload-Formular nicht erreichbar. cake.ski nach dem Laden der Erweiterung neu laden.'

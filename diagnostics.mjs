@@ -2,14 +2,14 @@ import { setLanguage, translatePage, localizedText } from './i18n.mjs';
 import { errorMessage } from './messages.mjs';
 import { memorySnapshot } from './runtime-metrics.mjs';
 import { createNativeClient } from './native-client.mjs';
+import { createLocalSession } from './local-session.mjs';
 
 setLanguage({ language: 'auto' }); translatePage();
 const status = document.querySelector('#status'), report = document.querySelector('#report');
 const run = document.querySelector('#run'), download = document.querySelector('#download');
 let details, busy = false;
-let token = location.hash.slice(1) || sessionStorage.getItem('cake-token') || '';
-if (location.hash) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', '/diagnostics.html'); }
-const client = createNativeClient({ token });
+const session = createLocalSession();
+const client = createNativeClient({ fetcher: session.request });
 localizedText(status, 'analysis.ready'); run.disabled = false;
 // The benchmark uses one constant, synthetic image. It never reads user files.
 run.onclick = async () => {

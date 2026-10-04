@@ -24,6 +24,7 @@
     "extension/site-theme.mjs",
     "i18n.mjs",
     "index.html",
+    "local-session.mjs",
     "mapping.json",
     "messages.mjs",
     "model/LICENSE.txt",

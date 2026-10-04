@@ -7,6 +7,7 @@ import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
 import { installSettings } from './settings-ui.mjs';
 import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
 import { createNativeClient } from './native-client.mjs';
+import { createLocalSession } from './local-session.mjs';
 import { memorySnapshot } from './runtime-metrics.mjs';
 import { installPageBridge } from './page-bridge.mjs';
 import { setLanguage, setSiteLanguage, t, translatePage, localizedText, localizedAttribute } from './i18n.mjs';
@@ -15,10 +16,9 @@ const { isExtension, installIntegration, integrationButton } = connected
   ? await import('./extension/integration.mjs')
   : { isExtension: false, installIntegration() {}, integrationButton() {} };
 const $ = s => document.querySelector(s);
-let token = location.hash.slice(1) || sessionStorage.getItem('cake-token') || '';
-if (location.hash) { sessionStorage.setItem('cake-token', token); history.replaceState(null, '', location.pathname + location.search); }
+const session = createLocalSession();
 const api = async (url, options = {}) => {
-  const response = await fetch(url, { ...options, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', ...options.headers } });
+  const response = await session.request(url, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
   const data = await response.json();
   if (!response.ok) throw messageError(data.error || 'error.requestFailed');
   return data;
@@ -50,7 +50,7 @@ function cancelInference() {
 function infer(frames, parallelism, excludedTags) {
   // One transport per page. Session configuration belongs to the backend.
   if (!nativeClient) {
-    nativeClient = createNativeClient({ token,
+    nativeClient = createNativeClient({ fetcher: session.request,
       onState: state => localizedText($('#status'), state),
       onProgress: (current, total) => localizedText($('#status'), message('analysis.progress', { current, total }))
     });

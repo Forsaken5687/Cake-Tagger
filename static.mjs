@@ -63,7 +63,10 @@ const server = http.createServer(async (req, res) => {
   // A website cannot send this custom header without an approved CORS preflight.
   // Privileged extension fetches may omit Origin; local processes are trusted.
   if (req.method === 'POST' && requested === '/api/connect') {
-    if (req.headers['x-cake-tagger-client'] !== 'extension' || (req.headers.origin && !extensionOrigin)) return json(res, 403, { error: 'error.nativeServer' });
+    const client = req.headers['x-cake-tagger-client'];
+    const local = client === 'local' && req.headers.origin === 'http://' + ownHost;
+    const extension = client === 'extension' && (!req.headers.origin || extensionOrigin);
+    if (!local && !extension) return json(res, 403, { error: 'error.nativeServer' });
     return json(res, 200, { token });
   }
   if (req.method === 'POST' && requested === '/api/infer') {
@@ -184,7 +187,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   if (requested === '/') requested = '/index.html';
-  if (!(/^\/(index\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|page-bridge\.mjs|native-client\.mjs|runtime-metrics\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || /^\/extension\/(auto-analysis|integration|site-theme|message-contract)\.mjs$/.test(requested) || /^\/assets\/logo\.svg$/.test(requested) || requested === '/model/provenance.json')) { res.writeHead(404); return res.end(); }
+  if (!(/^\/(index\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|page-bridge\.mjs|native-client\.mjs|local-session\.mjs|runtime-metrics\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || /^\/extension\/(auto-analysis|integration|site-theme|message-contract)\.mjs$/.test(requested) || /^\/assets\/logo\.svg$/.test(requested) || requested === '/model/provenance.json')) { res.writeHead(404); return res.end(); }
   const file = path.join(root, requested.slice(1));
   let stat;
   try { stat = fs.statSync(file); if (!stat.isFile()) throw Error(); } catch { res.writeHead(404); return res.end(); }

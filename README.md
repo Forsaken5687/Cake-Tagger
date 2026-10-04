@@ -71,6 +71,8 @@ Both standalone and extension exports include system total/free memory and Node 
 - Duplicate upload filenames are rejected during tag transfer. Filename matching does not prove that two files have identical content.
 - Image sets are not supported by the video analysis workflow.
 
+The running application can also be opened directly at `http://127.0.0.1:8765/`. Local pages automatically reconnect when the server session changes, preserving results already in page memory.
+
 ## Privacy and security
 
 Video decoding takes place in the browser. Only 448 × 448 RGBA samples are sent to the Node server on this computer for inference; full videos, filenames and preview images are not sent for analysis or saved by the server. Results and corrections remain in page memory. The server binds only to `127.0.0.1`, authenticates inference requests and rejects unrelated website origins. Downloads are short-lived in-memory snapshots.
