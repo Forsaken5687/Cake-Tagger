@@ -30,7 +30,8 @@ browser.runtime.onMessage.addListener((message, sender) => {
   if(fromCake && message?.type==='cake-tagger:ui-command' && /^[a-f0-9]{32}$/.test(message.channel || '') && Number.isInteger(sender.tab?.id)) {
     const command=message.command;
     if(!command || !['analyze','cancel','export','quit','tag','add','apply'].includes(command.action) || JSON.stringify(command).length>2048)return;
-    return browser.runtime.sendMessage({type:'cake-tagger:ui-command-forwarded',channel:message.channel,tabId:sender.tab.id,command}).catch(()=>null);
+    return browser.runtime.sendMessage({type:'cake-tagger:ui-command-forwarded',channel:message.channel,tabId:sender.tab.id,command})
+      .then(response=>response?.accepted ? {accepted:true} : {error:'error.uploadConnection'}).catch(()=>({error:'error.uploadConnection'}));
   }
   if(popup && message?.type==='cake-tagger:quit')return serverService().then(service=>service.stop()).catch(()=>({error:'error.stopFailed'}));
   if(popup && message?.type==='cake-tagger:open-upload')return (async()=>{
@@ -43,8 +44,9 @@ browser.runtime.onMessage.addListener((message, sender) => {
     // Accept only short-lived export capabilities from our processing bridge.
     // Never let a website choose an arbitrary URL or destination filename.
     if (popup || typeof message.path !== 'string' || message.path.length !== 62 || !/^\/api\/download\/[a-f0-9]{48}$/.test(message.path)) return Promise.resolve({error:'error.requestFailed'});
+    if (!browser.downloads?.download) return Promise.resolve({error:'error.downloadPermission'});
     return Promise.resolve().then(() => browser.downloads.download({url:'http://127.0.0.1:8765'+message.path, filename:'cake-tags.json', conflictAction:'uniquify'}))
-      .then(id => ({started:Number.isInteger(id)})).catch(() => ({error:'error.requestFailed'}));
+      .then(id => ({started:Number.isInteger(id)})).catch(error => ({error:{key:'error.downloadRejected',params:{reason:String(error?.message || 'Unknown error').replace(/\/api\/download\/[a-f0-9]{48}/g,'[export]').slice(0,200)}}}));
   }
   if (message?.type === 'cake-tagger:get-theme' && Number.isInteger(message.tabId) && message.tabId > 0) {
     if (new URL(sender.url).searchParams.get('embedded') === '1' && sender.tab?.id !== message.tabId) return Promise.resolve(null);

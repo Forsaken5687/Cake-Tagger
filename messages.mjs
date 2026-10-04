@@ -122,6 +122,12 @@ export const messages = {
 
   // Export messages.
   'export.description': { en: 'Download selected tags as JSON.', de: 'Ausgewählte Tags als JSON herunterladen.' },
+  'export.preparing': { en:'Preparing JSON export…', de:'JSON-Export wird vorbereitet…' },
+  'export.downloading': { en:'Starting download…', de:'Download wird gestartet…' },
+  'export.started': { en:'Download sent to the browser.', de:'Download an den Browser übergeben.' },
+  'error.downloadPermission': { en:'The extension cannot access the download manager. Enable its download permission or reinstall the current extension.', de:'Die Erweiterung kann nicht auf Downloads zugreifen. Erlaube ihr Downloads oder installiere die aktuelle Erweiterung erneut.' },
+  'error.downloadRejected': { en:'The browser rejected the download: {reason}', de:'Der Browser hat den Download abgelehnt: {reason}' },
+  'error.uploadConnection': { en:'The upload connection is unavailable. Reload the upload page.', de:'Die Verbindung zur Upload-Seite ist nicht verfügbar. Lade die Upload-Seite neu.' },
   'export.download': { en: 'Download JSON', de: 'JSON herunterladen' },
 
   // Language messages.

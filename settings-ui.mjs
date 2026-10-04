@@ -1,3 +1,4 @@
+import { isTrustedEvent } from './trusted-event.mjs';
 import { message, errorMessage, translate } from './messages.mjs';
 import { DEFAULT_SETTINGS, normalizeSettings } from './preferences.mjs';
 
@@ -63,7 +64,7 @@ export function settingsForm(store, tags, onSaved = () => {}, context = {}) {
   reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; parallelism.value = ''; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; autoAnalyze.checked = draft.autoAnalyzeEmbed; renderExclusions(); localizedText(status, ''); };
   form.onsubmit = async event => {
     event.preventDefault();
-    if (context.requireTrusted && (!(event instanceof doc.defaultView.Event) || !event.isTrusted)) return;
+    if (context.requireTrusted && !isTrustedEvent(event)) return;
     save.disabled = reset.disabled = true;
     try {
       await store.save({ ...draft, language: language.value, frames: frames.value, parallelism: parallelism.value || 'auto', showScores: scores.checked, showUncertain: uncertain.checked, autoAnalyzeEmbed: autoAnalyze.checked });

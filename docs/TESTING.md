@@ -44,3 +44,5 @@ Local fixtures can replace WebExtension APIs and intercept website calls, but ca
 ## Release checks
 
 Run the test suite, build both extensions, then run `scripts/Package.ps1`. Verify both manifest versions, required modules, dependency checksums and license notices. Confirm that the release contains the Firefox ZIP and unpacked Chrome directory, and no developer tests, build tools, duplicate extension sources, `data/`, `work/`, videos, session tokens or Git history.
+
+For exports, verify the visible preparation and download-manager status, and test a missing bridge receiver and a rejected download. Verify human clicks in Firefox content scripts as well as Chrome; synthetic page events must not trigger exports or shutdown.

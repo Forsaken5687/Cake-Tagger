@@ -38,4 +38,5 @@ browser.runtime.onMessage.addListener((message,sender)=>{
  if(sender.id===browser.runtime.id && trusted && message?.type==='cake-tagger:settings-updated'){frame.contentWindow.postMessage({type:'cake-tagger:settings-updated',channel},localOrigin);return;}
  if(sender.id!==browser.runtime.id || !trusted || message?.type!=='cake-tagger:ui-command-forwarded' || message.channel!==channel || message.tabId!==target)return;
  frame.contentWindow.postMessage({type:'cake-tagger:command',channel,...message.command},localOrigin);
+ return Promise.resolve({accepted:true});
 });

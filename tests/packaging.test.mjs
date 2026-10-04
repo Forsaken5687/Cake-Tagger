@@ -13,6 +13,7 @@ test('both extension packages contain integration only and retain notices and pr
   assert(!manifest.content_scripts.some(script=>script.js.includes('extension/local-bridge.js')));
   assert(!fs.existsSync(new URL('extension/local-bridge.js',root)));
   assert(fs.existsSync(new URL('settings-ui.mjs',root)));
+  assert(fs.existsSync(new URL('trusted-event.mjs',root)));
   assert(manifest.web_accessible_resources[0].resources.includes('extension/bridge.html'));
   for(const file of ['index.html','app.js','native-client.mjs','sampling.mjs','tagging.mjs','extension/integration.mjs','extension/auto-analysis.mjs','extension/settings-background.mjs'])assert.equal(fs.existsSync(new URL(file,root)),false,file);
   for(const file of ['model/LICENSE.txt','model/provenance.json','vendor/LICENSE-ONNX.txt','vendor/ThirdPartyNotices.txt','scripts/assets.json'])assert.deepEqual(fs.readFileSync(new URL(file,root)),fs.readFileSync(new URL('../'+file,import.meta.url)));

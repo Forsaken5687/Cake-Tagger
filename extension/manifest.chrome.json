@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "host_permissions": [
@@ -56,7 +56,8 @@
         "extension/bridge.html",
         "extension/upload-ui.mjs",
         "settings-ui.mjs",
-        "preferences.mjs"
+        "preferences.mjs",
+        "trusted-event.mjs"
       ],
       "matches": [
         "https://cake.ski/*"

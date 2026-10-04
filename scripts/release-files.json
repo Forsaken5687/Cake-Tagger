@@ -52,6 +52,7 @@
     "tags.txt",
     "vendor/LICENSE-ONNX.txt",
     "vendor/ThirdPartyNotices.txt",
-    "webext-api.js"
+    "webext-api.js",
+    "trusted-event.mjs"
   ]
 }

@@ -27,7 +27,7 @@ const settingsStore = createSettingsStore({ storage: localStorage, events: windo
 let settings;
 try { settings = await settingsStore.load(); } catch { settings = settingsStore.get(); }
 setLanguage(settings); translatePage();
-let allTags = [], entries = [], running = false, controller, stopping = false;
+let allTags = [], entries = [], running = false, controller, stopping = false, exporting = false;
 let mapping, modelSignature, nativeClient;
 // Legacy browser data is left untouched; current results live only in memory.
 const sessionRecords = new Map(), sessionCache = new Map();
@@ -228,14 +228,16 @@ async function analyze(targets = entries, automatic = false) {
 $('#analyze').onclick = () => analyze();
 $('#cancel').onclick = cancelAnalysis;
 $('#export').onclick = async () => {
-  $('#export').disabled = true;
+  if(exporting)return; exporting=true;
+  showMessage('export.preparing'); render();
   try {
     const output = await api('/api/export', { method: 'POST', body: JSON.stringify({ items: entries.filter(e => e.result).map(makeRecord) }) });
+    showMessage('export.downloading');
     const download = await browser.runtime.sendMessage({type:'cake-tagger:download',path:output.download});
     if (!download?.started) throw messageError(download?.error || 'error.requestFailed');
-    showMessage('');
+    showMessage('export.started');
   } catch (e) { showMessage(message('error.exportFailed', { error: errorMessage(e) })); }
-  finally { render(); }
+  finally { exporting=false; render(); }
 };
 $('#quit').onclick = async () => {
   cancelAnalysis(); stopping = true;
@@ -264,7 +266,7 @@ function publishUploadView() {
  const url=new URL(location.href);
  parent.postMessage({type:'cake-tagger:view',channel:url.searchParams.get('channel'),view:{
   settings, language:document.documentElement.lang === 'de' ? 'de' : 'en', status:$('#status').textContent,
-  message:$('#message').textContent, running:running || preparing, stopped:stopping, allTags,
+  message:$('#message').textContent, running:running || preparing, exporting, stopped:stopping, allTags,
   entries:entries.map(entry=>({filename:entry.file.name,sha256:entry.sha256,state:t(entry.state),error:entry.error ? t(entry.error) : '',
    complete:!!entry.result,tags:[...entry.selected].map(([tag,selected])=>{
     const original=entry.result?.tags.find(row=>row.tag===tag)||entry.result?.uncertainScores?.find(row=>row.tag===tag);

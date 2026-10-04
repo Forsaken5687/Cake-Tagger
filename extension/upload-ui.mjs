@@ -1,3 +1,4 @@
+import { isTrustedEvent } from '../trusted-event.mjs';
 import { translate } from '../messages.mjs';
 import { settingsForm } from '../settings-ui.mjs';
 import { inspectUploads } from './upload-adapter.mjs';
@@ -8,7 +9,7 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
  let view, sections=new Map(), signature='';
  const roots=new WeakMap();let nextRoot=0;
  const el=(tag,text,cls)=>{const n=doc.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
- const trusted=event=>event instanceof doc.defaultView.Event && event.isTrusted;
+ const trusted=event=>isTrustedEvent(event);
  const t=(key,params)=>translate(key,view?.language || 'en',params);
  const button=(key,action,cls='')=>{const n=el('button',t(key),cls);n.type='button';n.onclick=event=>{if(trusted(event))action(event);};return n;};
  const command=(action,entry,extra={})=>send({action,filename:entry?.filename,sha256:entry?.sha256,...extra});
@@ -81,7 +82,7 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   status.textContent=view.status;note.textContent=view.message || '';note.hidden=!note.textContent;
   for(const [node,key] of [[analyze,'analysis.start'],[cancel,'analysis.cancel'],[exportButton,'export.download'],[settings,'settings.title'],[quit,'action.quit']])node.textContent=t(key);
   analyze.hidden=view.running;cancel.hidden=!view.running;analyze.disabled=view.stopped||!view.entries.length;
-  exportButton.disabled=view.stopped||!view.entries.some(entry=>entry.complete);settings.disabled=quit.disabled=view.stopped;
+  exportButton.disabled=view.stopped||view.exporting||!view.entries.some(entry=>entry.complete);settings.disabled=quit.disabled=view.stopped;
   paint();
  }
  const onBlur=event=>{if(view && event.target.type==='text' && event.target.closest('.cake-tagger-suggestions'))setTimeout(()=>paint(true),0);};doc.addEventListener('focusout',onBlur);

@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-async function background(downloadFailure = false) {
+async function background(downloadFailure = false, commandReply = {accepted:true}) {
   let listener, click;
   const calls = [];
   const browser = {
     action: { onClicked: { addListener(fn) { click=fn; } } },
-    runtime: { id: 'fixture', getURL: path => 'moz-extension://fixture/' + path, onMessage: { addListener(fn) { listener = fn; } }, sendMessage: async message => { calls.push({ runtime: message }); return true; } },
+    runtime: { id: 'fixture', getURL: path => 'moz-extension://fixture/' + path, onMessage: { addListener(fn) { listener = fn; } }, sendMessage: async message => { calls.push({ runtime: message }); return commandReply; } },
     downloads: {download:async options=>{if(downloadFailure)throw Error('Download denied');calls.push({download:options});return 7;}},
     tabs: {
       create: async options => { calls.push(options); },
@@ -126,5 +126,41 @@ test('download manager rejection returns a visible export error',async()=>{
  const {listener}=await background(true);
  const sender={id:'fixture',url:'moz-extension://fixture/extension/bridge.html?embedded=1',tab:{id:42}};
  const result=await listener({type:'cake-tagger:download',path:'/api/download/'+'a'.repeat(48)},sender);
- assert.equal(result.error,'error.requestFailed');assert.equal(result.started,undefined);
+ assert.equal(result.error.key,'error.downloadRejected');assert.equal(result.error.params.reason,'Download denied');assert.equal(result.started,undefined);
+});
+
+
+test('upload command relay reports missing receivers instead of silently swallowing failure',async()=>{
+ const {listener}=await background(false,undefined);
+ const source={id:'fixture',url:'https://cake.ski/',tab:{id:42}};
+ // A background broadcast must be acknowledged by the matching bridge.
+ const missing=await background(false,null);
+ const result=await missing.listener({type:'cake-tagger:ui-command',channel:'a'.repeat(32),command:{action:'export'}},source);
+ assert.equal(result.error,'error.uploadConnection');
+ const accepted=await listener({type:'cake-tagger:ui-command',channel:'a'.repeat(32),command:{action:'export'}},source);
+ assert.equal(accepted.accepted,true);
+});
+
+
+test('processing bridge relays export RPCs and acknowledges only its own tab commands',async()=>{
+ const {listener,calls}=await background();
+ const channel='a'.repeat(32),origin='moz-extension://fixture';
+ const sender={id:'fixture',url:origin+'/extension/bridge.html?embedded=1&channel='+channel+'&target=42',tab:{id:42}};
+ let messageListener,commandListener;
+ const posted=[],frame={contentWindow:{postMessage:(message,target)=>posted.push({message,target})}},parent={postMessage(){}};
+ const browser={runtime:{id:'fixture',getURL:path=>origin+'/'+path,sendMessage:message=>listener(message,sender),onMessage:{addListener:fn=>{commandListener=fn;}}}};
+ const context={browser,parent,window:{addEventListener:(type,fn)=>{messageListener=fn;}},location:{href:sender.url,origin},document:{querySelector:()=>frame},URL,Set,Number,File:class{},isFileMessage:()=>false,translate:key=>key};
+ const source=(await readFile(new URL('../extension/bridge.mjs',import.meta.url),'utf8')).replace(/^import .*\r?\n/gm,'');
+ await vm.runInNewContext('(async()=>{'+source+'})()',context);
+ const trustedSender={id:'fixture',url:origin+'/_generated_background_page.html'};
+ const forwarded={type:'cake-tagger:ui-command-forwarded',channel,tabId:42,command:{action:'export'}};
+ assert.equal((await commandListener(forwarded,trustedSender)).accepted,true);
+ assert.equal(posted[0].message.action,'export');
+ assert.equal(commandListener({...forwarded,tabId:43},trustedSender),undefined);
+ assert.equal(commandListener(forwarded,{id:'fixture',url:'https://cake.ski/'}),undefined);
+ const rpc={source:frame.contentWindow,origin:'http://127.0.0.1:8765',data:{type:'cake-tagger:rpc',channel,id:1,message:{type:'cake-tagger:download',path:'/api/download/'+'b'.repeat(48)}}};
+ await messageListener(rpc);
+ assert.equal(calls.at(-1).download.url,'http://127.0.0.1:8765'+rpc.data.message.path);
+ assert.equal(posted.at(-1).message.type,'cake-tagger:rpc-response');assert.equal(posted.at(-1).message.response.started,true);
+ const before=calls.length;await messageListener({...rpc,source:parent,origin:'https://cake.ski/'});assert.equal(calls.length,before);
 });

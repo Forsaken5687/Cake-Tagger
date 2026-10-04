@@ -1,5 +1,5 @@
 // Keep the analysis document on the extension origin, separate from the site.
-import { translate } from '../messages.mjs';
+import { translate, errorMessage }  from '../messages.mjs';
 import { readSiteTheme } from './site-theme.mjs';
 import { createUploadUI } from './upload-ui.mjs';
 export function mountUploadPanel(doc, runtime) {
@@ -71,7 +71,10 @@ export function mountUploadPanel(doc, runtime) {
       panel = doc.createElement('section'); panel.className = 'cake-tagger-panel'; panel.setAttribute('aria-label', 'Cake Tagger');
       mount.before(panel);
       ui = createUploadUI(doc,mount,panel,command=>{
-       runtime.sendMessage({type:'cake-tagger:ui-command',channel,command}).catch(()=>{});
+       if(command.action==='export')ui.error(label('export.preparing'));
+       return runtime.sendMessage({type:'cake-tagger:ui-command',channel,command}).then(response=>{
+        if(!response?.accepted)ui.error(label(response?.error || 'error.uploadConnection'));
+       }).catch(error=>ui.error(translate(errorMessage(error),english?'en':'de')));
       }, {save:settings=>runtime.sendMessage({type:'cake-tagger:settings-save',settings}),capabilities:()=>runtime.sendMessage({type:'cake-tagger:capabilities'})});
       void open();
     }

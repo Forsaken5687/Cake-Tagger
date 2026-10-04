@@ -7,7 +7,7 @@ export function buildExtension(target) {
   const output = target === 'chrome' ? path.join(root, 'outputs', target) : path.join(root, 'work', 'extension-build', target);
   fs.mkdirSync(output, { recursive: true });
   // Bundle only extension controls and bridges; model metadata and license notices stay intact.
-  const files = ['webext-api.js', 'preferences.mjs', 'settings-ui.mjs', 'messages.mjs', 'tags.txt', 'assets/logo.svg',
+  const files = ['trusted-event.mjs', 'webext-api.js', 'preferences.mjs', 'settings-ui.mjs', 'messages.mjs', 'tags.txt', 'assets/logo.svg',
     'THIRD_PARTY.md', 'scripts/assets.json', 'model/LICENSE.txt', 'model/coverage.json',
     'model/provenance.json', 'model/top_tags.txt', 'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt',
     'extension/background.js', 'extension/popup.html', 'extension/popup.mjs', 'extension/popup.css', 'extension/server-connection.mjs',
