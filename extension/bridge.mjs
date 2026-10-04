@@ -3,7 +3,7 @@ import { translate } from '../messages.mjs';
 const channel = new URL(location.href).searchParams.get('channel');
 const localOrigin = 'http://127.0.0.1:8765', cakeOrigin = 'https://cake.ski';
 const frame = document.querySelector('#app');
-const allowed = new Set(['cake-tagger:tab-id', 'cake-tagger:get-theme', 'cake-tagger:transfer', 'cake-tagger:list-tabs', 'cake-tagger:settings-notify']);
+const allowed = new Set(['cake-tagger:tab-id', 'cake-tagger:get-theme', 'cake-tagger:transfer', 'cake-tagger:list-tabs', 'cake-tagger:settings-notify', 'cake-tagger:download']);
 window.addEventListener('message', async event => {
   if (event.data?.channel !== channel) return;
   if (isFileMessage(event, parent, cakeOrigin, channel, File) || (event.source === parent && event.origin === cakeOrigin && event.data.type === 'cake-tagger:theme')) {

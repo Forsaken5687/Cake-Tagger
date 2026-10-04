@@ -39,6 +39,13 @@ browser.runtime.onMessage.addListener((message, sender) => {
     else await browser.tabs.create({url:'https://cake.ski/'});return true;
   })();
   if (!fromAnalysis) return;
+  if (message?.type === 'cake-tagger:download') {
+    // Accept only short-lived export capabilities from our processing bridge.
+    // Never let a website choose an arbitrary URL or destination filename.
+    if (popup || typeof message.path !== 'string' || message.path.length !== 62 || !/^\/api\/download\/[a-f0-9]{48}$/.test(message.path)) return Promise.resolve({error:'error.requestFailed'});
+    return Promise.resolve().then(() => browser.downloads.download({url:'http://127.0.0.1:8765'+message.path, filename:'cake-tags.json', conflictAction:'uniquify'}))
+      .then(id => ({started:Number.isInteger(id)})).catch(() => ({error:'error.requestFailed'}));
+  }
   if (message?.type === 'cake-tagger:get-theme' && Number.isInteger(message.tabId) && message.tabId > 0) {
     if (new URL(sender.url).searchParams.get('embedded') === '1' && sender.tab?.id !== message.tabId) return Promise.resolve(null);
     return (async () => {

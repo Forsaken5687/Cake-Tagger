@@ -34,3 +34,5 @@ Run `runtime/node.exe scripts/Build-Firefox.mjs` to build `outputs/Cake-Tagger-F
 Synthetic tests cover message boundaries, settings, filename matching, tag preservation and manifests. Local browser fixtures exercise the shared interface and upload adapter, but do not replace a complete Firefox test of installation, permissions, model inference and transfer. See [testing](TESTING.md).
 
 For data handling and dependency trust, see [security](SECURITY.md).
+
+The extension requires download permission to save JSON exports through the browser download manager. Existing filenames are preserved by adding a numeric suffix. Your browser download preferences control the destination or file chooser.

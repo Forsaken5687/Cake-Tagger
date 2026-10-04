@@ -32,7 +32,7 @@ test('Firefox manifest confines page access and connects only to the local analy
   assert.equal(manifest.background.service_worker, undefined);
   assert.ok(manifest.content_security_policy.extension_pages.includes('http://127.0.0.1:8765'));
   assert.ok(!manifest.content_security_policy.extension_pages.includes('wasm-unsafe-eval'));
-  assert.deepEqual(manifest.permissions, ['storage']);
+  assert.deepEqual(manifest.permissions, ['storage','downloads']);
   assert.equal(manifest.action.default_popup, 'extension/popup.html');
   assert.ok(!manifest.web_accessible_resources[0].resources.some(p => p.startsWith('model/') || p.startsWith('vendor/')));
 });

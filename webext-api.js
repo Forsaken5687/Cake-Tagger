@@ -24,6 +24,7 @@ if (!globalThis.browser && globalThis.chrome?.runtime?.id) {
     },
     action: api.action,
     tabs: api.tabs,
+    downloads: api.downloads,
     storage: api.storage
   };
 }

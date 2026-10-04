@@ -231,8 +231,9 @@ $('#export').onclick = async () => {
   $('#export').disabled = true;
   try {
     const output = await api('/api/export', { method: 'POST', body: JSON.stringify({ items: entries.filter(e => e.result).map(makeRecord) }) });
+    const download = await browser.runtime.sendMessage({type:'cake-tagger:download',path:output.download});
+    if (!download?.started) throw messageError(download?.error || 'error.requestFailed');
     showMessage('');
-    const link = document.createElement('a'); link.href = output.download; link.download = 'cake-tags.json'; document.body.append(link); link.click(); link.remove();
   } catch (e) { showMessage(message('error.exportFailed', { error: errorMessage(e) })); }
   finally { render(); }
 };

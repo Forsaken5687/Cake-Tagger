@@ -97,3 +97,5 @@ Dependencies are pinned in `scripts/assets.json` and provenance metadata. Large 
 CPU inference is the supported path. A GPU provider would require compatibility, timing and output comparisons for this quantized model and should not be enabled merely because WebGPU is available. See [ONNX Runtime WebGPU](https://onnxruntime.ai/docs/tutorials/web/ep-webgpu.html).
 
 Cancel stops preparation or decoding, disconnects the active native request and clears pending automatic batches. The current native call finishes safely; subsequent frames are cancelled. Completed selections survive. Exports separate browser sampling, request time, server phases and estimated transport overhead, with browser identity and frame visibility for cross-browser comparisons.
+
+Exports use the background `downloads.download` API instead of link navigation inside the hidden processing frame. The relay accepts only the local snapshot endpoint with a 48-character hexadecimal capability, fixes the filename and uniquifies conflicts. The manifests require the `downloads` permission. Download start failures reach the upload toolbar.

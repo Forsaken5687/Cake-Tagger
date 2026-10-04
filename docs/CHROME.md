@@ -32,3 +32,5 @@ Chrome uses a module service worker with static imports. `webext-api.js` adapts 
 Automated tests and local fixtures cover messages, settings, manifests and UI behavior. Installation and the real website flow must also be checked in Chrome. See [testing](TESTING.md) and [security](SECURITY.md).
 
 References: [service workers](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/basics), [messaging](https://developer.chrome.com/docs/extensions/develop/concepts/messaging).
+
+The extension requires download permission to save JSON exports through the browser download manager. Existing filenames are preserved by adding a numeric suffix. Your browser download preferences control the destination or file chooser.

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "host_permissions": [
@@ -9,7 +9,8 @@
     "http://127.0.0.1/*"
   ],
   "permissions": [
-    "storage"
+    "storage",
+    "downloads"
   ],
   "icons": {
     "16": "assets/logo-16.png",

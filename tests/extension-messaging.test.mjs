@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-async function background() {
+async function background(downloadFailure = false) {
   let listener, click;
   const calls = [];
   const browser = {
     action: { onClicked: { addListener(fn) { click=fn; } } },
     runtime: { id: 'fixture', getURL: path => 'moz-extension://fixture/' + path, onMessage: { addListener(fn) { listener = fn; } }, sendMessage: async message => { calls.push({ runtime: message }); return true; } },
+    downloads: {download:async options=>{if(downloadFailure)throw Error('Download denied');calls.push({download:options});return 7;}},
     tabs: {
       create: async options => { calls.push(options); },
       query: async () => [{ id: 42, title: 'Cake', url: 'https://cake.ski/' }],
@@ -104,4 +105,26 @@ test('native upload settings use the background API and reject unrelated senders
  assert.equal(reply.settings.showScores,false);assert.equal(calls[0].saved,settings);
  assert.equal((await listener({type:'cake-tagger:capabilities'},sender)).testMaximum,24);
  assert.equal(listener({type:'cake-tagger:settings-save',settings},{...sender,id:'other'}),undefined);
+});
+
+
+test('exports use the download API only for guarded local snapshot paths',async()=>{
+ const {listener,calls}=await background();
+ const sender={id:'fixture',url:'moz-extension://fixture/extension/bridge.html?embedded=1',tab:{id:42}};
+ const path='/api/download/'+'a'.repeat(48),message={type:'cake-tagger:download',path};
+ assert.equal((await listener(message,sender)).started,true);
+ assert.equal(calls.length,1);assert.deepEqual(JSON.parse(JSON.stringify(calls[0].download)),{url:'http://127.0.0.1:8765'+path,filename:'cake-tags.json',conflictAction:'uniquify'});
+ for(const invalid of ['https://example.com/', '/api/stop',path+'?token=x',path+'\n', '/api/download/../private',null,{}])assert.ok((await listener({...message,path:invalid},sender)).error);
+ assert.equal(listener(message,{...sender,id:'other'}),undefined);
+ assert.equal(listener(message,{...sender,url:'https://cake.ski/'}),undefined);
+ assert.ok((await listener(message,{...sender,url:'moz-extension://fixture/extension/popup.html'})).error);
+ assert.equal(calls.length,1);
+});
+
+
+test('download manager rejection returns a visible export error',async()=>{
+ const {listener}=await background(true);
+ const sender={id:'fixture',url:'moz-extension://fixture/extension/bridge.html?embedded=1',tab:{id:42}};
+ const result=await listener({type:'cake-tagger:download',path:'/api/download/'+'a'.repeat(48)},sender);
+ assert.equal(result.error,'error.requestFailed');assert.equal(result.started,undefined);
 });
