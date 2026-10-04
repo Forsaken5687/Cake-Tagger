@@ -13,7 +13,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['static.mjs', 'native-policy.mjs', 'preferences.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'native-engine.mjs', 'native-client.mjs', 'local-session.mjs', 'diagnostics.html', 'diagnostics.mjs', 'runtime-metrics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
+  for (const name of ['analysis.html', 'static.mjs', 'native-policy.mjs', 'preferences.mjs', 'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'native-engine.mjs', 'native-client.mjs', 'local-session.mjs', 'diagnostics.html', 'diagnostics.mjs', 'runtime-metrics.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
   fs.mkdirSync(path.join(root, 'extension'));
   fs.copyFileSync(new URL('../extension/auto-analysis.mjs', import.meta.url), path.join(root, 'extension/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
@@ -26,6 +26,12 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert(fs.existsSync(sessionPath), 'server started');
     const url = new URL(JSON.parse(fs.readFileSync(sessionPath, 'utf8')).url);
     const headers = { Authorization: 'Bearer ' + url.hash.slice(1), 'Content-Type': 'application/json' };
+    for (const route of ['/', '/index.html', '/?integration=1&channel=' + 'a'.repeat(32)]) {
+      const response = await fetch(url.origin + route, { redirect: 'manual' });
+      assert.equal(response.status, 302); assert.equal(response.headers.get('location'), 'https://cake.ski/');
+    }
+    const hidden = await fetch(url.origin + '/analysis.html');
+    assert.equal(hidden.status, 200); assert((await hidden.text()).includes('<body hidden>'));
     assert.equal((await fetch(url.origin + '/api/runtime')).status, 401);
     assert.equal((await fetch(url.origin + '/api/connect', { method: 'POST' })).status, 403);
     assert.equal((await fetch(url.origin + '/api/connect', { method: 'POST', headers: { Origin: 'https://cake.ski', 'X-Cake-Tagger-Client': 'extension' } })).status, 403);

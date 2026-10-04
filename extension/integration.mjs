@@ -2,7 +2,7 @@ import { message, messageError, errorMessage } from '../messages.mjs';
 import { t, localizedText } from '../i18n.mjs';
 import { applySiteTheme } from './site-theme.mjs';
 export const isExtension = new URL(location.href).searchParams.get('integration') === '1';
-let select, refresh, busy = false;
+let busy = false;
 let embeddedTab = Number(new URL(location.href).searchParams.get('target'));
 const embedded = new URL(location.href).searchParams.get('embedded') === '1';
 const channel = new URL(location.href).searchParams.get('channel');
@@ -17,16 +17,16 @@ export function installIntegration(receiveFiles, onTheme = () => {}) {
     if (theme) { lastTheme = JSON.stringify(value); onTheme(theme); }
   };
   const requestTheme = async () => {
-    const tabId = Number(embedded ? embeddedTab : select?.value);
+    const tabId = embeddedTab;
     if (Number.isInteger(tabId) && tabId > 0) {
       try {
         const theme = await browser.runtime.sendMessage({ type: 'cake-tagger:get-theme', tabId });
-        if (tabId === Number(embedded ? embeddedTab : select?.value)) applyTheme(theme);
+        if (tabId === embeddedTab) applyTheme(theme);
       } catch {}
     }
   };
   browser.runtime.onMessage.addListener((message, sender) => {
-    if (sender.id === browser.runtime.id && message?.type === 'cake-tagger:site-theme-updated' && message.tabId === Number(embedded ? embeddedTab : select?.value)) applyTheme(message.theme);
+    if (sender.id === browser.runtime.id && message?.type === 'cake-tagger:site-theme-updated' && message.tabId === embeddedTab) applyTheme(message.theme);
   });
   window.addEventListener('focus', requestTheme);
   if (embedded && channel) {
@@ -45,30 +45,6 @@ export function installIntegration(receiveFiles, onTheme = () => {}) {
     parent.postMessage({ type: 'cake-tagger:ready', channel }, new URL(location.href).searchParams.get('bridgeOrigin'));
     return;
   }
-  const panel = document.createElement('section'); panel.className = 'panel integration-panel';
-  const title = document.createElement('h2'); localizedText(title, 'transfer.title');
-  const label = document.createElement('label'); const labelText = document.createElement('span'); localizedText(labelText, 'transfer.tab'); label.append(labelText);
-  select = document.createElement('select'); select.dataset.i18nAriaLabel = 'transfer.tabLabel'; select.setAttribute('aria-label', t('transfer.tabLabel'));
-  refresh = document.createElement('button'); refresh.className = 'quiet'; localizedText(refresh, 'transfer.refresh');
-  const note = document.createElement('p'); localizedText(note, 'transfer.hint');
-  label.append(select); panel.append(title, label, refresh, note);
-  document.querySelector('#message').before(panel);
-  select.onchange = requestTheme;
-  refresh.onclick = async () => { await refreshTabs(); await requestTheme(); };
-  refresh.onclick();
-}
-
-async function refreshTabs() {
-  const previous = select.value || new URL(location.href).searchParams.get('target');
-  select.replaceChildren();
-  try {
-    const tabs = await browser.runtime.sendMessage({ type: 'cake-tagger:list-tabs' });
-    for (const tab of tabs) {
-      const option = document.createElement('option'); option.value = String(tab.id); option.textContent = tab.title || 'cake.ski'; select.append(option);
-    }
-    if ([...select.options].some(option => option.value === previous)) select.value = previous;
-    if (!tabs.length) { const option = document.createElement('option'); option.value = ''; localizedText(option, 'transfer.noTab'); select.append(option); }
-  } catch { localizedText(document.querySelector('#message'), 'error.sitePermission'); }
 }
 
 export function integrationButton(entry, makeElement, showMessage) {
@@ -78,7 +54,7 @@ export function integrationButton(entry, makeElement, showMessage) {
     if (busy) return;
     const tags = [...entry.selected].filter(([, enabled]) => enabled).map(([tag]) => tag);
     if (!tags.length) return showMessage('error.noSelectedTags');
-    const tabId = Number(embedded ? embeddedTab : select.value);
+    const tabId = embeddedTab;
     if (!Number.isInteger(tabId) || tabId <= 0) return showMessage('error.chooseTab');
     busy = true; button.disabled = true;
     try {

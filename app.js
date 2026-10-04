@@ -4,7 +4,6 @@ import { makeRecord, applyRecord, tagSource } from './corrections.mjs';
 import { samplingPlan } from './sampling.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from './analysis-settings.mjs';
 import { createSettingsStore, suggestionPolicy } from './preferences.mjs';
-import { installSettings } from './settings-ui.mjs';
 import { createUploadAutoAnalysis } from './extension/auto-analysis.mjs';
 import { createNativeClient } from './native-client.mjs';
 import { createLocalSession } from './local-session.mjs';
@@ -12,6 +11,7 @@ import { memorySnapshot } from './runtime-metrics.mjs';
 import { installPageBridge } from './page-bridge.mjs';
 import { setLanguage, setSiteLanguage, t, translatePage, localizedText, localizedAttribute } from './i18n.mjs';
 const connected = installPageBridge();
+if (!connected) { location.replace('https://cake.ski/'); throw Error('Upload integration context required.'); }
 const { isExtension, installIntegration, integrationButton } = connected
   ? await import('./extension/integration.mjs')
   : { isExtension: false, installIntegration() {}, integrationButton() {} };
@@ -234,7 +234,6 @@ installIntegration(receiveFiles, theme => {
   if (!running && mapping) localizedText($('#status'), 'analysis.ready');
   render();
 });
-installSettings(settingsStore, allTags, document.body.classList.contains('embedded'));
 settingsStore.subscribe(next => {
   if (isExtension) browser.runtime.sendMessage({ type: 'cake-tagger:settings-notify' }).catch(() => {});
   settings = next; setLanguage(settings); translatePage();
@@ -258,14 +257,13 @@ function publishUploadView() {
    })}))}},url.searchParams.get('bridgeOrigin'));
 }
 window.addEventListener('cake-tagger:upload-message', async event=>{
- const data=event.detail;if(data?.type!=='cake-tagger:command')return;
+ const data=event.detail;if(data?.type==='cake-tagger:settings-updated'){await settingsStore.load();return;}if(data?.type!=='cake-tagger:command')return;
  const entry=entries.find(e=>e.file.name===data.filename && e.sha256===data.sha256);
  switch(data.action){
   case 'analyze': if(!stopping) await analyze();break;
   case 'cancel': controller?.abort();cancelInference();break;
   case 'export': if(entries.some(e=>e.result)) await $('#export').onclick();break;
   case 'quit': await $('#quit').onclick();break;
-  case 'settings': document.body.classList.add('settings-only');document.querySelector('.settings-open')?.click();break;
   case 'tag': if(entry?.result && entry.selected.has(data.tag) && typeof data.selected==='boolean'){entry.selected.set(data.tag,data.selected);changed(entry);render();}break;
   case 'add': if(entry?.result && !allTags.includes(data.tag))showMessage('error.chooseTag');
    if(entry?.result && allTags.includes(data.tag)){
@@ -276,16 +274,5 @@ window.addEventListener('cake-tagger:upload-message', async event=>{
  }
  publishUploadView();
 });
-document.querySelector('#settings-dialog')?.addEventListener('close',()=>{
- document.body.classList.remove('settings-only');const url=new URL(location.href);
- if(connected) parent.postMessage({type:'cake-tagger:settings-closed',channel:url.searchParams.get('channel')},url.searchParams.get('bridgeOrigin'));
-});
 new MutationObserver(()=>publishUploadView()).observe($('#status'),{childList:true,subtree:true,characterData:true});
 publishUploadView();
-
-if(!connected){
- document.body.classList.add('service-home');
- const title=document.querySelector('#page-title');delete title.dataset.i18n;title.textContent='Cake Tagger';
- const description=document.querySelector('.intro p');localizedText(description,'embed.openUpload');
- const link=document.createElement('a');link.href='https://cake.ski/';link.textContent='cake.ski';description.after(link);
-}

@@ -186,8 +186,8 @@ const server = http.createServer(async (req, res) => {
       serverMemory: { rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, heapTotalBytes: memory.heapTotal, externalBytes: memory.external, arrayBuffersBytes: memory.arrayBuffers } });
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
-  if (requested === '/') requested = '/index.html';
-  if (!(/^\/(index\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|page-bridge\.mjs|native-client\.mjs|local-session\.mjs|runtime-metrics\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || /^\/extension\/(auto-analysis|integration|site-theme|message-contract)\.mjs$/.test(requested) || /^\/assets\/logo\.svg$/.test(requested) || requested === '/model/provenance.json')) { res.writeHead(404); return res.end(); }
+  if (requested === '/' || requested === '/index.html') { res.writeHead(302, { Location: 'https://cake.ski/', 'Cache-Control': 'no-store' }); return res.end(); }
+  if (!(/^\/(analysis\.html|diagnostics\.html|diagnostics\.mjs|webext-api\.js|app\.js|style\.css|page-bridge\.mjs|native-client\.mjs|local-session\.mjs|runtime-metrics\.mjs|tagging\.mjs|analysis-settings\.mjs|preferences\.mjs|settings-ui\.mjs|i18n\.mjs|messages\.mjs|tag-policy\.mjs|sampling\.mjs|corrections\.mjs|mapping\.json|tags\.txt)$/.test(requested) || /^\/extension\/(auto-analysis|integration|site-theme|message-contract)\.mjs$/.test(requested) || /^\/assets\/logo\.svg$/.test(requested) || requested === '/model/provenance.json')) { res.writeHead(404); return res.end(); }
   const file = path.join(root, requested.slice(1));
   let stat;
   try { stat = fs.statSync(file); if (!stat.isFile()) throw Error(); } catch { res.writeHead(404); return res.end(); }

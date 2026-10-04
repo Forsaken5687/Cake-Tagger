@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "browser_specific_settings": {
@@ -48,16 +48,6 @@
         "extension/content.css"
       ],
       "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "http://127.0.0.1/*"
-      ],
-      "js": [
-        "webext-api.js",
-        "extension/local-bridge.js"
-      ],
-      "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
@@ -69,7 +59,9 @@
         "extension/site-theme.mjs",
         "messages.mjs",
         "extension/bridge.html",
-        "extension/upload-ui.mjs"
+        "extension/upload-ui.mjs",
+        "settings-ui.mjs",
+        "preferences.mjs"
       ],
       "matches": [
         "https://cake.ski/*"

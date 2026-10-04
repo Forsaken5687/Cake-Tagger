@@ -70,8 +70,6 @@ select { width: 100%; }
 .card h2 { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
 .card p { font-size: 12px; color: var(--muted); line-height: 1.6; }
 .card-state { margin: 8px 0 16px 43px; }
-.previews { display: flex; gap: 8px; overflow: auto; padding-bottom: 8px; margin: 16px 0 20px; scrollbar-width: thin; scrollbar-color: var(--subtle) var(--panel); }
-.previews img { height: 145px; max-width: 235px; object-fit: contain; border-radius: 9px; background: #090909; flex-shrink: 0; }
 .tag-heading { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--line); }
 .tag-heading h3 { margin: 0; font-size: 11px; font-weight: 600; color: var(--muted); }
 .tag-heading > span { font-size: 10px; color: var(--muted); }
@@ -135,31 +133,12 @@ input[type="checkbox"] { width: 14px; height: 14px; margin: 0; accent-color: var
 @media(max-width:440px){.export-bar{flex-wrap:nowrap;gap:12px}.export-description{max-width:115px}.export-hint{display:none}.export-actions{width:auto}.export-actions button{padding:11px 12px;font-size:11px;white-space:nowrap}.export-actions button span{margin-left:8px}}
 .intro h1{font-size:38px;letter-spacing:-1px}
 .intro{padding:34px 0 26px}
-.preview-thumb{display:block;flex-shrink:0;min-height:0;padding:0;background:transparent;border:0;border-radius:9px;cursor:zoom-in;line-height:0}
-.preview-thumb:hover{background:transparent}
-.preview-thumb img{display:block}
-.preview-open{overflow:hidden}
-#preview-dialog{color:var(--text);background:var(--panel);border:1px solid var(--line-strong);border-radius:16px;width:min(960px,94vw);max-height:94vh;padding:0;overflow:auto}
-#preview-dialog::backdrop{background:#000e}
-.preview-content{padding:16px}
-.preview-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
-#preview-title{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
-.preview-heading button{font-size:12px;min-height:36px;padding:8px 12px;flex-shrink:0}
-#preview-image{display:block;width:100%;height:min(70vh,740px);object-fit:contain;background:#090909;border-radius:8px}
-.preview-navigation{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:14px}
-#preview-position{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-@media(max-width:440px){.preview-content{padding:12px}#preview-image{height:60vh}.preview-heading{gap:8px}.preview-navigation button{padding:9px 12px}}
 /* Extension connection controls reuse the standalone visual language. */
 .integration-panel label { display: inline-flex; flex-direction: column; gap: .5rem; margin-right: .75rem; }
 .integration-panel select { min-width: 16rem; max-width: 100%; }
-body.embedded {
   margin: 0; padding: 14px; min-height: 100vh;
   background: var(--bg); color: var(--text);
 }
-body.embedded .app-header, body.embedded .intro, body.embedded .drop,
-body.embedded .export-bar, body.embedded .page-footer { display: none; }
-body.embedded .upload-layout { display: block; }
-body.embedded .analysis-options { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .settings-open { margin-left: 12px; }
 .app-header #quit { margin-left: auto; }
 .panel-heading { flex-wrap: wrap; }
@@ -182,21 +161,7 @@ body.embedded .analysis-options { display: flex; flex-wrap: wrap; align-items: c
 .settings-status:empty { display: none; }
 @media (max-width: 440px) { #settings-dialog { padding: 18px; } .app-header { flex-wrap: wrap; gap: 12px; } .settings-open { margin-left: 0; } }
 
-body.embedded main { max-width: none; padding: 0; }
-body.embedded .panel, body.embedded .card { padding: 14px; }
-body.embedded .panel-heading { margin-bottom: 14px; }
-body.embedded button { min-height: 36px; padding: 9px 14px; font-weight: 600; }
-body.embedded .results-heading { margin: 24px 0 14px; align-items: center; }
-body.embedded .results-heading h2 { font-size: 16px; margin: 0; }
-body.embedded .empty-state { padding: 24px 16px; }
 
 .settings-field input[type="number"] { width:58%; min-width:0; }
-body.embedded #quit { margin-left:auto; white-space:nowrap; }
 
 .settings-compute-hint { margin:0; color:var(--muted); font-size:12px; line-height:1.6; }
-
-body.embedded:not(.settings-only) main,body.embedded:not(.settings-only) #preview-dialog{display:none}
-body.embedded.settings-only main{display:none}
-body.embedded.settings-only #settings-dialog{width:min(560px,96vw);max-height:95vh;margin:auto;padding:20px}
-
-body.service-home .panel,body.service-home .results-heading,body.service-home #results,body.service-home .export-bar,body.service-home .page-footer{display:none}

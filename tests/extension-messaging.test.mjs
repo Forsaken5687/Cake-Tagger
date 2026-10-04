@@ -17,7 +17,7 @@ async function background() {
       sendMessage: async (id, message) => { calls.push({ id, message }); return { added: message.tags, skipped: [] }; }
     }
   };
-  vm.runInNewContext(await readFile(new URL('../extension/background.js', import.meta.url), 'utf8'), { browser, URL, crypto:globalThis.crypto, Uint8Array, cakeServer:{connect:async refresh=>{assert.equal(refresh,true);return {token:'a'.repeat(48)};}, stop: async () => { calls.push({stop:true}); return {stopped:true}; }} });
+  vm.runInNewContext(await readFile(new URL('../extension/background.js', import.meta.url), 'utf8'), { browser, URL, crypto:globalThis.crypto, Uint8Array, cakeServer:{saveSettings:async (_browser,settings)=>{calls.push({saved:settings});return {settings};},getCapabilities:async()=>({testMaximum:24}),connect:async refresh=>{assert.equal(refresh,true);return {token:'a'.repeat(48)};}, stop: async () => { calls.push({stop:true}); return {stopped:true}; }} });
   return { listener, calls, click };
 }
 
@@ -94,4 +94,14 @@ test('popup Quit calls the local shutdown service and never closes a tab instead
  assert.equal((await listener({type:'cake-tagger:quit'},sender)).stopped,true);
  assert.equal(calls.length,1);assert.equal(calls[0].stop,true);
  assert.equal(listener({type:'cake-tagger:quit'},{...sender,id:'other'}),undefined);
+});
+
+test('native upload settings use the background API and reject unrelated senders',async()=>{
+ const {listener,calls}=await background();
+ const sender={id:'fixture',url:'https://cake.ski/',tab:{id:42}};
+ const settings={uploadLayout:'sidebar'};
+ const reply=await listener({type:'cake-tagger:settings-save',settings},sender);
+ assert.equal(reply.settings.uploadLayout,'sidebar');assert.equal(calls[0].saved,settings);
+ assert.equal((await listener({type:'cake-tagger:capabilities'},sender)).testMaximum,24);
+ assert.equal(listener({type:'cake-tagger:settings-save',settings},{...sender,id:'other'}),undefined);
 });

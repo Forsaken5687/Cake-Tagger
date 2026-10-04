@@ -23,7 +23,7 @@
     "extension/integration.mjs",
     "extension/site-theme.mjs",
     "i18n.mjs",
-    "index.html",
+    "analysis.html",
     "local-session.mjs",
     "mapping.json",
     "messages.mjs",

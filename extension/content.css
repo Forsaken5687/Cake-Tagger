@@ -2,8 +2,34 @@
 .cake-tagger-heading{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px}.cake-tagger-heading span{flex:1;color:var(--cake-text-2,#aaa);font-size:12px}
 .cake-tagger-panel button,.cake-tagger-suggestions button,.cake-tagger-sidebar button{font:inherit;padding:8px 11px;color:var(--cake-text,#fff);background:var(--cake-hover,#303030);border:1px solid var(--cake-border-2,#444);border-radius:8px;cursor:pointer}
 .cake-tagger-heading button:disabled{opacity:.45;cursor:default}.cake-tagger-heading [hidden]{display:none}.cake-tagger-primary{background:var(--cake-accent,#fe2c55)!important;border-color:var(--cake-accent,#fe2c55)!important;color:var(--cake-on-accent,#fff)!important}
-.cake-tagger-frame{position:fixed;left:-10000px;top:0;width:800px;height:600px;border:0;pointer-events:none}.cake-tagger-frame.cake-tagger-settings-frame{left:50%;top:50%;transform:translate(-50%,-50%);width:min(610px,96vw);height:min(760px,94vh);z-index:2147483646;pointer-events:auto;border-radius:14px;box-shadow:0 0 0 100vmax #000b}
+.cake-tagger-frame{position:fixed;left:-10000px;top:0;width:800px;height:600px;border:0;pointer-events:none}
 .cake-tagger-suggestions{padding:13px;border-top:1px solid var(--cake-border-2,#444);background:var(--cake-surface-2,#1c1c1c);color:var(--cake-text,#fff);font:12px system-ui}.cake-tagger-result-heading{display:flex;gap:12px;align-items:start;justify-content:space-between;margin-bottom:12px}.cake-tagger-result-heading small{color:var(--cake-text-2,#999);max-width:65%;font-size:10px}.cake-tagger-tags{display:flex;flex-wrap:wrap;gap:7px}.cake-tagger-chip{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--cake-border-2,#444);border-radius:7px;cursor:pointer}.cake-tagger-chip.is-selected{background:var(--cake-accent-a12,#fe2c5520);border-color:var(--cake-accent-a45,#fe2c5580)}.cake-tagger-chip.is-uncertain{border-style:dashed}.cake-tagger-chip input{accent-color:var(--cake-accent,#fe2c55)}.cake-tagger-chip small{color:var(--cake-text-2,#999);font-size:10px}.cake-tagger-add{display:flex;gap:7px;margin-top:13px}.cake-tagger-add input,.cake-tagger-sidebar select{min-width:0;padding:9px;color:var(--cake-text,#fff);background:var(--cake-bg,#111);border:1px solid var(--cake-border-2,#444);border-radius:8px;font:inherit}.cake-tagger-add input{flex:1}.cake-tagger-result-actions{display:flex;align-items:center;gap:10px;margin-top:12px}.cake-tagger-result-actions small{flex:1;color:var(--cake-text-2,#999)}.cake-tagger-message{padding:0 14px 12px;color:var(--cake-text-2,#aaa);white-space:pre-wrap}.cake-tagger-workspace{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:18px;align-items:start}.cake-tagger-sidebar{position:sticky;top:85px;max-height:calc(100vh - 105px);overflow:auto;background:var(--cake-surface-2,#1c1c1c);border:1px solid var(--cake-border-2,#444);border-radius:12px;padding:16px;color:var(--cake-text,#fff);font:12px system-ui}.cake-tagger-sidebar select{width:100%;margin-bottom:16px}.cake-tagger-focused{outline:1px solid var(--cake-accent,#fe2c55);outline-offset:1px}.cake-tagger-workspace .stok-bulk-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.cake-tagger-workspace .stok-up-mount{min-width:0}.cake-tagger-panel button:focus-visible,.cake-tagger-suggestions input:focus-visible,.cake-tagger-sidebar :focus-visible{outline:2px solid var(--cake-accent,#fe2c55);outline-offset:2px}
 @media(max-width:1100px){.cake-tagger-workspace{grid-template-columns:minmax(0,1fr) 310px}.cake-tagger-workspace .stok-bulk-grid{grid-template-columns:1fr!important}}@media(max-width:780px){.cake-tagger-workspace{grid-template-columns:1fr}.cake-tagger-sidebar{position:static;max-height:none}.cake-tagger-heading span{flex-basis:100%}}
 
 .cake-tagger-other{margin:10px 0}.cake-tagger-other summary{cursor:pointer;color:var(--cake-text-2,#aaa);margin-bottom:8px}
+
+/* Stretch native Bulk cards; a bounded tag area aligns controls across each row. */
+.stok-bulk-card:has(>.cake-tagger-suggestions){display:flex;flex-direction:column;align-self:stretch}
+.stok-bulk-card>.cake-tagger-suggestions{margin-top:auto;display:flex;flex-direction:column;height:330px;box-sizing:border-box}
+.cake-tagger-tag-area{min-height:0;overflow:auto;scrollbar-gutter:stable}
+.stok-bulk-card .cake-tagger-tag-area{flex:1}
+.stok-bulk-card .cake-tagger-result-actions{margin-top:12px}
+.stok-up>.cake-tagger-suggestions{grid-column:1/-1;width:100%;box-sizing:border-box;margin:14px 0;border:1px solid var(--cake-border-2,#444);border-radius:12px}
+.cake-tagger-sidebar{height:calc(100dvh - 105px);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}
+.cake-tagger-sidebar>section{display:flex;flex-direction:column;min-height:0;flex:1}
+.cake-tagger-sidebar .cake-tagger-tag-area{flex:1}
+.cake-tagger-video-list{display:flex;gap:6px;flex:0 0 auto;max-height:100px;overflow:auto;flex-wrap:wrap;margin-bottom:14px}
+.cake-tagger-video-list button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px!important;text-align:left}
+.cake-tagger-video-list [aria-current=true]{border-color:var(--cake-accent,#fe2c55);background:var(--cake-accent-a12,#fe2c5520)}
+.cake-tagger-settings-dialog{box-sizing:border-box;background:var(--cake-surface-2,#1c1c1c);color:var(--cake-text,#eee);border:1px solid var(--cake-border-2,#444);border-radius:14px;padding:22px;width:min(580px,94vw);max-height:90dvh;overflow:auto;font:13px system-ui}
+.cake-tagger-settings-dialog::backdrop{background:#000b}
+.cake-tagger-settings-dialog button,.cake-tagger-settings-dialog input,.cake-tagger-settings-dialog select{font:inherit;background:var(--cake-hover,#303030);color:var(--cake-text,#eee);border:1px solid var(--cake-border-2,#444);border-radius:8px;padding:9px;min-width:0}
+.cake-tagger-settings-dialog .settings-form{display:grid;gap:15px}
+.cake-tagger-settings-dialog .settings-field{display:grid;grid-template-columns:1fr 1.1fr;gap:15px;align-items:center}
+.cake-tagger-settings-dialog .settings-check{grid-template-columns:1fr auto}
+.cake-tagger-settings-dialog input[type=checkbox]{accent-color:var(--cake-accent,#fe2c55)}
+.cake-tagger-settings-dialog .settings-compute-hint,.cake-tagger-settings-dialog .settings-exclusions p{margin:0;color:var(--cake-text-2,#aaa);font-size:12px;line-height:1.5}
+.cake-tagger-settings-dialog .settings-excluded-tags,.cake-tagger-settings-dialog .tag-add,.cake-tagger-settings-dialog .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cake-tagger-settings-dialog .tag-add input{flex:1}.cake-tagger-settings-dialog .settings-actions{justify-content:flex-end}
+.cake-tagger-settings-dialog button[type=submit]{background:var(--cake-accent,#fe2c55);border-color:var(--cake-accent,#fe2c55);color:var(--cake-on-accent,#fff)}
+@media(max-width:780px){.cake-tagger-sidebar{height:560px;max-height:75dvh}.cake-tagger-settings-dialog .settings-field{grid-template-columns:1fr}.cake-tagger-settings-dialog .settings-check{grid-template-columns:1fr auto}}

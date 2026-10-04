@@ -9,9 +9,8 @@ browser.action.onClicked.addListener(async tab => {
 browser.runtime.onMessage.addListener((message, sender) => {
   // Only our analysis document and our content script may use the background relay.
   const analysisUrl = browser.runtime.getURL('extension/bridge.html');
-  const local = /^http:\/\/127\.0\.0\.1:8765\/(?:index\.html)?(?:\?|$)/.test(sender.url || '');
   const popup = sender.url === browser.runtime.getURL('extension/popup.html');
-  const fromAnalysis = popup || local || sender.url === analysisUrl || sender.url?.startsWith(analysisUrl + '?');
+  const fromAnalysis = popup || sender.url === analysisUrl || sender.url?.startsWith(analysisUrl + '?');
   const fromCake = sender.url?.startsWith('https://cake.ski/');
   if (sender.id !== browser.runtime.id || (!fromAnalysis && !fromCake)) return;
   if (fromCake && message?.type === 'cake-tagger:site-theme' && Number.isInteger(sender.tab?.id) && message.theme && JSON.stringify(message.theme).length <= 4096) {
@@ -20,13 +19,17 @@ browser.runtime.onMessage.addListener((message, sender) => {
   if (message?.type === 'cake-tagger:settings-get' || (fromAnalysis && message?.type === 'cake-tagger:settings-notify')) {
     return serverService().then(service => message.type === 'cake-tagger:settings-get' ? service.getSettings(browser) : service.notifySettings(browser)).catch(() => ({ error: 'error.nativeServer' }));
   }
+  if (fromCake && message?.type === 'cake-tagger:settings-save' && message.settings && JSON.stringify(message.settings).length <= 8192) {
+    return serverService().then(service => service.saveSettings(browser, message.settings)).catch(() => ({ error: 'error.requestFailed' }));
+  }
+  if (fromCake && message?.type === 'cake-tagger:capabilities') return serverService().then(service => service.getCapabilities()).catch(() => ({}));
   if (fromAnalysis && message?.type === 'cake-tagger:connect') return serverService().then(service => service.connect(true)).catch(() => ({ error: 'error.nativeServer' }));
   if (message?.type === 'cake-tagger:tab-id') {
     return Promise.resolve(sender.tab?.id ?? null);
   }
   if(fromCake && message?.type==='cake-tagger:ui-command' && /^[a-f0-9]{32}$/.test(message.channel || '') && Number.isInteger(sender.tab?.id)) {
     const command=message.command;
-    if(!command || !['analyze','cancel','export','quit','settings','tag','add','apply'].includes(command.action) || JSON.stringify(command).length>2048)return;
+    if(!command || !['analyze','cancel','export','quit','tag','add','apply'].includes(command.action) || JSON.stringify(command).length>2048)return;
     return browser.runtime.sendMessage({type:'cake-tagger:ui-command-forwarded',channel:message.channel,tabId:sender.tab.id,command}).catch(()=>null);
   }
   if(popup && message?.type==='cake-tagger:quit')return serverService().then(service=>service.stop()).catch(()=>({error:'error.stopFailed'}));

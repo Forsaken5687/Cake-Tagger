@@ -6,19 +6,19 @@ export function buildExtension(target) {
   if (!['firefox', 'chrome'].includes(target)) throw Error('Unsupported browser.');
   const output = target === 'chrome' ? path.join(root, 'outputs', target) : path.join(root, 'work', 'extension-build', target);
   fs.mkdirSync(output, { recursive: true });
-  // Only the page bridge is executable here; model metadata and license notices stay intact.
-  const files = ['webext-api.js', 'preferences.mjs', 'messages.mjs', 'tags.txt', 'assets/logo.svg',
+  // Bundle only extension controls and bridges; model metadata and license notices stay intact.
+  const files = ['webext-api.js', 'preferences.mjs', 'settings-ui.mjs', 'messages.mjs', 'tags.txt', 'assets/logo.svg',
     'THIRD_PARTY.md', 'scripts/assets.json', 'model/LICENSE.txt', 'model/coverage.json',
     'model/provenance.json', 'model/top_tags.txt', 'vendor/LICENSE-ONNX.txt', 'vendor/ThirdPartyNotices.txt',
-    'extension/background.js', 'extension/popup.html', 'extension/popup.mjs', 'extension/popup.css', 'extension/server-connection.mjs', 'extension/local-bridge.js',
+    'extension/background.js', 'extension/popup.html', 'extension/popup.mjs', 'extension/popup.css', 'extension/server-connection.mjs',
     'extension/bridge.html', 'extension/bridge.mjs', 'extension/bridge.css',
     'extension/content.js', 'extension/content.css', 'extension/embedded-upload.mjs', 'extension/upload-ui.mjs',
     'extension/site-theme.mjs', 'extension/message-contract.mjs',
     'extension/upload-adapter.mjs', '_locales/en/messages.json', '_locales/de/messages.json'];
   if (target === 'chrome') files.push('extension/chrome-worker.mjs', ...[16,32,48,128].map(size => `assets/logo-${size}.png`));
   // Prune only obsolete application code, never notices, provenance or unknown user files.
-  const retired = ['index.html', 'app.js', 'style.css', 'native-client.mjs', 'runtime-metrics.mjs',
-    'analysis-settings.mjs', 'settings-ui.mjs', 'i18n.mjs', 'corrections.mjs', 'sampling.mjs',
+  const retired = ['extension/local-bridge.js', 'i18n.mjs', 'index.html', 'app.js', 'style.css', 'native-client.mjs', 'runtime-metrics.mjs',
+    'analysis-settings.mjs', 'corrections.mjs', 'sampling.mjs',
     'tagging.mjs', 'tag-policy.mjs', 'mapping.json', 'extension/integration.mjs',
     'extension/settings-background.mjs', 'extension/auto-analysis.mjs', 'vendor/ort.wasm.min.js',
     'vendor/ort-wasm-simd-threaded.mjs', 'vendor/ort-wasm-simd-threaded.wasm', 'engine-worker.js', 'compute-policy.js', 'inference-pool.mjs'];

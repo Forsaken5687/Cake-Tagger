@@ -71,9 +71,8 @@ export function mountUploadPanel(doc, runtime) {
       panel = doc.createElement('section'); panel.className = 'cake-tagger-panel'; panel.setAttribute('aria-label', 'Cake Tagger');
       mount.before(panel);
       ui = createUploadUI(doc,mount,panel,command=>{
-       if(command.action==='settings')frame?.classList.add('cake-tagger-settings-frame');
        runtime.sendMessage({type:'cake-tagger:ui-command',channel,command}).catch(()=>{});
-      });
+      }, {save:settings=>runtime.sendMessage({type:'cake-tagger:settings-save',settings}),capabilities:()=>runtime.sendMessage({type:'cake-tagger:capabilities'})});
       void open();
     }
     syncFiles(); ui?.refresh();
@@ -96,7 +95,6 @@ export function mountUploadPanel(doc, runtime) {
     if (!frame || event.source !== frame.contentWindow || event.origin !== extensionOrigin || event.data?.channel !== channel) return;
     if (event.data.type === 'cake-tagger:connection-error') ui?.error(label('error.nativeServer'));
     if (event.data.type === 'cake-tagger:view') ui?.update(event.data.view);
-    if (event.data.type === 'cake-tagger:settings-closed') frame.classList.remove('cake-tagger-settings-frame');
     if (event.data.type === 'cake-tagger:ready') { ready = true; lastSelection = ''; syncTheme(true); syncFiles(); }
   });
   const observer = new MutationObserver(() => { clearTimeout(timer); timer = setTimeout(refresh, 100); });

@@ -39,3 +39,9 @@ export async function notifySettings(browser) {
 export async function stop() {
   return request('/api/stop', { method: 'POST', signal: AbortSignal.timeout(60000) });
 }
+
+export async function getCapabilities() { return request('/api/capabilities'); }
+export async function saveSettings(browser, settings) {
+  const result = await request('/api/settings', { method: 'POST', body: JSON.stringify({ settings: normalizeSettings(settings) }) });
+  await notifySettings(browser); return result;
+}

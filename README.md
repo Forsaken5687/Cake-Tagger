@@ -28,16 +28,16 @@ Requires Windows x64 and a current Firefox or Chrome browser with video decoding
 3. Open cake.ski's upload area with the extension installed and select videos.
 4. Review suggestions on the cards or in the side panel, then apply them or download JSON.
 
-The separate analysis window has been removed. Direct Localhost navigation opens a small service page with Settings and Quit. Results are kept only for the current upload-page session. Download anything you want to retain before closing or reloading it. **Quit** cancels unfinished work, waits for the native worker to stop, and shuts down the local server. It is available on the service page, upload toolbar and extension menu.
+The separate analysis window has been removed. Direct Localhost navigation redirects to cake.ski. No standalone tagging or service interface is served. Results are kept only for the current upload-page session. Download anything you want to retain before closing or reloading it. **Quit** cancels unfinished work, waits for the native worker to stop, and shuts down the local server. It is available on the upload toolbar and extension menu.
 
 A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned artifacts and verify SHA-256 checksums. Complete releases include the archives; `Start.cmd` verifies and extracts the native runtime on first use. Analysis works offline afterward.
 
 ## Settings
 
-**Settings** is available on the service page and upload toolbar. Both use one configuration on the local server.
+**Settings** is available on the upload toolbar. Both use one configuration on the local server.
 
-- Upload layout: suggestions directly on each upload card (default), or a sticky side panel with a video selector and Next video control. Layout changes retain selections.
-- Language: Automatic, German or English. Automatic follows cake.ski in connected extension views and the browser language in standalone use. Tag names are unchanged.
+- Upload layout: suggestions directly on each upload card (default), or a sticky side panel with a clickable video list and Next video control. Layout changes retain selections.
+- Language: Automatic, German or English. Automatic follows cake.ski in upload views and the browser language in the extension menu. Tag names are unchanged.
 - Automatically analyze upload videos: enabled by default; applies only to the embedded upload workflow.
 - Images per video: automatic by duration, or a fixed count from 4 to 48.
 - CPU parallelism: leave the field empty for Automatic, or enter a positive thread count. The server recommends a third of its available logical processors and allows manual testing up to their full count. The dialog displays both values. Higher counts can reduce throughput. Changes apply to the next video.
@@ -58,7 +58,7 @@ All views use one centrally managed native backend in Node. Automatic recommends
 
 JSON runtime details include the native provider, configured thread count, ONNX Runtime version, model checksum and memory metrics. Diagnostics also include queue wait time, CPU time, available processors, the recommended thread count and manual test maximum. Optional page heap measurements exclude the native model; unavailable fields are `null`.
 
-Both standalone and extension exports include system total/free memory and Node process memory sampled after inference. Node RSS includes the native runtime, model and server allocations; it is not an isolated model measurement or a sampled peak.
+Exports include system total/free memory and Node process memory sampled after inference. Node RSS includes the native runtime, model and server allocations; it is not an isolated model measurement or a sampled peak.
 
 ## Limitations
 
@@ -71,7 +71,7 @@ Both standalone and extension exports include system total/free memory and Node 
 - Duplicate upload filenames are rejected during tag transfer. Filename matching does not prove that two files have identical content.
 - Image sets are not supported by the video analysis workflow.
 
-The running application can also be opened directly at `http://127.0.0.1:8765/`. Local pages automatically reconnect when the server session changes, preserving results already in page memory.
+The processing frame automatically reconnects when the server session changes, preserving results already in page memory.
 
 ## Privacy and security
 
@@ -81,7 +81,7 @@ Settings are persisted; exports contain filenames and tags. Selecting files on c
 
 ## Development and sharing
 
-For unexpected slowdowns in the standalone application, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It uses the same native Node API and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
+For unexpected slowdowns during analysis, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It uses the same native Node API and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
 
 Development tools and tests belong to the source checkout and are not included in runtime releases. Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Firefox.mjs` and `runtime/node.exe scripts/Build-Chrome.mjs`.
 
