@@ -13,8 +13,8 @@ browser.runtime.onMessage.addListener((message, sender) => {
     return browser.runtime.sendMessage({ type: 'cake-tagger:site-theme-updated', tabId: sender.tab.id, theme: message.theme }).catch(() => null);
   }
   if (message?.type === 'cake-tagger:settings-get' || ((!fromCake) && message?.type === 'cake-tagger:settings-set')) {
-    if (globalThis.cakeSettingsHandler) return globalThis.cakeSettingsHandler(message).catch(() => ({ error: 'Settings could not be saved.' }));
-    return import(browser.runtime.getURL('extension/settings-background.mjs')).then(module => module.handleSettings(browser, message)).catch(() => ({ error: 'Settings could not be saved.' }));
+    if (globalThis.cakeSettingsHandler) return globalThis.cakeSettingsHandler(message).catch(() => ({ error: 'error.settingsSave' }));
+    return import(browser.runtime.getURL('extension/settings-background.mjs')).then(module => module.handleSettings(browser, message)).catch(() => ({ error: 'error.settingsSave' }));
   }
   if (message?.type === 'cake-tagger:tab-id') {
     return Promise.resolve(sender.tab?.id ?? null);
@@ -35,18 +35,18 @@ browser.runtime.onMessage.addListener((message, sender) => {
   }
   if (message?.type !== 'cake-tagger:transfer') return;
   if (!Number.isInteger(message.tabId) || message.tabId <= 0 || typeof message.filename !== 'string' || !message.filename || !Array.isArray(message.tags) || message.tags.length > 258 || message.tags.some(tag => typeof tag !== 'string')) {
-    return Promise.resolve({ error: 'Invalid tag transfer.' });
+    return Promise.resolve({ error: 'error.invalidTagTransfer' });
   }
   const embedded = new URL(sender.url).searchParams.get('embedded') === '1';
   // An embedded view cannot transfer tags into a different Cake tab.
-  if (embedded && sender.tab?.id !== message.tabId) return Promise.resolve({ error: 'Upload tab does not match.' });
+  if (embedded && sender.tab?.id !== message.tabId) return Promise.resolve({ error: 'error.uploadTabDoesNotMatch' });
   return (async () => {
     try {
       const target = await browser.tabs.get(message.tabId);
-      if (!target.url?.startsWith('https://cake.ski/')) return { error: 'Bitte einen cake.ski-Upload-Tab auswählen.' };
+      if (!target.url?.startsWith('https://cake.ski/')) return { error: 'error.chooseTab' };
       return await browser.tabs.sendMessage(message.tabId, { type: 'cake-tagger:append', filename: message.filename, tags: message.tags });
     } catch {
-      return { error: 'Upload form unavailable. Please reload cake.ski.' };
+      return { error: 'error.uploadFormUnavailable' };
     }
   })();
 });

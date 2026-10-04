@@ -1,3 +1,4 @@
+import { messageError, errorMessage } from './messages.mjs';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,7 +12,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const token = randomBytes(24).toString('hex');
 const showBrowser = !process.argv.includes('--no-browser') && process.env.CAKE_TAGGER_NO_BROWSER !== '1';
 const port = Number(process.env.CAKE_TAGGER_PORT ?? 8765);
-if (!Number.isInteger(port) || port < 0 || port > 65535) throw Error('Invalid port.');
+if (!Number.isInteger(port) || port < 0 || port > 65535) throw messageError('error.invalidPort');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.onnx': 'application/octet-stream' };
 fs.mkdirSync(path.join(root, 'data'), { recursive: true });
 const tagList = fs.readFileSync(path.join(root, 'tags.txt'), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
@@ -31,18 +32,18 @@ const server = http.createServer(async (req, res) => {
   try { requested = decodeURIComponent(new URL(req.url, 'http://' + ownHost).pathname); } catch { res.writeHead(400); return res.end(); }
   if (req.method === 'GET' && requested.startsWith('/api/download/')) {
     const id = requested.slice('/api/download/'.length), item = downloads.get(id);
-    if (!item || item.expires < Date.now()) { downloads.delete(id); return json(res, 404, { error: 'Download expired. Please create it again.' }); }
+    if (!item || item.expires < Date.now()) { downloads.delete(id); return json(res, 404, { error: 'error.downloadExpired' }); }
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': 'attachment; filename="cake-tags.json"', 'Content-Length': item.data.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
     return res.end(item.data);
   }
   if (requested === '/api/export' && req.method === 'POST') {
-    if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'Please open the application using Start.cmd.' });
+    if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'error.openUsingStart' });
     try {
-      if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'Expected JSON.' });
+      if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'error.expectedJson' });
       const chunks = []; let size = 0;
-      for await (const chunk of req) { size += chunk.length; if (size > 16000000) throw Error('Export is too large.'); chunks.push(chunk); }
+      for await (const chunk of req) { size += chunk.length; if (size > 16000000) throw messageError('error.exportIsTooLarge'); chunks.push(chunk); }
       const input = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-      if (!Array.isArray(input.items) || !input.items.length || input.items.length > 10000) throw Error('No valid results.');
+      if (!Array.isArray(input.items) || !input.items.length || input.items.length > 10000) throw messageError('error.noValidResults');
       const items = input.items.map(item => { const record = validateRecord(item, tagList); return exportItem(applyRecord({ file: { name: record.filename } }, record)); });
       const snapshot = Buffer.from(JSON.stringify({ version: 2, source: 'cake-tagger-local', createdAt: new Date().toISOString(), items }, null, 2), 'utf8');
       for (const [id, item] of downloads) if (item.expires < Date.now()) downloads.delete(id);
@@ -50,7 +51,7 @@ const server = http.createServer(async (req, res) => {
       const id = randomBytes(24).toString('hex');
       downloads.set(id, { data: snapshot, expires: Date.now() + 5 * 60 * 1000 });
       return json(res, 200, { download: '/api/download/' + id });
-    } catch (e) { return json(res, 400, { error: e.message }); }
+    } catch (e) { return json(res, 400, { error: errorMessage(e) }); }
   }
   if (req.method === 'POST' && requested === '/api/stop') {
     if (req.headers.authorization !== 'Bearer ' + token) { res.writeHead(401); return res.end(); }

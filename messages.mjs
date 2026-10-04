@@ -1,129 +1,238 @@
-// Shared UI messages for page, worker errors and the content-script header.
-export const english = {
-  'Upload-Videos automatisch analysieren': 'Automatically analyze upload videos',
-  'Vorschläge': 'Suggestions', 'Tags übernehmen': 'Apply tags', 'Automatisch': 'Automatic',
-  'Einstellungen': 'Settings', 'Schließen': 'Close', 'Sprache': 'Language', 'Browsersprache': 'Browser language', 'Deutsch': 'Deutsch', 'English': 'English',
-  'Bilder pro Video': 'Images per video', 'Automatisch nach Videolänge': 'Automatic by video length',
-  'Scores anzeigen': 'Show scores', 'Unsichere Vorschläge anzeigen': 'Show uncertain suggestions',
-  'Ausgeschlossene Tags': 'Excluded tags', 'Gilt für neue automatische Vorschläge. Manuelle Tags und vorhandene Auswahlen bleiben erhalten.': 'Applies to new automatic suggestions. Manual tags and existing selections are preserved.',
-  'Tag suchen …': 'Search tags …', 'Tag ausschließen': 'Exclude tag', 'Hinzufügen': 'Add', 'Ausschluss entfernen: ': 'Remove exclusion: ', 'Bitte einen Tag aus der Liste wählen.': 'Please choose a tag from the list.',
-  'Standardwerte': 'Defaults', 'Speichern': 'Save', 'Gespeichert': 'Saved', 'Analyse öffnen': 'Open analysis',
-  'Programm beenden': 'Quit', 'Videos taggen': 'Tag videos', 'Tag-Vorschläge für deine Videos.': 'Tag suggestions for your videos.',
-  'Neue Videos': 'New videos', 'Analyse': 'Analysis', 'Bereit': 'Ready', 'Verbindung wird geprüft …': 'Checking connection …',
-  'Videos hierher ziehen': 'Drop videos here', 'oder klicken und Dateien auswählen': 'or click to choose files', 'Videos auswählen': 'Choose videos',
-  'Tags vorschlagen': 'Suggest tags', 'Analyse abbrechen': 'Cancel analysis', 'Videos & Tags': 'Videos & tags', 'Tag-Auswahl': 'Tag selection',
-  'JSON herunterladen': 'Download JSON', 'Ausgewählte Tags als JSON herunterladen.': 'Download selected tags as JSON.',
-  'Ergebnisse bleiben bis zum Neuladen in dieser Sitzung.': 'Results stay in this session until the page is reloaded.',
-  'Zurück': 'Previous', 'Weiter': 'Next', 'Vorschaubild schließen': 'Close preview', 'Vorheriges Vorschaubild': 'Previous preview', 'Nächstes Vorschaubild': 'Next preview',
-  'Noch keine Videos': 'No videos yet', 'Wähle Videos im Upload-Bereich aus.': 'Choose videos in the upload area.', 'Wähle Videos aus, um deine Tag-Auswahl zusammenzustellen.': 'Choose videos to create your tag selection.',
-  'Wartet auf Analyse': 'Waiting for analysis', 'Videos werden vorbereitet …': 'Preparing videos …', 'Vorschaubilder werden gelesen …': 'Reading preview images …',
-  'Auswahl aus dieser Sitzung übernommen': 'Selection restored from this session', 'Unbekannt': 'Unknown', 'Unsicher': 'Uncertain', 'Vorschlag': 'Suggested', 'Ergänzt': 'Added', 'Ergänzen': 'Add',
-  'Manuell ergänzt': 'Added manually', 'Herkunft im alten Ergebnis nicht dokumentiert': 'Origin not recorded in the old result', 'Ursprünglicher Modellvorschlag': 'Original model suggestion',
-  'Modellscore: Durchschnitt der zwei stärksten Bildtreffer. Keine gemessene Wahrscheinlichkeit für einen richtigen Tag.': 'Model score: average of the two strongest image matches. This is not a measured probability that the tag is correct.',
-  'Keine ausreichend klaren Tags gefunden. Bitte manuell prüfen.': 'No sufficiently clear tags found. Please review manually.',
-  'Aus altem Export übernommen. Ursprüngliche Vorschläge und Scores sind hier nicht vollständig bekannt.': 'Restored from an old export. Original suggestions and scores are not fully known.',
-  'Weiteren Tag suchen …': 'Search for another tag …', 'Bitte einen Tag aus deiner vorhandenen Liste wählen.': 'Please choose a tag from the available list.',
-  'Abgebrochen': 'Cancelled', 'Analyse fehlgeschlagen': 'Analysis failed', 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.': 'Analysis cancelled. Completed results are preserved.',
-  'Programm beendet': 'Stopped', 'Du kannst dieses Fenster schließen.': 'You can close this window.', 'Kleines Tagging-Modell wird geladen …': 'Loading tagging model …',
-  'Tags auf cake.ski ergänzen': 'Add tags on cake.ski', 'Bitte mindestens einen Tag auswählen.': 'Please select at least one tag.', 'Bitte einen cake.ski-Tab auswählen.': 'Please choose a cake.ski tab.',
-  'cake.ski verbinden': 'Connect cake.ski', 'Upload-Tab': 'Upload tab', 'Tabs aktualisieren': 'Refresh tabs', 'Kein cake.ski-Tab geöffnet': 'No cake.ski tab open',
-  'Dieselben Videos auf cake.ski auswählen, dann die geprüften Tags pro Datei ergänzen.': 'Choose the same videos on cake.ski, then add reviewed tags for each file.',
-  'Bitte der Erweiterung Zugriff auf cake.ski erlauben.': 'Please allow the extension to access cake.ski.',
-  'Upload-Tab nicht erreichbar. Bitte cake.ski neu laden.': 'Upload tab unavailable. Please reload cake.ski.',
-  'Upload-Formular nicht erreichbar. Bitte cake.ski neu laden.': 'Upload form unavailable. Please reload cake.ski.',
-  'Upload-Formular nicht erreichbar. cake.ski nach dem Laden der Erweiterung neu laden.': 'Upload form unavailable. Reload cake.ski after loading the extension.',
-  'Einstellungen nicht erreichbar.': 'Settings unavailable.', 'Einstellungen konnten nicht gespeichert werden.': 'Settings could not be saved.',
-  'Pro Video sind maximal 250 MB möglich.': 'Each video can be up to 250 MB.', 'Browser-Erkennung konnte nicht starten.': 'Browser analysis could not start.',
-  'Das Video lässt sich im Browser nicht lesen.': 'The browser cannot read this video.', 'Das Lesen des Videos dauert zu lange.': 'Reading the video took too long.',
-  'Ungültige Videolänge oder Auflösung.': 'Invalid video duration or resolution.', 'Anfrage fehlgeschlagen.': 'Request failed.',
-  'Lokale Tag-Vorschläge': 'Local tag suggestions', 'Öffnen': 'Open', 'Cake Tagger Startseite': 'Cake Tagger home', 'Videoergebnisse': 'Video results'
-};
-const englishPatterns = [
-  [/^Ausschluss entfernen: (.+)$/, (_, tag) => 'Remove exclusion: ' + tag],
-  [/^(\d+) Bilder$/, (_, n) => `${n} images`],
-  [/^(\d+) Videos · (\d+) analysiert$/, (_, n, done) => `${n} videos · ${done} analyzed`],
-  [/^(\d+) ausgewählt$/, (_, n) => `${n} selected`],
-  [/^Analysiere Bild (\d+) \/ (\d+) …$/, (_, n, total) => `Analyzing image ${n} / ${total} …`],
-  [/^(\d+) Vorschaubilder werden analysiert …$/, (_, n) => `Analyzing ${n} preview images …`],
-  [/^Gespeichertes Ergebnis geladen · (\d+) Bilder · bitte prüfen$/, (_, n) => `Cached result loaded · ${n} images · please review`],
-  [/^Analyse abgeschlossen · (\d+) Bilder · ([\d.]+) s · bitte prüfen$/, (_, n, seconds) => `Analysis complete · ${n} images · ${seconds} s · please review`],
-  [/^Vorschaubild (\d+) von (\d+)$/, (_, n, total) => `Preview ${n} of ${total}`],
-  [/^Vorschaubild (\d+) vergrößern$/, (_, n) => `Enlarge preview ${n}`],
-  [/^Vorschaubild (\d+)$/, (_, n) => `Preview ${n}`],
-  [/^Tag ergänzen für (.+)$/, (_, name) => `Add tag for ${name}`],
-  [/^ · erkannt in (\d+) von (\d+) Vorschaubildern$/, (_, n, total) => ` · detected in ${n} of ${total} preview images`],
-  [/^(\d+) Tags ergänzt · (\d+) bereits vorhanden oder ausgeschlossen\.$/, (_, n, skipped) => `${n} tags added · ${skipped} already present or excluded.`],
-  [/^Übernahme fehlgeschlagen: (.+)$/, (_, error) => 'Transfer failed: ' + translate(error, 'en')],
-  [/^Export fehlgeschlagen: (.+)$/, (_, error) => 'Export failed: ' + translate(error, 'en')]
-];
+// Stable message IDs keep wording and runtime data independent of each other.
+export const messages = {
+  // Action messages.
+  'action.add': { en: 'Add', de: 'Hinzufügen' },
+  'action.close': { en: 'Close', de: 'Schließen' },
+  'action.defaults': { en: 'Defaults', de: 'Standardwerte' },
+  'action.next': { en: 'Next', de: 'Weiter' },
+  'action.open': { en: 'Open', de: 'Öffnen' },
+  'action.previous': { en: 'Previous', de: 'Zurück' },
+  'action.quit': { en: 'Quit', de: 'Programm beenden' },
+  'action.save': { en: 'Save', de: 'Speichern' },
 
-Object.assign(english, {
-  "Ungültige Tag-Auswahl.": "Invalid tag selection.",
-  "Ungültige Tag-Übernahme.": "Invalid tag transfer.",
-  "Upload-Tab stimmt nicht überein.": "Upload tab does not match.",
-  "Mehrere Uploads haben diesen Dateinamen. Bitte einzeln übernehmen.": "Multiple uploads have this filename. Apply tags individually.",
-  "Keine passende Datei im Upload-Formular gefunden.": "No matching file found in the upload form.",
-  "Im Tag-Feld steht noch eine Eingabe. Bitte zuerst übernehmen oder leeren.": "The tag field contains unfinished input. Apply or clear it first.",
-  "Das Upload-Formular wurde während der Übernahme geändert.": "The upload form changed during tag transfer.",
-  "Die Tag-Eingabe wurde während der Übernahme geändert.": "The tag input changed during tag transfer.",
-  "Eine Tag-Übernahme läuft bereits.": "A tag transfer is already in progress.",
-  "Ungültiges Modellbild.": "Invalid model input image.",
-  "Modellausgabe passt nicht zur Tagliste.": "Model output does not match the tag list.",
-  "Ungültige Videolänge.": "Invalid video duration.",
-  "Videos dürfen höchstens 10 Minuten lang sein.": "Videos must be no longer than 10 minutes.",
-  "Ungültige Bildanzahl.": "Invalid frame count.",
-  "Ungültige zeitliche Abdeckung.": "Invalid temporal coverage.",
-  "Ungültige Analysezeiten.": "Invalid analysis timings.",
-  "Ungültige Analyse-Regel.": "Invalid analysis policy.",
-  "Ungültige Tags in der Korrektur.": "Invalid tags in the correction.",
-  "Ungültige Dateizuordnung.": "Invalid file association.",
-  "Ungültige Bildauswahl.": "Invalid frame selection.",
-  "Ungültige Analyseangaben.": "Invalid analysis data.",
-  "Ungültige Modell-Scores.": "Invalid model scores.",
-  "Ungültige unsichere Modell-Scores.": "Invalid uncertain model scores.",
-  "Ungültige Tag-Herkunft.": "Invalid tag origin.",
-  "Bitte die Oberfläche über Start.cmd öffnen.": "Please open the application using Start.cmd.",
-  "Download abgelaufen. Bitte den Download erneut erstellen.": "Download expired. Please create it again.",
-  "JSON erwartet.": "Expected JSON.",
-  "Export zu groß.": "Export is too large.",
-  "Keine gültigen Ergebnisse.": "No valid results.",
-  "Ungültiger Port.": "Invalid port.",
-  "Keine Videos ausgewählt.": "No videos selected.",
-  "cake.ski Upload-Tab": "cake.ski upload tab",
-  "Fehler beim Laden der Anwendung.": "Application could not be loaded.",
-  "Netzwerkanfrage fehlgeschlagen.": "Failed to fetch",
-  "Nicht unterstützte Einstellungsnachricht.": "Unsupported settings message.",
-  "Ungültige Sitzungsadresse.": "Invalid session URL."
-});
-english["Cake Tagger – Tag-Vorschläge"] = "Cake Tagger – tag suggestions";
-const german = Object.fromEntries(Object.entries(english).map(([de, en]) => [en, de]));
-const germanPatterns = [
-  [/^Remove exclusion: (.+)$/, (_, tag) => 'Ausschluss entfernen: ' + tag],
-  [/^(\d+) images$/, (_, n) => `${n} Bilder`],
-  [/^(\d+) videos? · (\d+) analyzed$/, (_, n, done) => `${n} Videos · ${done} analysiert`],
-  [/^(\d+) selected$/, (_, n) => `${n} ausgewählt`],
-  [/^Analyzing image (\d+) \/ (\d+) …$/, (_, n, total) => `Analysiere Bild ${n} / ${total} …`],
-  [/^Analyzing (\d+) preview images …$/, (_, n) => `${n} Vorschaubilder werden analysiert …`],
-  [/^Cached result loaded · (\d+) images · please review$/, (_, n) => `Gespeichertes Ergebnis geladen · ${n} Bilder · bitte prüfen`],
-  [/^Analysis complete · (\d+) images · ([\d.]+) s · please review$/, (_, n, seconds) => `Analyse abgeschlossen · ${n} Bilder · ${seconds} s · bitte prüfen`],
-  [/^Preview (\d+) of (\d+)$/, (_, n, total) => `Vorschaubild ${n} von ${total}`],
-  [/^Enlarge preview (\d+)$/, (_, n) => `Vorschaubild ${n} vergrößern`],
-  [/^Preview (\d+)$/, (_, n) => `Vorschaubild ${n}`],
-  [/^Add tag for (.+)$/, (_, name) => `Tag ergänzen für ${name}`],
-  [/^ · detected in (\d+) of (\d+) preview images$/, (_, n, total) => ` · erkannt in ${n} von ${total} Vorschaubildern`],
-  [/^(\d+) tags added · (\d+) already present or excluded\.$/, (_, n, skipped) => `${n} Tags ergänzt · ${skipped} bereits vorhanden oder ausgeschlossen.`],
-  [/^Transfer failed: (.+)$/, (_, error) => 'Übernahme fehlgeschlagen: ' + translate(error, 'de')],
-  [/^Export failed: (.+)$/, (_, error) => 'Export fehlgeschlagen: ' + translate(error, 'de')],
-  [/^Analysis failed: (.+)$/, (_, error) => 'Analyse fehlgeschlagen: ' + translate(error, 'de')],
-  [/^"(.+)" was not accepted by the site\. Previously added tags are preserved\.$/, (_, tag) => `"${tag}" wurde von der Seite nicht übernommen. Bereits ergänzte Tags bleiben erhalten.`]
-];
-// Translate semantic UI messages, not tag names or filenames. Values stay language-neutral in state.
-export function translate(value, language) {
-  if (typeof value !== 'string') return value;
-  const dictionary = language === 'de' ? german : english;
-  if (Object.hasOwn(dictionary, value)) return dictionary[value];
-  for (const [pattern, replace] of language === 'de' ? germanPatterns : englishPatterns) {
-    if (pattern.test(value)) return value.replace(pattern, replace);
-  }
-  return value;
+  // Analysis messages.
+  'analysis.cached': { en: 'Cached result loaded · {count} images · please review', de: 'Gespeichertes Ergebnis geladen · {count} Bilder · bitte prüfen' },
+  'analysis.cancel': { en: 'Cancel analysis', de: 'Analyse abbrechen' },
+  'analysis.cancelled': { en: 'Cancelled', de: 'Abgebrochen' },
+  'analysis.cancelledHint': { en: 'Analysis cancelled. Completed results are preserved.', de: 'Analyse abgebrochen. Fertige Ergebnisse bleiben erhalten.' },
+  'analysis.complete': {
+    en: 'Analysis complete · {count} images · {seconds} s · please review',
+    de: 'Analyse abgeschlossen · {count} Bilder · {seconds} s · bitte prüfen'
+  },
+  'analysis.connecting': { en: 'Checking connection …', de: 'Verbindung wird geprüft …' },
+  'analysis.failed': { en: 'Analysis failed', de: 'Analyse fehlgeschlagen' },
+  'analysis.frameProgress': { en: 'Analyzing {count} preview images …', de: '{count} Vorschaubilder werden analysiert …' },
+  'analysis.loadingModel': { en: 'Loading tagging model …', de: 'Kleines Tagging-Modell wird geladen …' },
+  'analysis.preparing': { en: 'Preparing videos …', de: 'Videos werden vorbereitet …' },
+  'analysis.progress': { en: 'Analyzing image {current} / {total} …', de: 'Analysiere Bild {current} / {total} …' },
+  'analysis.ready': { en: 'Ready', de: 'Bereit' },
+  'analysis.restored': { en: 'Selection restored from this session', de: 'Auswahl aus dieser Sitzung übernommen' },
+  'analysis.sampling': { en: 'Reading preview images …', de: 'Vorschaubilder werden gelesen …' },
+  'analysis.start': { en: 'Suggest tags', de: 'Tags vorschlagen' },
+  'analysis.stopped': { en: 'Stopped', de: 'Programm beendet' },
+  'analysis.title': { en: 'Analysis', de: 'Analyse' },
+  'analysis.waiting': { en: 'Waiting for analysis', de: 'Wartet auf Analyse' },
+
+  // Embed messages.
+  'embed.title': { en: 'Cake Tagger – tag suggestions', de: 'Cake Tagger – Tag-Vorschläge' },
+
+  // Error messages.
+  'error.analysisStart': { en: 'Browser analysis could not start.', de: 'Browser-Erkennung konnte nicht starten.' },
+  'error.chooseExclusion': { en: 'Please choose a tag from the list.', de: 'Bitte einen Tag aus der Liste wählen.' },
+  'error.chooseTab': { en: 'Please choose a cake.ski tab.', de: 'Bitte einen cake.ski-Tab auswählen.' },
+  'error.chooseTag': { en: 'Please choose a tag from the available list.', de: 'Bitte einen Tag aus deiner vorhandenen Liste wählen.' },
+  'error.downloadExpired': { en: 'Download expired. Please create it again.', de: 'Download abgelaufen. Bitte den Download erneut erstellen.' },
+  'error.duplicateFilename': {
+    en: 'Multiple uploads have this filename. Apply tags individually.',
+    de: 'Mehrere Uploads haben diesen Dateinamen. Bitte einzeln übernehmen.'
+  },
+  'error.expectedJson': { en: 'Expected JSON.', de: 'JSON erwartet.' },
+  'error.exportFailed': { en: 'Export failed: {error}', de: 'Export fehlgeschlagen: {error}' },
+  'error.exportIsTooLarge': { en: 'Export is too large.', de: 'Export zu groß.' },
+  'error.invalidAnalysisData': { en: 'Invalid analysis data.', de: 'Ungültige Analyseangaben.' },
+  'error.invalidAnalysisPolicy': { en: 'Invalid analysis policy.', de: 'Ungültige Analyse-Regel.' },
+  'error.invalidAnalysisTimings': { en: 'Invalid analysis timings.', de: 'Ungültige Analysezeiten.' },
+  'error.invalidFileAssociation': { en: 'Invalid file association.', de: 'Ungültige Dateizuordnung.' },
+  'error.invalidFrameCount': { en: 'Invalid frame count.', de: 'Ungültige Bildanzahl.' },
+  'error.invalidFrameSelection': { en: 'Invalid frame selection.', de: 'Ungültige Bildauswahl.' },
+  'error.invalidModelInputImage': { en: 'Invalid model input image.', de: 'Ungültiges Modellbild.' },
+  'error.invalidModelScores': { en: 'Invalid model scores.', de: 'Ungültige Modell-Scores.' },
+  'error.invalidPort': { en: 'Invalid port.', de: 'Ungültiger Port.' },
+  'error.invalidSessionUrl': { en: 'Invalid session URL.', de: 'Ungültige Sitzungsadresse.' },
+  'error.invalidTagOrigin': { en: 'Invalid tag origin.', de: 'Ungültige Tag-Herkunft.' },
+  'error.invalidTagSelection': { en: 'Invalid tag selection.', de: 'Ungültige Tag-Auswahl.' },
+  'error.invalidTagTransfer': { en: 'Invalid tag transfer.', de: 'Ungültige Tag-Übernahme.' },
+  'error.invalidTagsInTheCorrection': { en: 'Invalid tags in the correction.', de: 'Ungültige Tags in der Korrektur.' },
+  'error.invalidTemporalCoverage': { en: 'Invalid temporal coverage.', de: 'Ungültige zeitliche Abdeckung.' },
+  'error.invalidUncertainModelScores': { en: 'Invalid uncertain model scores.', de: 'Ungültige unsichere Modell-Scores.' },
+  'error.invalidVideoDuration': { en: 'Invalid video duration.', de: 'Ungültige Videolänge.' },
+  'error.invalidVideoDurationOrResolution': { en: 'Invalid video duration or resolution.', de: 'Ungültige Videolänge oder Auflösung.' },
+  'error.missingUpload': { en: 'No matching file found in the upload form.', de: 'Keine passende Datei im Upload-Formular gefunden.' },
+  'error.modelOutput': { en: 'Model output does not match the tag list.', de: 'Modellausgabe passt nicht zur Tagliste.' },
+  'error.noSelectedTags': { en: 'Please select at least one tag.', de: 'Bitte mindestens einen Tag auswählen.' },
+  'error.noValidResults': { en: 'No valid results.', de: 'Keine gültigen Ergebnisse.' },
+  'error.noVideosSelected': { en: 'No videos selected.', de: 'Keine Videos ausgewählt.' },
+  'error.openUsingStart': { en: 'Please open the application using Start.cmd.', de: 'Bitte die Oberfläche über Start.cmd öffnen.' },
+  'error.reloadUploadForm': {
+    en: 'Upload form unavailable. Reload cake.ski after loading the extension.',
+    de: 'Upload-Formular nicht erreichbar. cake.ski nach dem Laden der Erweiterung neu laden.'
+  },
+  'error.requestFailed': { en: 'Request failed.', de: 'Anfrage fehlgeschlagen.' },
+  'error.settingsSave': { en: 'Settings could not be saved.', de: 'Einstellungen konnten nicht gespeichert werden.' },
+  'error.settingsUnavailable': { en: 'Settings unavailable.', de: 'Einstellungen nicht erreichbar.' },
+  'error.sitePermission': { en: 'Please allow the extension to access cake.ski.', de: 'Bitte der Erweiterung Zugriff auf cake.ski erlauben.' },
+  'error.tagInputChanged': { en: 'The tag input changed during tag transfer.', de: 'Die Tag-Eingabe wurde während der Übernahme geändert.' },
+  'error.tagRejected': {
+    en: '"{tag}" was not accepted by the site. Previously added tags are preserved.',
+    de: '"{tag}" wurde von der Seite nicht übernommen. Bereits ergänzte Tags bleiben erhalten.'
+  },
+  'error.transferBusy': { en: 'A tag transfer is already in progress.', de: 'Eine Tag-Übernahme läuft bereits.' },
+  'error.transferFailed': { en: 'Transfer failed: {error}', de: 'Übernahme fehlgeschlagen: {error}' },
+  'error.unfinishedTag': {
+    en: 'The tag field contains unfinished input. Apply or clear it first.',
+    de: 'Im Tag-Feld steht noch eine Eingabe. Bitte zuerst übernehmen oder leeren.'
+  },
+  'error.unknown': { en: 'An unexpected error occurred.', de: 'Ein unerwarteter Fehler ist aufgetreten.' },
+  'error.unsupportedSettings': { en: 'Unsupported settings message.', de: 'Nicht unterstützte Einstellungsnachricht.' },
+  'error.uploadChanged': { en: 'The upload form changed during tag transfer.', de: 'Das Upload-Formular wurde während der Übernahme geändert.' },
+  'error.uploadFormUnavailable': { en: 'Upload form unavailable. Please reload cake.ski.', de: 'Upload-Formular nicht erreichbar. Bitte cake.ski neu laden.' },
+  'error.uploadTabDoesNotMatch': { en: 'Upload tab does not match.', de: 'Upload-Tab stimmt nicht überein.' },
+  'error.uploadTabUnavailable': { en: 'Upload tab unavailable. Please reload cake.ski.', de: 'Upload-Tab nicht erreichbar. Bitte cake.ski neu laden.' },
+  'error.videoDecode': { en: 'The browser cannot read this video.', de: 'Das Video lässt sich im Browser nicht lesen.' },
+  'error.videoDurationLimit': { en: 'Videos must be no longer than 10 minutes.', de: 'Videos dürfen höchstens 10 Minuten lang sein.' },
+  'error.videoSize': { en: 'Each video can be up to 250 MB.', de: 'Pro Video sind maximal 250 MB möglich.' },
+  'error.videoTimeout': { en: 'Reading the video took too long.', de: 'Das Lesen des Videos dauert zu lange.' },
+
+  // Export messages.
+  'export.description': { en: 'Download selected tags as JSON.', de: 'Ausgewählte Tags als JSON herunterladen.' },
+  'export.download': { en: 'Download JSON', de: 'JSON herunterladen' },
+
+  // Language messages.
+  'language.de': { en: 'Deutsch', de: 'Deutsch' },
+  'language.en': { en: 'English', de: 'English' },
+
+  // Page messages.
+  'page.description': { en: 'Tag suggestions for your videos.', de: 'Tag-Vorschläge für deine Videos.' },
+  'page.home': { en: 'Cake Tagger home', de: 'Cake Tagger Startseite' },
+  'page.sessionHint': { en: 'Results stay in this session until the page is reloaded.', de: 'Ergebnisse bleiben bis zum Neuladen in dieser Sitzung.' },
+  'page.stoppedHint': { en: 'You can close this window.', de: 'Du kannst dieses Fenster schließen.' },
+  'page.title': { en: 'Tag videos', de: 'Videos taggen' },
+
+  // Preview messages.
+  'preview.close': { en: 'Close preview', de: 'Vorschaubild schließen' },
+  'preview.enlarge': { en: 'Enlarge preview {number}', de: 'Vorschaubild {number} vergrößern' },
+  'preview.image': { en: 'Preview {number}', de: 'Vorschaubild {number}' },
+  'preview.next': { en: 'Next preview', de: 'Nächstes Vorschaubild' },
+  'preview.position': { en: 'Preview {current} of {total}', de: 'Vorschaubild {current} von {total}' },
+  'preview.previous': { en: 'Previous preview', de: 'Vorheriges Vorschaubild' },
+
+  // Results messages.
+  'results.emptyEmbed': { en: 'Choose videos in the upload area.', de: 'Wähle Videos im Upload-Bereich aus.' },
+  'results.emptyStandalone': { en: 'Choose videos to create your tag selection.', de: 'Wähle Videos aus, um deine Tag-Auswahl zusammenzustellen.' },
+  'results.emptyTitle': { en: 'No videos yet', de: 'Noch keine Videos' },
+  'results.label': { en: 'Video results', de: 'Videoergebnisse' },
+  'results.legacyHint': {
+    en: 'Restored from an old export. Original suggestions and scores are not fully known.',
+    de: 'Aus altem Export übernommen. Ursprüngliche Vorschläge und Scores sind hier nicht vollständig bekannt.'
+  },
+  'results.noClearTags': {
+    en: 'No sufficiently clear tags found. Please review manually.',
+    de: 'Keine ausreichend klaren Tags gefunden. Bitte manuell prüfen.'
+  },
+  'results.suggestions': { en: 'Suggestions', de: 'Vorschläge' },
+  'results.summary': { en: '{count} videos · {done} analyzed', de: '{count} Videos · {done} analysiert' },
+  'results.summarySingle': { en: '{count} video · {done} analyzed', de: '{count} Video · {done} analysiert' },
+  'results.title': { en: 'Videos & tags', de: 'Videos & Tags' },
+
+  // Settings messages.
+  'settings.autoAnalyze': { en: 'Automatically analyze upload videos', de: 'Upload-Videos automatisch analysieren' },
+  'settings.autoFrames': { en: 'Automatic by video length', de: 'Automatisch nach Videolänge' },
+  'settings.automatic': { en: 'Automatic', de: 'Automatisch' },
+  'settings.excludeTag': { en: 'Exclude tag', de: 'Tag ausschließen' },
+  'settings.exclusions': { en: 'Excluded tags', de: 'Ausgeschlossene Tags' },
+  'settings.exclusionsHint': {
+    en: 'Applies to new automatic suggestions. Manual tags and existing selections are preserved.',
+    de: 'Gilt für neue automatische Vorschläge. Manuelle Tags und vorhandene Auswahlen bleiben erhalten.'
+  },
+  'settings.frameCount': { en: '{count} images', de: '{count} Bilder' },
+  'settings.frames': { en: 'Images per video', de: 'Bilder pro Video' },
+  'settings.language': { en: 'Language', de: 'Sprache' },
+  'settings.removeExclusion': { en: 'Remove exclusion: {tag}', de: 'Ausschluss entfernen: {tag}' },
+  'settings.scores': { en: 'Show scores', de: 'Scores anzeigen' },
+  'settings.searchTags': { en: 'Search tags …', de: 'Tag suchen …' },
+  'settings.title': { en: 'Settings', de: 'Einstellungen' },
+  'settings.uncertain': { en: 'Show uncertain suggestions', de: 'Unsichere Vorschläge anzeigen' },
+
+  // Tags messages.
+  'tags.add': { en: 'Add', de: 'Ergänzen' },
+  'tags.addForFile': { en: 'Add tag for {filename}', de: 'Tag ergänzen für {filename}' },
+  'tags.added': { en: 'Added', de: 'Ergänzt' },
+  'tags.frameSupport': { en: ' · detected in {count} of {total} preview images', de: ' · erkannt in {count} von {total} Vorschaubildern' },
+  'tags.manualOrigin': { en: 'Added manually', de: 'Manuell ergänzt' },
+  'tags.modelOrigin': { en: 'Original model suggestion', de: 'Ursprünglicher Modellvorschlag' },
+  'tags.score': { en: 'Score {score} %', de: 'Score {score} %' },
+  'tags.scoreHint': {
+    en: 'Model score: average of the two strongest image matches. This is not a measured probability that the tag is correct.',
+    de: 'Modellscore: Durchschnitt der zwei stärksten Bildtreffer. Keine gemessene Wahrscheinlichkeit für einen richtigen Tag.'
+  },
+  'tags.search': { en: 'Search for another tag …', de: 'Weiteren Tag suchen …' },
+  'tags.selectedCount': { en: '{count} selected', de: '{count} ausgewählt' },
+  'tags.selection': { en: 'Tag selection', de: 'Tag-Auswahl' },
+  'tags.suggested': { en: 'Suggested', de: 'Vorschlag' },
+  'tags.uncertain': { en: 'Uncertain', de: 'Unsicher' },
+  'tags.unknown': { en: 'Unknown', de: 'Unbekannt' },
+  'tags.unknownOrigin': { en: 'Origin not recorded in the old result', de: 'Herkunft im alten Ergebnis nicht dokumentiert' },
+
+  // Transfer messages.
+  'transfer.apply': { en: 'Apply tags', de: 'Tags übernehmen' },
+  'transfer.complete': {
+    en: '{count} tags added · {skipped} already present or excluded.',
+    de: '{count} Tags ergänzt · {skipped} bereits vorhanden oder ausgeschlossen.'
+  },
+  'transfer.completeSingle': {
+    en: '{count} tag added · {skipped} already present or excluded.',
+    de: '{count} Tag ergänzt · {skipped} bereits vorhanden oder ausgeschlossen.'
+  },
+  'transfer.hint': {
+    en: 'Choose the same videos on cake.ski, then add reviewed tags for each file.',
+    de: 'Dieselben Videos auf cake.ski auswählen, dann die geprüften Tags pro Datei ergänzen.'
+  },
+  'transfer.noTab': { en: 'No cake.ski tab open', de: 'Kein cake.ski-Tab geöffnet' },
+  'transfer.refresh': { en: 'Refresh tabs', de: 'Tabs aktualisieren' },
+  'transfer.tab': { en: 'Upload tab', de: 'Upload-Tab' },
+  'transfer.tabLabel': { en: 'cake.ski upload tab', de: 'cake.ski Upload-Tab' },
+  'transfer.title': { en: 'Connect cake.ski', de: 'cake.ski verbinden' },
+
+  // Upload messages.
+  'upload.choose': { en: 'Choose videos', de: 'Videos auswählen' },
+  'upload.chooseHint': { en: 'or click to choose files', de: 'oder klicken und Dateien auswählen' },
+  'upload.drop': { en: 'Drop videos here', de: 'Videos hierher ziehen' },
+  'upload.title': { en: 'New videos', de: 'Neue Videos' },
+};
+
+// Plain descriptors survive worker/runtime messaging without translating user data.
+export function message(key, params = {}) { return { key, params }; }
+
+export function translate(value, language, params = {}) {
+  const key = typeof value === 'object' && value !== null ? value.key : value;
+  const entry = Object.hasOwn(messages, key) ? messages[key] : null;
+  if (!entry) return typeof value === 'string' ? value : '';
+  const values = typeof value === 'object' ? value.params || {} : params;
+  return entry[language === 'de' ? 'de' : 'en'].replace(/\{([a-zA-Z]+)\}/g, (placeholder, name) => {
+    if (!Object.hasOwn(values, name)) return placeholder;
+    const value = values[name];
+    return typeof value === 'object' && value !== null ? translate(value, language) : String(value);
+  });
+}
+
+// Error.message stays readable in logs; its descriptor preserves localization at UI boundaries.
+export function messageError(value, params = {}) {
+  const localizedMessage = typeof value === 'string' && Object.hasOwn(messages, value) ? message(value, params) : value;
+  const error = new Error(translate(localizedMessage, 'en'));
+  if (localizedMessage && typeof localizedMessage === 'object') error.localizedMessage = localizedMessage;
+  return error;
+}
+
+export function errorMessage(error) {
+  return error?.localizedMessage || (Object.hasOwn(messages, error?.message) ? message(error.message) : error?.message || message('error.unknown'));
 }

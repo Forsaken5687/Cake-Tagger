@@ -58,7 +58,9 @@ Firefox uses background scripts; Chrome uses `chrome-worker.mjs` with static imp
 
 ## Language, theme and previews
 
-`i18n.mjs` supports German and English. UI source messages are English. The shared `messages.mjs` catalog translates static and parameterized messages, with legacy German keys accepted for compatibility. Visible statuses and errors retain source messages so a language change can refresh them without changing selections. Automatic uses the connected site's language or the standalone browser language. Explicit preferences take priority and tag names remain unchanged.
+`i18n.mjs` supports German and English. The shared `messages.mjs` catalog stores explicit English and German values under stable IDs. Named placeholders carry counts and filenames; descriptors preserve nested errors across worker/runtime messaging. No reverse dictionary or sentence matching is used. `i18n.mjs` retains IDs and parameters for visible text and attributes so language changes refresh them without changing selections. Unrecognized browser/library errors remain readable in their original wording. Automatic uses the connected site's language or the standalone browser language. Explicit preferences take priority and tag names remain unchanged.
+
+When adding UI text, define both languages under a descriptive ID and use identical named placeholders, such as `analysis.progress` with `{current}` and `{total}`. Pass values through `message(id, params)` or `t(id, params)`. Use `localizedText`/`localizedAttribute` for elements that must follow language changes. Create application errors with `messageError` and send their `errorMessage` descriptor across process boundaries. Keep filenames and tag names as literal parameters. The localization tests check referenced IDs, placeholder parity, encoding and nested-error rendering.
 
 `site-theme.mjs` reads known `--cake-*` variables from `.stok-root`. Only validated color values cross the frame boundary. Style/class/language changes update the palette without persistence; separate views receive updates from their selected tab. Playback control updates do not delay root theme synchronization.
 

@@ -58,8 +58,8 @@ test('custom exclusions filter both suggestions and uncertain candidates; defaul
 
 test('language changes translate controls and dynamic analysis messages; tag names stay unchanged', () => {
   setLanguage({ language: 'en' });
-  assert.equal(t('Einstellungen'), 'Settings'); assert.equal(t('16 Bilder'), '16 images');
-  assert.equal(t('Analyse abgeschlossen · 16 Bilder · 3.2 s · bitte prüfen'), 'Analysis complete · 16 images · 3.2 s · please review');
+  assert.equal(t('settings.title'), 'Settings'); assert.equal(t('settings.frameCount', { count: 16 }), '16 images');
+  assert.equal(t('analysis.complete', { count: 16, seconds: 3.2 }), 'Analysis complete · 16 images · 3.2 s · please review');
   assert.equal(t('tattoos'), 'tattoos');
-  setLanguage({ language: 'de' }); assert.equal(t('Einstellungen'), 'Einstellungen');
+  setLanguage({ language: 'de' }); assert.equal(t('settings.title'), 'Einstellungen');
 });

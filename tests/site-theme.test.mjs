@@ -36,8 +36,8 @@ test('theme messages require the correct parent, origin and session; only color 
 
 test('automatic extension language follows Cake while explicit language stays selected', () => {
   setLanguage({ language: 'auto' }, 'de'); setSiteLanguage('en');
-  assert.equal(t('Einstellungen'), 'Settings');
-  setSiteLanguage('de'); assert.equal(t('Einstellungen'), 'Einstellungen');
+  assert.equal(t('settings.title'), 'Settings');
+  setSiteLanguage('de'); assert.equal(t('settings.title'), 'Einstellungen');
   setLanguage({ language: 'en' }); setSiteLanguage('de');
-  assert.equal(t('Einstellungen'), 'Settings');
+  assert.equal(t('settings.title'), 'Settings');
 });

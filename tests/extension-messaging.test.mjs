@@ -51,7 +51,7 @@ test('embedded transfer works with runtime messaging and no browser.tabs API', a
     await button.onclick();
     assert.equal(calls.length, 1);
     assert.deepEqual(calls[0].message.tags, ['tattoos']);
-    assert.match(messages[0], /^1 tags added/);
+    assert.equal(messages[0].key, 'transfer.completeSingle'); assert.deepEqual(messages[0].params, { count: 1, skipped: 0 });
     assert.equal(button.disabled, false);
   } finally {
     for (const [key, value] of Object.entries(previous)) {

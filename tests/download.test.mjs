@@ -13,7 +13,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['static.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
+  for (const name of ['static.mjs', 'messages.mjs', 'session-url.mjs', 'corrections.mjs', 'sampling.mjs', 'analysis-settings.mjs', 'tags.txt']) fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root, name));
   fs.mkdirSync(path.join(root, 'extension'));
   fs.copyFileSync(new URL('../extension/auto-analysis.mjs', import.meta.url), path.join(root, 'extension/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
@@ -43,6 +43,10 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.deepEqual(exported.items[0].tags, ['tattoos']);
     assert.equal(exported.items[0].reviewed, true);
     assert.equal(exported.items[0].analysisPolicy, record.result.analysisPolicy);
+    const malformed = { ...record, result: { ...record.result, analysisPolicy: 'unknown-policy' } };
+    const invalid = await fetch(url.origin + '/api/export', { method: 'POST', headers, body: JSON.stringify({ items: [malformed] }) });
+    assert.equal(invalid.status, 400);
+    assert.equal((await invalid.json()).error.key, 'error.invalidAnalysisPolicy');
     const forbiddenOrigin = await fetch(url.origin + '/api/export', { method: 'POST', headers: { ...headers, Origin: 'https://example.com' }, body: JSON.stringify({ items: [record] }) });
     assert.equal(forbiddenOrigin.status, 403);
     // fetch controls its own Host header; use HTTP directly to exercise rebinding checks.

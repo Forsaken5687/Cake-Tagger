@@ -29,7 +29,7 @@ export function createSettingsStore({ runtime, storage, events } = {}) {
   async function load() {
     if (runtime) {
       const response = await runtime.sendMessage({ type: 'cake-tagger:settings-get' });
-      if (!response || response.error) throw Error(response?.error || 'Settings unavailable.');
+      if (!response || response.error) throw messageError(response?.error || 'error.settingsUnavailable');
       accept(response.settings);
     } else {
       let value; try { value = JSON.parse(storage.getItem(SETTINGS_KEY) || 'null'); } catch { value = null; }
@@ -41,7 +41,7 @@ export function createSettingsStore({ runtime, storage, events } = {}) {
     const next = normalizeSettings(value);
     if (runtime) {
       const response = await runtime.sendMessage({ type: 'cake-tagger:settings-set', settings: next });
-      if (!response || response.error) throw Error(response?.error || 'Settings could not be saved.');
+      if (!response || response.error) throw messageError(response?.error || 'error.settingsSave');
       accept(response.settings);
     } else { storage.setItem(SETTINGS_KEY, JSON.stringify(next)); accept(next); }
     return normalizeSettings(current);

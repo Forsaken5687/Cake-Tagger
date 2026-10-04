@@ -11,9 +11,9 @@ export function mountUploadPanel(doc, runtime) {
     preferences = settings;
     english = settings.language === 'en' || (settings.language === 'auto' && readSiteTheme(doc).language !== 'de');
     if (panel) {
-      if (frame) frame.title = label('Cake Tagger – tag suggestions');
-      panel.querySelector('.cake-tagger-heading span').textContent = label('Suggest tags');
-      panel.querySelector('button').textContent = frame && !frame.hidden ? label('Close') : label('Open');
+      if (frame) frame.title = label('embed.title');
+      panel.querySelector('.cake-tagger-heading span').textContent = label('analysis.start');
+      panel.querySelector('button').textContent = frame && !frame.hidden ? label('action.close') : label('action.open');
     }
   }
   runtime.sendMessage({ type: 'cake-tagger:settings-get' }).then(response => { if (response?.settings) { applyLanguage(response.settings); refresh(); } }).catch(() => {});
@@ -48,10 +48,10 @@ export function mountUploadPanel(doc, runtime) {
   }
 
   async function open() {
-    if (frame) { frame.hidden = !frame.hidden; panel.querySelector('button').textContent = frame.hidden ? label('Open') : label('Close'); return; }
+    if (frame) { frame.hidden = !frame.hidden; panel.querySelector('button').textContent = frame.hidden ? label('action.open') : label('action.close'); return; }
     channel = [...crypto.getRandomValues(new Uint8Array(16))].map(n => n.toString(16).padStart(2, '0')).join('');
     frame = doc.createElement('iframe');
-    frame.title = label('Cake Tagger – tag suggestions'); frame.className = 'cake-tagger-frame';
+    frame.title = label('embed.title'); frame.className = 'cake-tagger-frame';
     const url = new URL(runtime.getURL('index.html')); url.searchParams.set('embedded', '1'); url.searchParams.set('channel', channel);
     const created = frame, owner = panel;
     try {
@@ -59,7 +59,7 @@ export function mountUploadPanel(doc, runtime) {
       if (Number.isInteger(id) && id > 0) url.searchParams.set('target', String(id));
     } catch { /* The embedded document can also request its tab ID. */ }
     if (frame !== created || !owner.isConnected) return;
-    frame.src = url.href; panel.append(frame); panel.querySelector('button').textContent = label('Close');
+    frame.src = url.href; panel.append(frame); panel.querySelector('button').textContent = label('action.close');
   }
 
   function refresh() {
@@ -74,8 +74,8 @@ export function mountUploadPanel(doc, runtime) {
       panel = doc.createElement('section'); panel.className = 'cake-tagger-panel'; panel.setAttribute('aria-label', 'Cake Tagger');
       const head = doc.createElement('div'); head.className = 'cake-tagger-heading';
       const title = doc.createElement('strong'); title.textContent = 'Cake Tagger';
-      const note = doc.createElement('span'); note.textContent = label('Suggest tags');
-      const button = doc.createElement('button'); button.type = 'button'; button.textContent = label('Open'); button.addEventListener('click', open);
+      const note = doc.createElement('span'); note.textContent = label('analysis.start');
+      const button = doc.createElement('button'); button.type = 'button'; button.textContent = label('action.open'); button.addEventListener('click', open);
       head.append(title, note, button); panel.append(head); mount.before(panel);
     }
     if (preferences.autoAnalyzeEmbed && !frame && activeFiles().length) void open();

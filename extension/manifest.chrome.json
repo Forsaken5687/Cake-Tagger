@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "Local video tag suggestions and transfer to cake.ski upload fields.",
   "host_permissions": [
     "https://cake.ski/*"

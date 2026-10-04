@@ -1,4 +1,5 @@
 (async () => {
+  const { errorMessage } = await import(browser.runtime.getURL('messages.mjs'));
   const { readSiteTheme } = await import(browser.runtime.getURL('extension/site-theme.mjs'));
   const { inspectUploads, appendTags } = await import(browser.runtime.getURL('extension/upload-adapter.mjs'));
   const text = await fetch(browser.runtime.getURL('tags.txt')).then(r => r.text());
@@ -13,10 +14,10 @@
     if (message?.type === 'cake-tagger:theme-request') return Promise.resolve(readSiteTheme(document));
     if (message?.type === 'cake-tagger:inspect') return Promise.resolve(inspectUploads(document).map(({ id, filename, tags }) => ({ id, filename, tags })));
     if (message?.type !== 'cake-tagger:append' || typeof message.filename !== 'string') return;
-    if (busy) return Promise.resolve({ error: 'A tag transfer is already in progress.' });
+    if (busy) return Promise.resolve({ error: 'error.transferBusy' });
     busy = true;
     return appendTags(document, message.filename, message.tags, allowed)
-      .catch(e => ({ error: e.message }))
+      .catch(e => ({ error: errorMessage(e) }))
       .finally(() => { busy = false; });
   });
 })();

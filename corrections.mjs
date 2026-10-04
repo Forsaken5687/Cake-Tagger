@@ -1,3 +1,4 @@
+import { messageError } from './messages.mjs';
 import { MAX_FRAMES, MAX_DURATION } from './sampling.mjs';
 import { validateTimings, validateAnalysisPolicy } from './analysis-settings.mjs';
 
@@ -42,27 +43,27 @@ export function exportItem(entry) {
 export function validateRecord(input, tags) {
   const allowed = new Set(tags);
   const list = value => {
-    if (!Array.isArray(value) || value.length > tags.length || value.some(t => typeof t !== 'string' || !allowed.has(t))) throw Error('Invalid tags in the correction.');
+    if (!Array.isArray(value) || value.length > tags.length || value.some(t => typeof t !== 'string' || !allowed.has(t))) throw messageError('error.invalidTagsInTheCorrection');
     return [...new Set(value)];
   };
-  if (!input || typeof input.filename !== 'string' || !input.filename || input.filename.length > 240 || !/^[a-f0-9]{64}$/.test(input.sha256) || typeof input.reviewed !== 'boolean' || typeof input.originalSuggestionsKnown !== 'boolean') throw Error('Invalid file association.');
+  if (!input || typeof input.filename !== 'string' || !input.filename || input.filename.length > 240 || !/^[a-f0-9]{64}$/.test(input.sha256) || typeof input.reviewed !== 'boolean' || typeof input.originalSuggestionsKnown !== 'boolean') throw messageError('error.invalidFileAssociation');
   const r = input.result;
   validateAnalysisPolicy(r?.analysisPolicy);
-  if (r?.samplingMode != null && !['auto', 'fixed'].includes(r.samplingMode)) throw Error('Invalid frame selection.');
-  if (r?.durationSeconds != null && (!Number.isFinite(r.durationSeconds) || r.durationSeconds <= 0 || r.durationSeconds > MAX_DURATION)) throw Error('Invalid video duration.');
-  if (!r || r.sha256 !== input.sha256 || !Array.isArray(r.tags) || r.tags.length > tags.length || !Number.isInteger(r.sampledFrames) || r.sampledFrames < 1 || r.sampledFrames > MAX_FRAMES || (r.threshold != null && (!Number.isFinite(r.threshold) || r.threshold < 0 || r.threshold > 1)) || typeof r.model !== 'string' || r.model.length > 120) throw Error('Invalid analysis data.');
+  if (r?.samplingMode != null && !['auto', 'fixed'].includes(r.samplingMode)) throw messageError('error.invalidFrameSelection');
+  if (r?.durationSeconds != null && (!Number.isFinite(r.durationSeconds) || r.durationSeconds <= 0 || r.durationSeconds > MAX_DURATION)) throw messageError('error.invalidVideoDuration');
+  if (!r || r.sha256 !== input.sha256 || !Array.isArray(r.tags) || r.tags.length > tags.length || !Number.isInteger(r.sampledFrames) || r.sampledFrames < 1 || r.sampledFrames > MAX_FRAMES || (r.threshold != null && (!Number.isFinite(r.threshold) || r.threshold < 0 || r.threshold > 1)) || typeof r.model !== 'string' || r.model.length > 120) throw messageError('error.invalidAnalysisData');
   const suggestions = r.tags.map(row => {
-    if (!row || !allowed.has(row.tag) || !Number.isFinite(row.confidence) || row.confidence < 0 || row.confidence > 1 || (row.supportingFrames != null && (!Number.isInteger(row.supportingFrames) || row.supportingFrames < 1 || row.supportingFrames > r.sampledFrames))) throw Error('Invalid model scores.');
+    if (!row || !allowed.has(row.tag) || !Number.isFinite(row.confidence) || row.confidence < 0 || row.confidence > 1 || (row.supportingFrames != null && (!Number.isInteger(row.supportingFrames) || row.supportingFrames < 1 || row.supportingFrames > r.sampledFrames))) throw messageError('error.invalidModelScores');
     return { tag: row.tag, confidence: row.confidence, ...(row.supportingFrames != null ? { supportingFrames: row.supportingFrames } : {}) };
   });
   const date = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : null;
   const uncertain = list(r.uncertain);
-  if (r.uncertainScores != null && (!Array.isArray(r.uncertainScores) || r.uncertainScores.length > uncertain.length)) throw Error('Invalid uncertain model scores.');
+  if (r.uncertainScores != null && (!Array.isArray(r.uncertainScores) || r.uncertainScores.length > uncertain.length)) throw messageError('error.invalidUncertainModelScores');
   const uncertainScores = r.uncertainScores == null ? null : r.uncertainScores.map(row => {
-    if (!row || !uncertain.includes(row.tag) || !Number.isFinite(row.confidence) || row.confidence < 0 || row.confidence > 1 || !Number.isInteger(row.supportingFrames) || row.supportingFrames < 0 || row.supportingFrames > r.sampledFrames) throw Error('Invalid uncertain model scores.');
+    if (!row || !uncertain.includes(row.tag) || !Number.isFinite(row.confidence) || row.confidence < 0 || row.confidence > 1 || !Number.isInteger(row.supportingFrames) || row.supportingFrames < 0 || row.supportingFrames > r.sampledFrames) throw messageError('error.invalidUncertainModelScores');
     return { tag: row.tag, confidence: row.confidence, supportingFrames: row.supportingFrames };
   });
-  if (input.tagSources != null && (typeof input.tagSources !== 'object' || Array.isArray(input.tagSources) || Object.entries(input.tagSources).some(([tag, source]) => !allowed.has(tag) || !['suggestion', 'manual', 'unknown'].includes(source)))) throw Error('Invalid tag origin.');
+  if (input.tagSources != null && (typeof input.tagSources !== 'object' || Array.isArray(input.tagSources) || Object.entries(input.tagSources).some(([tag, source]) => !allowed.has(tag) || !['suggestion', 'manual', 'unknown'].includes(source)))) throw messageError('error.invalidTagOrigin');
   return { filename: input.filename, sha256: input.sha256, tags: list(input.tags), candidateTags: list(input.candidateTags),
     ...(input.tagSources != null ? { tagSources: Object.fromEntries(Object.entries(input.tagSources)) } : {}),
     reviewed: input.reviewed, originalSuggestionsKnown: input.originalSuggestionsKnown,
