@@ -1,3 +1,4 @@
+import { createBridgeConnection } from './command-relay.mjs';
 import { isFileMessage } from '../src/shared/message-contract.mjs';
 import { translate } from '../src/shared/messages.mjs';
 const channel = new URL(location.href).searchParams.get('channel');
@@ -6,6 +7,11 @@ const frame = document.querySelector('#app');
 const allowed = new Set(['cake-tagger:tab-id', 'cake-tagger:get-theme', 'cake-tagger:transfer', 'cake-tagger:list-tabs', 'cake-tagger:settings-notify', 'cake-tagger:download']);
 window.addEventListener('message', async event => {
   if (event.data?.channel !== channel) return;
+  if (event.source === parent && event.origin === cakeOrigin && event.data.type === 'cake-tagger:ensure-connection' && Number.isSafeInteger(event.data.id)) {
+    const accepted = await commandConnection.ensure();
+    parent.postMessage({type:'cake-tagger:connection-checked',channel,id:event.data.id,accepted},cakeOrigin);
+    return;
+  }
   if (isFileMessage(event, parent, cakeOrigin, channel, File) || (event.source === parent && event.origin === cakeOrigin && event.data.type === 'cake-tagger:theme')) {
     frame.contentWindow.postMessage(event.data, localOrigin); return;
   }
@@ -30,16 +36,11 @@ try {
   parent.postMessage({ type: 'cake-tagger:connection-error', channel }, cakeOrigin);
 }
 
-// The bridge initiates a tab-bound port; broadcasts cannot locate this frame reliably.
-const commandPort=browser.runtime.connect({name:'cake-tagger:upload:'+channel});
-commandPort.onMessage.addListener(message=>{
- if(message?.type!=='command' || !Number.isSafeInteger(message.id))return;
- frame.contentWindow.postMessage({type:'cake-tagger:command',channel,...message.command},localOrigin);
- commandPort.postMessage({type:'ack',id:message.id,accepted:true});
+// The owner renews its tab/channel grant before asking us to recover the port.
+const commandConnection=createBridgeConnection(browser.runtime,channel,command=>{
+ frame.contentWindow.postMessage({type:'cake-tagger:command',channel,...command},localOrigin);
 });
-// Keep Chrome's service worker alive while this upload session is open.
-const heartbeat=setInterval(()=>{try{commandPort.postMessage({type:'ping'});}catch{}},20000);
-commandPort.onDisconnect.addListener(()=>{clearInterval(heartbeat);parent.postMessage({type:'cake-tagger:command-connection-error',channel},cakeOrigin);});
+void commandConnection.ensure();
 // Preference broadcasts remain independent of command delivery.
 browser.runtime.onMessage.addListener((message,sender)=>{
  const trusted=!sender.url || [browser.runtime.getURL('extension/background.js'),browser.runtime.getURL('extension/chrome-worker.mjs'),browser.runtime.getURL('_generated_background_page.html')].includes(sender.url);

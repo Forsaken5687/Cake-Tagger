@@ -5,7 +5,24 @@ import { createUploadUI } from './upload-ui.mjs';
 export function mountUploadPanel(doc, runtime) {
   const selections = new WeakMap();
   let panel, frame, mount, ui, ready = false, channel, lastSelection = '', timer;
-  let english = false;
+  let english = false, connectionCheck, connectionSerial=0;
+  const connectionReplies=new Map();
+  async function ensureConnection() {
+    if(connectionCheck)return connectionCheck;
+    const current=frame, owner=channel;
+    connectionCheck=(async()=>{
+      const grant=await runtime.sendMessage({type:'cake-tagger:register-upload',channel:owner});
+      if(!grant?.registered || frame!==current || channel!==owner)throw Error('error.uploadConnection');
+      const accepted=await new Promise(resolve=>{
+        const id=++connectionSerial;
+        const timeout=setTimeout(()=>{connectionReplies.delete(id);resolve(false);},5000);
+        connectionReplies.set(id,{resolve,timeout,frame:current});
+        current.contentWindow.postMessage({type:'cake-tagger:ensure-connection',channel:owner,id},extensionOrigin);
+      });
+      if(!accepted || frame!==current || channel!==owner)throw Error('error.uploadConnection');
+    })().finally(()=>{connectionCheck=undefined;});
+    return connectionCheck;
+  }
   let preferences = { language: 'auto', autoAnalyzeEmbed: true }, lastTheme = '';
   const label = key => translate(key, english ? 'en' : 'de');
   function applyLanguage(settings) {
@@ -75,7 +92,7 @@ export function mountUploadPanel(doc, runtime) {
       mount.before(panel);
       ui = createUploadUI(doc,mount,panel,command=>{
        if(command.action==='export')ui.error(label('export.preparing'));
-       return runtime.sendMessage({type:'cake-tagger:ui-command',channel,command}).then(response=>{
+       return ensureConnection().then(()=>runtime.sendMessage({type:'cake-tagger:ui-command',channel,command})).then(response=>{
         if(!response?.accepted)ui.error(label(response?.error || 'error.uploadConnection'));
        }).catch(error=>ui.error(translate(errorMessage(error),english?'en':'de')));
       }, {save:settings=>runtime.sendMessage({type:'cake-tagger:settings-save',settings}),capabilities:()=>runtime.sendMessage({type:'cake-tagger:capabilities'})});
@@ -99,7 +116,11 @@ export function mountUploadPanel(doc, runtime) {
   }, true);
   doc.defaultView.addEventListener('message', event => {
     if (!frame || event.source !== frame.contentWindow || event.origin !== extensionOrigin || event.data?.channel !== channel) return;
-    if (event.data.type === 'cake-tagger:command-connection-error') ui?.error(label('error.uploadConnection'));
+    if(event.data.type==='cake-tagger:connection-checked') {
+      const job=connectionReplies.get(event.data.id);
+      if(job?.frame===frame){connectionReplies.delete(event.data.id);clearTimeout(job.timeout);job.resolve(event.data.accepted===true);}
+      return;
+    }
     if (event.data.type === 'cake-tagger:connection-error') ui?.error(label('error.nativeServer'));
     if (event.data.type === 'cake-tagger:view') ui?.update(event.data.view);
     if (event.data.type === 'cake-tagger:ready') { ready = true; lastSelection = ''; syncTheme(true); syncFiles(); }

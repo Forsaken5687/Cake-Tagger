@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
+import {createBridgeConnection} from '../extension/command-relay.mjs';
 
 async function background(downloadFailure = false, commandReply = {accepted:true}) {
   let listener, click;
@@ -149,9 +150,9 @@ test('processing bridge relays export RPCs and acknowledges dedicated port comma
  let messageListener,commandListener;
  const posted=[],frame={contentWindow:{postMessage:(message,target)=>posted.push({message,target})}},parent={postMessage(){}};
  const acknowledgements=[];
- const port={onMessage:{addListener:fn=>{commandListener=fn;}},onDisconnect:{addListener(){}},postMessage:message=>acknowledgements.push(message)};
+ const port={onMessage:{addListener:fn=>{commandListener=fn;queueMicrotask(()=>fn({type:'connected'}));}},onDisconnect:{addListener(){}},disconnect(){},postMessage:message=>acknowledgements.push(message)};
  const browser={runtime:{id:'fixture',getURL:path=>origin+'/'+path,sendMessage:message=>listener(message,sender),connect:options=>{assert.equal(options.name,'cake-tagger:upload:'+channel);return port;},onMessage:{addListener(){}}}};
- const context={browser,parent,window:{addEventListener:(type,fn)=>{messageListener=fn;}},location:{href:sender.url,origin},document:{querySelector:()=>frame},URL,Set,Number,setInterval:()=>1,clearInterval(){},File:class{},isFileMessage:()=>false,translate:key=>key};
+ const context={browser,parent,window:{addEventListener:(type,fn)=>{messageListener=fn;}},location:{href:sender.url,origin},document:{querySelector:()=>frame},URL,Set,Number,createBridgeConnection,setTimeout,clearTimeout,setInterval:()=>1,clearInterval(){},File:class{},isFileMessage:()=>false,translate:key=>key};
  const source=(await readFile(new URL('../extension/bridge.mjs',import.meta.url),'utf8')).replace(/^import .*\r?\n/gm,'');
  await vm.runInNewContext('(async()=>{'+source+'})()',context);
  commandListener({type:'command',id:1,command:{action:'export'}});
