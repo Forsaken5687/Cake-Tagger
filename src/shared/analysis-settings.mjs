@@ -44,7 +44,8 @@ export function validateRuntime(value) {
     || value.threadsPerSession.reduce((sum,count)=>sum+count,0) !== value.configuredNativeThreads
     || !['auto','single'].includes(value.imageParallelism) || !Number.isInteger(value.residentSessions) || value.residentSessions < value.inferenceWorkers || value.residentSessions > 2)) throw messageError('error.invalidAnalysisRuntime');
   if (native && ((value.threadSpinning != null && typeof value.threadSpinning !== 'boolean')
-    || (value.processPriority != null && !['below-normal', 'normal', 'other', 'unknown'].includes(value.processPriority)))) throw messageError('error.invalidAnalysisRuntime');
+    || (value.processPriority != null && !['below-normal', 'normal', 'other', 'unknown'].includes(value.processPriority))
+    || (value.processPowerPolicy != null && !['high-qos', 'unavailable'].includes(value.processPowerPolicy)))) throw messageError('error.invalidAnalysisRuntime');
   if (value.clientBrowser != null && (!value.clientBrowser || !['firefox','chromium','other'].includes(value.clientBrowser.family) || !['visible','hidden'].includes(value.clientBrowser.visibilityState))) throw messageError('error.invalidAnalysisRuntime');
   let memory;
   if (value.memory != null) {
@@ -70,6 +71,7 @@ export function validateRuntime(value) {
     ...(native && value.threadsPerSession != null ? { threadsPerSession: [...value.threadsPerSession], imageParallelism:value.imageParallelism, residentSessions:value.residentSessions } : {}),
     ...(native && value.threadSpinning != null ? { threadSpinning: value.threadSpinning } : {}),
     ...(native && value.processPriority != null ? { processPriority: value.processPriority } : {}),
+    ...(native && value.processPowerPolicy != null ? { processPowerPolicy: value.processPowerPolicy } : {}),
     ...(value.clientBrowser ? {clientBrowser:{family:value.clientBrowser.family,visibilityState:value.clientBrowser.visibilityState}} : {}),
     ...(memory ? { memory } : {}),
     ...(Object.hasOwn(value, 'hostMemory') ? { hostMemory } : {}),

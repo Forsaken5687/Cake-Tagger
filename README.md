@@ -20,7 +20,7 @@ The description in the browser's extension manager and the toolbar tooltip follo
 
 ## Local service
 
-Requires Windows x64 and a current Firefox or Chrome browser with video decoding and Canvas support. Node runs native ONNX Runtime on the CPU; the browser handles video decoding and tag review.
+Requires Windows x64 and a current Firefox or Chrome browser with video decoding and Canvas support. Node runs native ONNX Runtime on the CPU; the browser handles video decoding and tag review. On Windows, startup applies explicit CPU performance QoS to the backend process so hidden-window classification does not throttle analysis. Process priority and the global power plan are unchanged.
 
 1. Extract the complete release into a writable folder.
 2. Run `Start.cmd` to start the local server.

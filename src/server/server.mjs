@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { validateRecord, applyRecord, exportItem } from '../shared/corrections.mjs';
 import { validatedSessionURL } from '../shared/session-url.mjs';
 import { createNativeEngine } from './native-engine.mjs';
@@ -15,6 +15,14 @@ import { aggregate } from '../shared/tagging.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE } from '../shared/analysis-settings.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+// Windows may downclassify a hidden service independently of Normal priority.
+// Apply explicit process QoS once; no global power plan or thread limit changes.
+let processPowerPolicy = 'unavailable';
+const policyScript = path.join(root, 'scripts/Process-Policy.ps1');
+if (process.platform === 'win32' && fs.existsSync(policyScript)) {
+  const policy = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', policyScript, '-ProcessId', String(process.pid)], {windowsHide:true, encoding:'utf8', timeout:15000});
+  if (policy.status === 0 && policy.stdout?.trim() === 'high-qos') processPowerPolicy = 'high-qos';
+}
 const token = randomBytes(24).toString('hex');
 const showBrowser = !process.argv.includes('--no-browser') && process.env.CAKE_TAGGER_NO_BROWSER !== '1';
 const port = Number(process.env.CAKE_TAGGER_PORT ?? 8765);
@@ -125,7 +133,7 @@ const server = http.createServer(async (req, res) => {
       const result = await engine.infer(frames, parallelism, controller.signal, data => send({ type: 'progress', current: data.current, total: data.total }));
       const memory = process.memoryUsage();
       send({ type: 'done', ...result, analysis: aggregate(result.scores, mapping, DEFAULT_THRESHOLD, DEFAULT_COVERAGE, { excludedTags }),
-        scores: new URL(req.url, 'http://' + ownHost).searchParams.get('raw') === '1' ? result.scores.map(row => Array.from(row)) : undefined, runtime: { ...result.runtime, processPriority,
+        scores: new URL(req.url, 'http://' + ownHost).searchParams.get('raw') === '1' ? result.scores.map(row => Array.from(row)) : undefined, runtime: { ...result.runtime, processPriority, processPowerPolicy,
         hostMemory: { totalBytes: os.totalmem(), freeBytes: os.freemem() },
         serverMemory: { rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, heapTotalBytes: memory.heapTotal, externalBytes: memory.external, arrayBuffersBytes: memory.arrayBuffers } } });
       return res.end();

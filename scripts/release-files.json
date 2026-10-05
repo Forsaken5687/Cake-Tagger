@@ -19,6 +19,7 @@
     "model/tags.txt",
     "model/top_tags.txt",
     "runtime/LICENSE-Node.txt",
+    "scripts/Process-Policy.ps1",
     "scripts/Setup-Native.mjs",
     "scripts/Setup.ps1",
     "scripts/Start.ps1",
