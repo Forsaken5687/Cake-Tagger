@@ -1,5 +1,6 @@
 // Stable message IDs keep wording and runtime data independent of each other.
 export const messages = {
+  "review.restartRequired": {"en":"The review tool could not start. Restart the local Cake Tagger service, then reload this page. Your saved reviews are retained.","de":"Das Bewertungstool konnte nicht starten. Starte den lokalen Cake-Tagger-Dienst neu und lade diese Seite erneut. Gesicherte Bewertungen bleiben erhalten."},
   "review.unclear": {"en":"Unclear","de":"Unklar"},
   "review.confidence": {"en":"Confidence score","de":"Confidence Score"},
   "review.sessionOptions": {"en":"Session options","de":"Sitzungsoptionen"},

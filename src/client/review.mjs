@@ -6,11 +6,13 @@ import {ANALYSIS_VERSION,aggregate} from '../shared/tagging.mjs';
 import {makeRecord} from '../shared/corrections.mjs';
 import {DEFAULT_THRESHOLD,DEFAULT_COVERAGE} from '../shared/analysis-settings.mjs';
 import {candidateTags,comparisonMetrics,createReviewSnapshot,validateVariants,DEFAULT_VARIANTS,reviewPartition,problemTags,compareVariants,frameEvidence} from '../shared/evaluation.mjs';
-import {createDraft,restoreDraft,importReview,openReviewStore} from './review-session.mjs';
+// Load the optional development module after translating the shell. An older
+// running backend may not yet allow this file, even though HTML is current.
+let createDraft,restoreDraft,importReview,store;
 import {errorMessage,messageError} from '../shared/messages.mjs';
 import {setLanguage,t,translatePage,localizedText} from './i18n.mjs';
 
-const $=selector=>document.querySelector(selector),session=createLocalSession(),store=openReviewStore();
+const $=selector=>document.querySelector(selector),session=createLocalSession();
 const client=createNativeClient({fetcher:session.request,onProgress:(current,total)=>localizedText($('#status'),'analysis.progress',{current,total})});
 let entries=[],active,controller,running=false,settings=normalizeSettings(),mapping,allTags=[],playerURL,downloadURL;
 let variants=validateVariants(DEFAULT_VARIANTS),evidenceTag,pendingDraft,saveTimer,dirty=false,saveChain=Promise.resolve(),changeVersion=0,attaching=false;
@@ -339,10 +341,19 @@ $('#server-export').onclick=async()=>{
 window.addEventListener('beforeunload',event=>{if(running||dirty){event.preventDefault();event.returnValue='';}});
 window.addEventListener('pagehide',()=>{if(dirty)saveNow();});
 try{
+ setLanguage({language:'auto'});translatePage();
+ try{
+  const module=await import('./review-session.mjs');
+  ({createDraft,restoreDraft,importReview}=module);store=module.openReviewStore();
+ }catch{throw messageError('review.restartRequired');}
  const [tags,map,config]=await Promise.all([fetch('/model/tags.txt').then(r=>r.text()),fetch('/model/mapping.json').then(r=>r.json()),session.request('/api/settings').then(async r=>{if(!r.ok)throw messageError('error.nativeServer');return r.json();})]);
  allTags=tags.replace(/^\uFEFF/,'').split(/\r?\n/).filter(Boolean);mapping=map;settings=normalizeSettings(config.settings);
  $('#frames').value=settings.frames;$('#language').value=setLanguage(settings);translatePage();controlsFromVariants();
  try{pendingDraft=await store.load();if(pendingDraft?.entries?.length){$('#resume').hidden=false;label($('#resume-text'),'review.savedSession',{count:pendingDraft.entries.length,time:pendingDraft.savedAt??'—'});}else pendingDraft=undefined;}
  catch{label($('#save-status'),'review.storageFailed');}
  renderQueue();
-}catch(error){setLanguage({language:'auto'});translatePage();label($('#status'),errorMessage(error));}
+}catch(error){
+ setLanguage({language:'auto'});translatePage();label($('#status'),errorMessage(error));$('#status').setAttribute('role','alert');
+ // A failed startup must not expose handlers that depend on uninitialized data.
+ for(const control of document.querySelectorAll('button,input,select'))control.disabled=true;
+}

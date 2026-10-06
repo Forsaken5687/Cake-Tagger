@@ -2,6 +2,8 @@
 
 The review lab is a development-only tool. Start `Review.cmd` from a source checkout. It uses the production sampling implementation and central native inference queue, but its experimental rules never change upload suggestions.
 
+After updates that add browser modules, restart the local service before opening the lab. The page reports a startup failure if an older running service cannot serve the session module; saved reviews are retained.
+
 ## Workflow
 
 1. Choose local videos and analyze them. **Review videos** opens by default, with the video and judgments side by side. Select a video in the queue; the progress counter tracks completed reviews. Frame count, import, explicit saving and starting a new session are under **Session options**.
