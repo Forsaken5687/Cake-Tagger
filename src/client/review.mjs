@@ -2,7 +2,7 @@ import {createLocalSession} from './local-session.mjs';
 import {createNativeClient} from './native-client.mjs';
 import {sampleVideo} from './sampling.mjs';
 import {normalizeSettings,suggestionPolicy} from '../shared/preferences.mjs';
-import {ANALYSIS_VERSION,aggregate} from '../shared/tagging.mjs';
+import {ANALYSIS_VERSION,aggregate,mappedFrameScore} from '../shared/tagging.mjs';
 import {makeRecord} from '../shared/corrections.mjs';
 import {DEFAULT_THRESHOLD,DEFAULT_COVERAGE} from '../shared/analysis-settings.mjs';
 import {candidateTags,comparisonMetrics,createReviewSnapshot} from '../shared/evaluation.mjs';
@@ -66,7 +66,7 @@ function renderTags(){
   };
   for(const present of [baseline.has(tag),alternative.has(tag)]){const cell=node('td',present?'✓':'—');if(present)cell.className='yes';tr.append(cell);}
   const indices=mapping[tag];
-  const scores=indices?active.scores.map(frame=>Math.max(...indices.map(index=>frame[index]))):[];
+  const scores=indices?active.scores.map(frame=>mappedFrameScore(frame,indices)):[];
   tr.append(node('td',percent(scores.length?[...scores].sort((a,b)=>b-a).slice(0,2).reduce((a,b)=>a+b,0)/Math.min(2,scores.length):null)));
   tr.append(node('td',scores.length?scores.filter(score=>score>=rules().threshold).length+'/'+scores.length:'—'));$('#tags').append(tr);
  }

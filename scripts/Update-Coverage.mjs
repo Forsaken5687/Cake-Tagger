@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { mappingGroups } from '../src/shared/tagging.mjs';
 import { readTags, excluded } from '../src/shared/tag-policy.mjs';
 
 const root = new URL('../', import.meta.url);
@@ -6,8 +7,9 @@ const read = name => fs.readFileSync(new URL(name, root), 'utf8');
 const tags = readTags(read('model/tags.txt'));
 const mapping = JSON.parse(read('model/mapping.json'));
 const labels = read('model/top_tags.txt').replace(/^\uFEFF/, '').trimEnd().split(/\r?\n/);
-for (const [tag, indices] of Object.entries(mapping)) {
-  if (!tags.includes(tag) || !indices.length || new Set(indices).size !== indices.length || indices.some(i => !Number.isInteger(i) || !labels[i])) throw Error(`Invalid mapping: ${tag}`);
+for (const [tag, rule] of Object.entries(mapping)) {
+  const groups = mappingGroups(rule);
+  if (!tags.includes(tag) || !Array.isArray(groups) || !groups.length || (!Array.isArray(rule) && (Object.keys(rule).length !== 1 || !Array.isArray(rule.all))) || groups.some(indices => !Array.isArray(indices) || !indices.length || new Set(indices).size !== indices.length || indices.some(i => !Number.isInteger(i) || !labels[i]))) throw Error(`Invalid mapping: ${tag}`);
 }
 // Explicit unresolved cases make taxonomy additions require a fresh mapping audit.
 const reasons = new Map();
@@ -17,7 +19,7 @@ group('teen|milf|gilf|asian|latina|ebony|interracial|russian|german|trans|gay|le
 group('incest|forced|blackmail|freeuse|taboo|cuck|used|degrading', 'Narrative or consent context; excluded by policy.');
 group('hairy', 'Mapped, but excluded by default following recognition mismatches.');
 group('watermark', 'Excluded by default; no suitable model label.');
-group('tease|amateur|rough|alternative|sloppy|egirl|dirty talk|edging|pet play|maledom', 'Requires context or a category distinction absent from the model vocabulary.');
+group('tease|amateur|rough|alternative|egirl|dirty talk|edging|pet play|maledom', 'Requires context or a category distinction absent from the model vocabulary.');
 group('ass shake|twerking|tit drop|slow motion', 'Requires motion or timing evidence; no suitable model label.');
 group('compilation|pmv', 'Editing or media-type category; no reliable equivalent model label.');
 group('fisting|side fuck|cum on pussy|chastity cage|gagging|pillow humping|rimming|gloryhole|ball sucking|held down|strap on|ball fondling|pegging', 'No suitable label in the pinned model vocabulary.');
@@ -38,21 +40,22 @@ group('hijab', 'Generic kerchief labels do not establish this garment.');
 group('scissoring', 'The available tribadism label is broader than this specific action.');
 group('animated', 'Anime content; the anime_coloring label describes shading style rather than a general anime-content category.');
 const scopes = {
+  sloppy: 'Oral sex and saliva/drooling in the same sampled image; amount is approximated by model evidence.',
   public: 'Public nudity only; other public scenes are not covered.',
   'changing room': 'Locker rooms only; other changing rooms are not covered.',
   'tit shake': 'Visual bouncing-breast label; sampled images do not track motion.',
   dance: 'Visual dancing label; sampled images do not track motion.'
 };
-const supported = tags.filter(tag => mapping[tag]?.length && !excluded.has(tag));
+const supported = tags.filter(tag => mapping[tag] && !excluded.has(tag));
 const manualOnly = tags.filter(tag => !supported.includes(tag));
 const entries = tags.map(tag => {
   const automatic = supported.includes(tag);
   if (!automatic && !reasons.has(tag)) throw Error(`Missing audit reason: ${tag}`);
-  return { tag, status: automatic ? 'automatic' : excluded.has(tag) ? 'default-excluded' : 'manual', labels: (mapping[tag] ?? []).map(i => labels[i]), ...(automatic ? scopes[tag] ? { scope: scopes[tag] } : {} : { reason: reasons.get(tag) }) };
+  return { tag, status: automatic ? 'automatic' : excluded.has(tag) ? 'default-excluded' : 'manual', labels: mapping[tag] ? mappingGroups(mapping[tag]).flat().map(i => labels[i]) : [], ...(mapping[tag] && !Array.isArray(mapping[tag]) ? { all: mappingGroups(mapping[tag]).map(group => group.map(i => labels[i])) } : {}), ...(automatic ? scopes[tag] ? { scope: scopes[tag] } : {} : { reason: reasons.get(tag) }) };
 });
 const coverage = { supportedCount: supported.length, totalCount: tags.length, supported, manualOnly, entries };
 fs.writeFileSync(new URL('model/coverage.json', root), JSON.stringify(coverage, null, 2) + '\n');
 const escape = text => text.replaceAll('|', '\\|');
-const report = `# Tag coverage\n\nUnder default settings, ${supported.length} of ${tags.length} tags have an automatic model mapping. Every taxonomy entry is audited below. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce automatic coverage.\n\nMappings combine explicit aliases and concrete subtypes. They do not infer a tag from the absence of another detection. Temporal support thresholds remain unchanged. Snapshot labels for motion still require review.\n\n## Automatic mappings\n\n| Website tag | Pinned model labels | Scope limitation |\n| --- | --- | --- |\n${entries.filter(e => e.status === 'automatic').map(e => `| ${escape(e.tag)} | ${e.labels.map(x => '`' + escape(x) + '`').join(', ')} | ${e.scope ?? ''} |`).join('\n')}\n\n## Manual or excluded under default settings\n\n| Website tag | Status | Reason |\n| --- | --- | --- |\n${entries.filter(e => e.status !== 'automatic').map(e => `| ${escape(e.tag)} | ${e.status} | ${e.reason} |`).join('\n')}\n\nRemoving the default exclusion for \`hairy\` enables its existing mapping. Removing \`watermark\` does not create a model signal. Manual website entry remains available for all tags.\n\n## Regenerate\n\nRun \`runtime/node.exe scripts/Update-Coverage.mjs\` after changing the taxonomy, mapping or policy. The generator rejects invalid indices, duplicate indices and unresolved tags without an audit reason. The label vocabulary is the pinned \`model/top_tags.txt\`.\n`;
+const report = `# Tag coverage\n\nUnder default settings, ${supported.length} of ${tags.length} tags have an automatic model mapping. Every taxonomy entry is audited below. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce automatic coverage.\n\nMappings combine explicit aliases and concrete subtypes. For compound rules, every label group must match in the same image; each group accepts alternative labels. The combined score is the weakest group score, not a calibrated joint probability. They do not infer a tag from the absence of another detection. Temporal support thresholds remain unchanged. Snapshot labels for motion still require review.\n\n## Automatic mappings\n\n| Website tag | Pinned model labels | Scope limitation |\n| --- | --- | --- |\n${entries.filter(e => e.status === 'automatic').map(e => `| ${escape(e.tag)} | ${(e.all ?? [e.labels]).map(group => group.map(x => '`' + escape(x) + '`').join(' OR ')).join(' AND ')} | ${e.scope ?? ''} |`).join('\n')}\n\n## Manual or excluded under default settings\n\n| Website tag | Status | Reason |\n| --- | --- | --- |\n${entries.filter(e => e.status !== 'automatic').map(e => `| ${escape(e.tag)} | ${e.status} | ${e.reason} |`).join('\n')}\n\nRemoving the default exclusion for \`hairy\` enables its existing mapping. Removing \`watermark\` does not create a model signal. Manual website entry remains available for all tags.\n\n## Regenerate\n\nRun \`runtime/node.exe scripts/Update-Coverage.mjs\` after changing the taxonomy, mapping or policy. The generator rejects invalid indices, duplicate indices and unresolved tags without an audit reason. The label vocabulary is the pinned \`model/top_tags.txt\`.\n`;
 fs.writeFileSync(new URL('docs/TAG_COVERAGE.md', root), report);
 console.log(`${supported.length}/${tags.length} automatic; ${manualOnly.length} manual or excluded.`);

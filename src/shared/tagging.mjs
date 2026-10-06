@@ -1,6 +1,13 @@
 import { messageError } from './messages.mjs';
 import { excluded } from './tag-policy.mjs';
-export const ANALYSIS_VERSION = 'coverage-v5';
+export const ANALYSIS_VERSION = 'coverage-v6';
+// Arrays are alternative labels. An all-rule requires every group in the same
+// frame; its score is the weakest group's evidence, not a joint probability.
+export function mappingGroups(rule) { return Array.isArray(rule) ? [rule] : rule.all; }
+export function mappedFrameScore(frame, rule) {
+  if (Array.isArray(rule)) return Math.max(...rule.map(index => frame[index]));
+  return Math.min(...mappingGroups(rule).map(group => Math.max(...group.map(index => frame[index]))));
+}
 const details = new Set(['glasses', 'choker', 'collar', 'cat ears', 'bunny ears', 'maid outfit', 'skirt', 'underwear', 'lingerie', 'bikini', 'swimsuit', 'bra', 'panties', 'thigh highs', 'knee high socks', 'pantyhose', 'fishnet', 'high heels', 'hoodie', 'mask', 'earrings', 'piercings', 'hat', 'gag', 'blindfold', 'handcuffs', 'butt plug', 'dildo', 'vibrator', 'sex toy']);
 export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'majority', options = {}) {
   if (!['majority', 'brief'].includes(coverage)) throw messageError('error.invalidTemporalCoverage');
@@ -13,7 +20,7 @@ export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'maj
     const isDetail = coverage === 'majority' && details.has(tag);
     const tagThreshold = isDetail || tag === 'dance' ? Math.max(0.65, threshold) : threshold;
     const tagRequired = isDetail ? Math.max(2, Math.ceil(frameScores.length / 4)) : required;
-    const scores = frameScores.map(frame => Math.max(...indices.map(i => frame[i]))).filter(Number.isFinite).sort((a, b) => b - a);
+    const scores = frameScores.map(frame => mappedFrameScore(frame, indices)).filter(Number.isFinite).sort((a, b) => b - a);
     if (!scores.length) continue;
     const support = scores.filter(v => v >= tagThreshold).length;
     const confidence = scores.length >= 2 ? (scores[0] + scores[1]) / 2 : scores[0];

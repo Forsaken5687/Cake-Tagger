@@ -83,3 +83,24 @@ test('weak or isolated detail remains unselected and optional brief mode is sepa
   frames[0][0]=0.99;frames[1][0]=0.1;
   assert.equal(aggregate(frames,{glasses:[0]},0.5).tags.length,0);
 });
+
+test('sloppy requires oral and saliva evidence in the same frames', () => {
+  const mapping = { sloppy: { all: [[0, 1], [2, 3]] } };
+  for (const mode of ['majority', 'brief']) {
+    for (const frames of [Array(8).fill([.9, .1, .1, .1]), Array(8).fill([.1, .1, .9, .1]), Array.from({length:8}, (_, i) => i < 4 ? [.9, .1, .1, .1] : [.1, .1, .9, .1])]) {
+      const result = aggregate(frames, mapping, .4, mode);
+      assert.deepEqual(result.tags, []);
+      assert.deepEqual(result.uncertain, []);
+    }
+    const frames = Array(8).fill([.1, .8, .1, .7]);
+    const result = aggregate(frames, mapping, .4, mode);
+    assert.equal(result.tags[0].tag, 'sloppy');
+    assert.equal(result.tags[0].confidence, .7);
+    assert.equal(result.tags[0].supportingFrames, 8);
+    assert.deepEqual(aggregate(frames, mapping, .75, mode).tags, []);
+    assert.deepEqual(aggregate(frames, mapping, .4, mode, {excludedTags:['sloppy']}).tags, []);
+  }
+  const isolated = Array.from({length:8}, (_, i) => i === 0 ? [.9, .1, .8, .1] : [.1, .1, .1, .1]);
+  assert.deepEqual(aggregate(isolated, mapping, .4).tags, []);
+  assert.deepEqual(aggregate(isolated, mapping, .4).uncertain, ['sloppy']);
+});

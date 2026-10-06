@@ -63,7 +63,7 @@ Exports include system total/free memory and Node process memory sampled after i
 - Maximum 10 minutes and 250 MiB per video. Supported codecs depend on the browser; MP4/M4V with H.264 is a practical starting point.
 - Frame sampling can miss brief events and cannot establish motion or context reliably.
 - JoyTag was trained mainly on illustrations and also on photographs; real video frames can produce incorrect tags.
-- 174 of the 258 bundled tags have an automatic mapping under default settings. This is coverage, not accuracy. See [tag coverage](docs/TAG_COVERAGE.md).
+- 175 of the 258 bundled tags have an automatic mapping under default settings. This is coverage, not accuracy. See [tag coverage](docs/TAG_COVERAGE.md).
 - Context-dependent and identity-related categories, and technical tags assigned by the website, are not automatically inferred.
 - Manual corrections change the session's selection; they do not train the model.
 - Duplicate upload filenames are rejected during tag transfer. Filename matching does not prove that two files have identical content.

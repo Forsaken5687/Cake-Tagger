@@ -1,5 +1,5 @@
 import { excluded } from './tag-policy.mjs';
-import { ANALYSIS_VERSION } from './tagging.mjs';
+import { ANALYSIS_VERSION, mappedFrameScore } from './tagging.mjs';
 import { PREPROCESS_VERSION } from './analysis-settings.mjs';
 import { messageError } from './messages.mjs';
 import { exportItem } from './corrections.mjs';
@@ -10,7 +10,7 @@ export function candidateTags(frames,mapping,{threshold=.5,coverage=.5,excludedT
  const blocked=new Set(excludedTags),required=Math.max(2,Math.ceil(frames.length*coverage)),rows=[];
  for(const [tag,indices] of Object.entries(mapping)) {
   if(blocked.has(tag)||(excluded.has(tag)&&!['hairy','watermark'].includes(tag)))continue;
-  const scores=frames.map(frame=>Math.max(...indices.map(index=>frame[index])));
+  const scores=frames.map(frame=>mappedFrameScore(frame,indices));
   if(!scores.length||scores.some(value=>!Number.isFinite(value)))continue;
   const support=scores.filter(value=>value>=threshold).length;
   if(support>=required)rows.push({tag,confidence:scores.reduce((a,b)=>a+b,0)/scores.length,supportingFrames:support});

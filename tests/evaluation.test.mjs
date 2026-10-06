@@ -45,3 +45,11 @@ test('local review snapshot preserves corrections and raw scores without a serve
  assert.equal(entry.selected.get('glasses'),false);
  assert.throws(()=>createReviewSnapshot([],{},{}));
 });
+
+test('review candidates preserve compound same-frame evidence', () => {
+ const mapping={sloppy:{all:[[0],[1,2]]}};
+ assert.deepEqual(candidateTags([[.9,.1,.1],[.1,.9,.1]],mapping,{threshold:.4,coverage:.5}),[]);
+ const result=candidateTags([[.9,.1,.7],[.8,.6,.1]],mapping,{threshold:.4,coverage:.5});
+ assert.equal(result[0].tag,'sloppy');
+ assert(Math.abs(result[0].confidence-.65)<1e-6);
+});

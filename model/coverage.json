@@ -1,5 +1,5 @@
 {
-  "supportedCount": 174,
+  "supportedCount": 175,
   "totalCount": 258,
   "supported": [
     "solo",
@@ -83,6 +83,7 @@
     "female orgasm",
     "kissing",
     "legs up",
+    "sloppy",
     "shower",
     "vibrator",
     "cum on tits",
@@ -214,7 +215,6 @@
     "animated",
     "tit drop",
     "freeuse",
-    "sloppy",
     "femboy",
     "egirl",
     "gay",
@@ -1102,9 +1102,28 @@
     },
     {
       "tag": "sloppy",
-      "status": "manual",
-      "labels": [],
-      "reason": "Requires context or a category distinction absent from the model vocabulary."
+      "status": "automatic",
+      "labels": [
+        "fellatio",
+        "deepthroat",
+        "saliva",
+        "saliva_trail",
+        "drooling",
+        "mouth_drool"
+      ],
+      "all": [
+        [
+          "fellatio",
+          "deepthroat"
+        ],
+        [
+          "saliva",
+          "saliva_trail",
+          "drooling",
+          "mouth_drool"
+        ]
+      ],
+      "scope": "Oral sex and saliva/drooling in the same sampled image; amount is approximated by model evidence."
     },
     {
       "tag": "shower",

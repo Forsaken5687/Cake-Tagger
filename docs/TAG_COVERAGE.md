@@ -1,8 +1,8 @@
 # Tag coverage
 
-Under default settings, 174 of 258 tags have an automatic model mapping. Every taxonomy entry is audited below. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce automatic coverage.
+Under default settings, 175 of 258 tags have an automatic model mapping. Every taxonomy entry is audited below. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce automatic coverage.
 
-Mappings combine explicit aliases and concrete subtypes. They do not infer a tag from the absence of another detection. Temporal support thresholds remain unchanged. Snapshot labels for motion still require review.
+Mappings combine explicit aliases and concrete subtypes. For compound rules, every label group must match in the same image; each group accepts alternative labels. The combined score is the weakest group score, not a calibrated joint probability. They do not infer a tag from the absence of another detection. Temporal support thresholds remain unchanged. Snapshot labels for motion still require review.
 
 ## Automatic mappings
 
@@ -11,7 +11,7 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | solo | `solo` |  |
 | long hair | `long_hair` |  |
 | nude | `nude` |  |
-| big tits | `large_breasts`, `huge_breasts`, `gigantic_breasts` |  |
+| big tits | `large_breasts` OR `huge_breasts` OR `gigantic_breasts` |  |
 | couple | `couple` |  |
 | bedroom | `bedroom` |  |
 | brunette | `brown_hair` |  |
@@ -21,22 +21,22 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | small tits | `small_breasts` |  |
 | blowjob | `fellatio` |  |
 | thighs | `thighs` |  |
-| masturbating | `masturbation`, `female_masturbation`, `male_masturbation` |  |
+| masturbating | `masturbation` OR `female_masturbation` OR `male_masturbation` |  |
 | music | `music` |  |
 | skinny | `skinny` |  |
-| tattoos | `tattoo`, `shoulder_tattoo`, `arm_tattoo`, `pubic_tattoo`, `facial_tattoo`, `chest_tattoo`, `leg_tattoo`, `number_tattoo`, `stomach_tattoo`, `heart_tattoo`, `breast_tattoo` |  |
-| underwear | `underwear`, `bra`, `panties`, `boxers` |  |
+| tattoos | `tattoo` OR `shoulder_tattoo` OR `arm_tattoo` OR `pubic_tattoo` OR `facial_tattoo` OR `chest_tattoo` OR `leg_tattoo` OR `number_tattoo` OR `stomach_tattoo` OR `heart_tattoo` OR `breast_tattoo` |  |
+| underwear | `underwear` OR `bra` OR `panties` OR `boxers` |  |
 | black hair | `black_hair` |  |
-| piercings | `piercing`, `nipple_piercing`, `navel_piercing`, `nose_piercing`, `lip_piercing`, `tongue_piercing` |  |
+| piercings | `piercing` OR `nipple_piercing` OR `navel_piercing` OR `nose_piercing` OR `lip_piercing` OR `tongue_piercing` |  |
 | doggy | `doggystyle` |  |
-| cumshot | `ejaculation`, `projectile_cum` |  |
+| cumshot | `ejaculation` OR `projectile_cum` |  |
 | dildo | `dildo` |  |
 | handjob | `handjob` |  |
 | dance | `dancing` | Visual dancing label; sampled images do not track motion. |
 | partially clothed | `partially_undressed` |  |
 | tit shake | `bouncing_breasts` | Visual bouncing-breast label; sampled images do not track motion. |
 | deepthroat | `deepthroat` |  |
-| sex toy | `sex_toy`, `dildo`, `vibrator`, `egg_vibrator`, `remote_control_vibrator`, `vibrator_under_clothes`, `butt_plug`, `anal_beads` |  |
+| sex toy | `sex_toy` OR `dildo` OR `vibrator` OR `egg_vibrator` OR `remote_control_vibrator` OR `vibrator_under_clothes` OR `butt_plug` OR `anal_beads` |  |
 | anal penetration | `anal` |  |
 | cosplay | `cosplay` |  |
 | short hair | `short_hair` |  |
@@ -51,7 +51,7 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | red hair | `red_hair` |  |
 | squirting | `female_ejaculation` |  |
 | swimsuit | `swimsuit` |  |
-| creampie | `cum_in_pussy`, `cum_in_ass`, `internal_cumshot` |  |
+| creampie | `cum_in_pussy` OR `cum_in_ass` OR `internal_cumshot` |  |
 | 2girls | `2girls` |  |
 | feet | `feet` |  |
 | cowgirl | `cowgirl_position` |  |
@@ -75,22 +75,23 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | on knees | `kneeling` |  |
 | thigh highs | `thighhighs` |  |
 | reverse cowgirl | `reverse_cowgirl_position` |  |
-| makeup | `makeup`, `eyeshadow`, `lipstick`, `eyeliner`, `mascara` |  |
+| makeup | `makeup` OR `eyeshadow` OR `lipstick` OR `eyeliner` OR `mascara` |  |
 | groping | `groping` |  |
 | kitchen | `kitchen` |  |
 | pussy juice | `pussy_juice` |  |
 | cleavage | `cleavage` |  |
 | cunnilingus | `cunnilingus` |  |
-| choker | `choker`, `black_choker`, `ribbon_choker`, `red_choker`, `blue_choker`, `white_choker`, `pink_choker`, `frilled_choker`, `heart_choker`, `orange_choker`, `green_choker`, `purple_choker`, `yellow_choker`, `star_choker` |  |
+| choker | `choker` OR `black_choker` OR `ribbon_choker` OR `red_choker` OR `blue_choker` OR `white_choker` OR `pink_choker` OR `frilled_choker` OR `heart_choker` OR `orange_choker` OR `green_choker` OR `purple_choker` OR `yellow_choker` OR `star_choker` |  |
 | blue eyes | `blue_eyes` |  |
 | freckles | `freckles` |  |
 | earrings | `earrings` |  |
 | dress | `dress` |  |
 | female orgasm | `female_orgasm` |  |
-| kissing | `kiss`, `french_kiss` |  |
+| kissing | `kiss` OR `french_kiss` |  |
 | legs up | `legs_up` |  |
+| sloppy | `fellatio` OR `deepthroat` AND `saliva` OR `saliva_trail` OR `drooling` OR `mouth_drool` | Oral sex and saliva/drooling in the same sampled image; amount is approximated by model evidence. |
 | shower | `showering` |  |
-| vibrator | `vibrator`, `egg_vibrator`, `remote_control_vibrator`, `vibrator_under_clothes` |  |
+| vibrator | `vibrator` OR `egg_vibrator` OR `remote_control_vibrator` OR `vibrator_under_clothes` |  |
 | cum on tits | `cum_on_breasts` |  |
 | spit | `spitting` |  |
 | bikini | `bikini` |  |
@@ -102,7 +103,7 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | drooling | `drooling` |  |
 | chubby | `plump` |  |
 | cum on ass | `cum_on_ass` |  |
-| titjob | `paizuri`, `paizuri_under_clothes` |  |
+| titjob | `paizuri` OR `paizuri_under_clothes` |  |
 | butt plug | `butt_plug` |  |
 | thighjob | `thigh_sex` |  |
 | pink hair | `pink_hair` |  |
@@ -146,7 +147,7 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | furry | `furry` |  |
 | handcuffs | `handcuffs` |  |
 | crying | `crying` |  |
-| braids | `braid`, `twin_braids` |  |
+| braids | `braid` OR `twin_braids` |  |
 | sitting on face | `sitting_on_face` |  |
 | booty shorts | `short_shorts` |  |
 | pajamas | `pajamas` |  |
@@ -176,7 +177,7 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | anal beads | `anal_beads` |  |
 | big ass | `huge_ass` |  |
 | hoodie | `hoodie` |  |
-| sweaty | `sweat`, `sweating_profusely` |  |
+| sweaty | `sweat` OR `sweating_profusely` |  |
 | orange hair | `orange_hair` |  |
 | genshin impact | `genshin_impact` |  |
 | supine | `on_back` |  |
@@ -223,7 +224,6 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | animated | manual | Anime content; the anime_coloring label describes shading style rather than a general anime-content category. |
 | tit drop | manual | Requires motion or timing evidence; no suitable model label. |
 | freeuse | default-excluded | Narrative or consent context; excluded by policy. |
-| sloppy | manual | Requires context or a category distinction absent from the model vocabulary. |
 | femboy | default-excluded | Age, identity or relationship category; excluded by policy. |
 | egirl | manual | Requires context or a category distinction absent from the model vocabulary. |
 | gay | default-excluded | Age, identity or relationship category; excluded by policy. |
