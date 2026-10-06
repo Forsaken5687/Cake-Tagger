@@ -1,9 +1,12 @@
 {
-  "repository": "IamTheStormThatIsApproaching/joytag-onnx-Q8_0-quantized",
-  "revision": "9829c49ee97c55ad42f23c619a9925a77dabc54c",
-  "sha256": "888419d6832b2e39404c6051842e04cacf71cf33f4ce0cb9096874e4f32eec01",
+  "repository": "fancyfeast/joytag",
+  "revision": "6b7f16331a6ccf0fdce37d5a9564715f6e772b22",
+  "file": "model.onnx",
+  "precision": "float32",
+  "name": "JoyTag-FP32",
+  "sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
   "checksumVerified": true,
   "baseModel": "fancyfeast/joytag",
-  "runtime": "onnxruntime-web@1.30.0",
-  "runtimeIntegrity": "sha512-q0y+JrrtukXSzsBWEMccVfqX25LRmosXHF+CaRJmg8pZClzcV7svNc4rKY3jL02Vb7QmRMDs1SigqR4CXAfKYQ=="
+  "runtime": "onnxruntime-node@1.30.0",
+  "runtimeArchiveSha256": "6e3390d6b783e7be946fad629292799da28d0b42f84856e50d2c1b0383291e75"
 }

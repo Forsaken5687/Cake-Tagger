@@ -99,7 +99,7 @@ $('#analyze').onclick=async()=>{
     // Preserve reviewed labels when a different sampling count is tested.
     const baseline=aggregate(output.scores,mapping,DEFAULT_THRESHOLD,DEFAULT_COVERAGE,{excludedTags:settings.excludedTags});
     const wasAnalyzed=!!entry.result;entry.scores=output.scores;entry.timestamps=sample.timestamps;entry.frameSetting=frameSetting;
-    entry.result={...baseline,sha256:sample.sha256,filename:entry.file.name,model:'JoyTag-INT8',sampledFrames:sample.sampledFrames,samplingMode:sample.samplingMode,durationSeconds:sample.durationSeconds,
+    entry.result={...baseline,sha256:sample.sha256,filename:entry.file.name,model:'JoyTag-FP32',sampledFrames:sample.sampledFrames,samplingMode:sample.samplingMode,durationSeconds:sample.durationSeconds,
      threshold:DEFAULT_THRESHOLD,analysisPolicy:ANALYSIS_VERSION+':'+DEFAULT_COVERAGE+':'+suggestionPolicy(settings),runtime:output.runtime,
      timings:{...output.timings,samplingSeconds,requestSeconds,totalSeconds:(performance.now()-start)/1000},createdAt:new Date().toISOString()};
     for(const tag of [...baseline.tags.map(row=>row.tag),...baseline.uncertain])if(!entry.selected.has(tag)){entry.selected.set(tag,!wasAnalyzed&&baseline.tags.some(row=>row.tag===tag));entry.tagSources[tag]='suggestion';}

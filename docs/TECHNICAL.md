@@ -4,7 +4,7 @@
 
 `src/client/app.js` reads local files, computes SHA-256 content hashes and samples frames through Video and Canvas APIs. The upload integration uses the native site video players; no preview JPEGs are produced for it. Model input is prepared as 448 x 448 RGBA buffers, padded white to a square, and sent together in one binary body per video to the authenticated `/api/infer` endpoint on loopback; JPEG previews are not decoded again for inference.
 
-`src/server/native-worker.mjs` runs JoyTag INT8 through ONNX Runtime Node 1.30.0 on the CPU. RGB channels use CLIP mean/std normalization; sigmoid converts 5,813 logits to per-label scores. The model checksum is verified before creating a session. Browser resizing is not identical to Pillow bicubic resizing. Native CPU and WASM scores are not numerically equivalent for this quantized artifact; new cache signatures include `native-cpu-v1`. Browser model execution is removed.
+`src/server/native-worker.mjs` runs the original JoyTag FP32 model through ONNX Runtime Node 1.30.0 on the CPU. RGB channels use CLIP mean/std normalization; sigmoid converts 5,813 logits to per-label scores. The model checksum is verified before creating a session. Browser resizing is not identical to Pillow bicubic resizing. Cache signatures include `native-cpu-v1`, the model SHA-256 and mapping, so results from different model artifacts are not reused. Browser model execution is removed.
 
 `src/server/native-engine.mjs` owns one reusable Node worker and one FIFO video queue. Eight additional video jobs may wait; excess jobs receive the streamed `error.nativeBusy` response. This is an admission/backpressure limit, not a CPU-thread or RAM limit. Each job holds at most 48 images. Automatic uses a third of `os.availableParallelism()`, with a minimum of one thread. Manual overrides use any integer up to all available logical processors. `src/server/native-policy.mjs` publishes the operating recommendation, hardware-derived test ceiling, its reason and queue capacity.
 
@@ -18,7 +18,7 @@ The server streams newline-delimited JSON: state/progress records followed by on
 
 ## Tag aggregation
 
-`model/mapping.json` maps model label indices to the bundled taxonomy. `src/shared/tagging.mjs` takes the maximum of mapped label scores for each tag and each sampled frame. Most tags require more than half the frames to pass the base threshold of 0.4, with at least two supporting frames.
+`model/mapping.json` maps model label indices to the bundled taxonomy. `src/shared/tagging.mjs` takes the maximum of alternative mapped label scores for each tag and each sampled frame. Compound `all` mappings require all label groups in the same frame and use the minimum of their group maxima. Most tags require more than half the frames to pass the base threshold of 0.4, with at least two supporting frames.
 
 An explicit detail-tag set uses a threshold of at least 0.65 and requires a quarter of the sampled frames, with a minimum of two. `dance` also has a threshold of at least 0.65. These are heuristics, not calibrated classifiers or motion recognition.
 
@@ -32,7 +32,7 @@ Results, selections, corrections and caches are held in page memory. Hashes matc
 
 `src/shared/corrections.mjs` preserves tag origins and manual selections when a new baseline is analyzed. JSON exports contain selected tags, original suggestions, added/removed/deselected tags, scores and timings. The legacy `reviewed` field remains for format compatibility and has no current UI control. Corrections do not train the model.
 
-Current analysis policies include a JSON exclusion snapshot after `coverage-v5:majority`. Validation also accepts older v2-v5 coverage keys. Arrays, scores, support counts, durations and timing fields are validated before a standalone export is created.
+Current analysis policies include a JSON exclusion snapshot after `coverage-v6:majority`. Validation also accepts older v2-v6 coverage keys. Arrays, scores, support counts, durations and timing fields are validated before a standalone export is created.
 
 Old correction files are not loaded or overwritten. Legacy browser databases are left untouched and are not used by the current application. Settings remain persisted separately.
 

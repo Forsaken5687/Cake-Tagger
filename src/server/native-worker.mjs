@@ -8,7 +8,7 @@ import { computeCapabilities, resolveThreads } from './native-policy.mjs';
 
 const require = createRequire(new URL('../../runtime/native/loader.cjs', import.meta.url));
 const ort = require('onnxruntime-node');
-const model = new URL('../../model/joytag-int8.onnx', import.meta.url);
+const model = new URL('../../model/joytag.onnx', import.meta.url);
 const expectedHash = JSON.parse(fs.readFileSync(new URL('../../model/provenance.json', import.meta.url))).sha256;
 if (createHash('sha256').update(fs.readFileSync(model)).digest('hex') !== expectedHash) throw Error('error.nativeModelChecksum');
 const cores = os.availableParallelism();
@@ -61,7 +61,7 @@ parentPort.on('message', async ({ id, frames, parallelism, type }) => {
         const inferenceSeconds = (performance.now() - started) / 1000;
         const raw = output[session.outputNames[0]].data;
         if (raw.length !== 5813 || raw.some(value => !Number.isFinite(value))) throw Error('error.modelOutput');
-        // The quantized graph emits logits; sigmoid converts them to label scores.
+        // The model graph emits logits; sigmoid converts them to label scores.
         const scores = Float32Array.from(raw, value => 1 / (1 + Math.exp(-value)));
         all.push(scores);
         timings.preprocessSeconds += preprocessSeconds;

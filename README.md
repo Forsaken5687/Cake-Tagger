@@ -46,6 +46,8 @@ A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned
 
 ## Analysis and results
 
+The local backend uses the original JoyTag FP32 ONNX model. Setup pins and verifies the official weights; model identity and checksum are recorded in analysis exports.
+
 Automatic sampling uses 8/12/16/24/32/48 frames for videos up to 15/30/60/120/300/600 seconds. The integration uses the website's existing video players instead of duplicating preview images.
 
 The base threshold is fixed at 0.4. Most suggested tags require support in more than half of the sampled frames. Selected clothing, accessory and object tags require at least a quarter of the frames, with a minimum of two and a score of at least 0.65. `dance` also requires a threshold of at least 0.65. Uncertain candidates are unchecked and displayed beside selected suggestions by default.

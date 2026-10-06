@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cake Tagger",
-  "version": "0.7.14",
+  "version": "0.7.15",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "host_permissions": [

@@ -48,3 +48,18 @@ test('mapping audit covers every tag with exact sources or an explicit reason', 
   assert(coverage.entries.find(e => e.tag === 'public').scope);
   assert(coverage.entries.find(e => e.tag === 'changing room').scope);
 });
+
+test('production model download and provenance identify the same official FP32 artifact', () => {
+  const assets = JSON.parse(read('scripts/assets.json'));
+  const provenance = JSON.parse(read('model/provenance.json'));
+  const models = assets.assets.filter(asset => asset.path.endsWith('.onnx'));
+  assert.equal(models.length, 1);
+  assert.equal(models[0].path, 'model/joytag.onnx');
+  assert.equal(provenance.repository, 'fancyfeast/joytag');
+  assert.equal(provenance.precision, 'float32');
+  assert.equal(provenance.name, 'JoyTag-FP32');
+  assert.equal(models[0].sha256, provenance.sha256);
+  assert.equal(models[0].url, `https://huggingface.co/${provenance.repository}/resolve/${provenance.revision}/${provenance.file}`);
+  assert.equal(provenance.runtime, 'onnxruntime-node@1.30.0');
+  assert.equal(provenance.runtimeArchiveSha256, assets.assets.find(asset => asset.path === 'runtime/native/archives/onnxruntime-node.tgz').sha256);
+});

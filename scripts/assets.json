@@ -12,9 +12,9 @@
       "sha256": "7906c439e0d3e0f4048caa23b64cdfadc0f455c377f579ce1ab2a4b778f07d5f"
     },
     {
-      "path": "model/joytag-int8.onnx",
-      "url": "https://huggingface.co/IamTheStormThatIsApproaching/joytag-onnx-Q8_0-quantized/resolve/9829c49ee97c55ad42f23c619a9925a77dabc54c/joytag-Q8_0.onnx",
-      "sha256": "888419d6832b2e39404c6051842e04cacf71cf33f4ce0cb9096874e4f32eec01"
+      "path": "model/joytag.onnx",
+      "url": "https://huggingface.co/fancyfeast/joytag/resolve/6b7f16331a6ccf0fdce37d5a9564715f6e772b22/model.onnx",
+      "sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097"
     },
     {
       "path": "runtime/node.exe",
