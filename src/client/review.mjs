@@ -3,15 +3,15 @@ import {createNativeClient} from './native-client.mjs';
 import {sampleVideo} from './sampling.mjs';
 import {normalizeSettings,suggestionPolicy} from '../shared/preferences.mjs';
 import {ANALYSIS_VERSION,aggregate} from '../shared/tagging.mjs';
-import {DEFAULT_THRESHOLD,DEFAULT_COVERAGE} from '../shared/analysis-settings.mjs';
 import {makeRecord} from '../shared/corrections.mjs';
-import {candidateTags,comparisonMetrics} from '../shared/evaluation.mjs';
+import {DEFAULT_THRESHOLD,DEFAULT_COVERAGE} from '../shared/analysis-settings.mjs';
+import {candidateTags,comparisonMetrics,createReviewSnapshot} from '../shared/evaluation.mjs';
 import {errorMessage,messageError} from '../shared/messages.mjs';
 import {setLanguage,t,translatePage,localizedText} from './i18n.mjs';
 
 const $=selector=>document.querySelector(selector),session=createLocalSession();
 const client=createNativeClient({fetcher:session.request,onProgress:(current,total)=>localizedText($('#status'),'analysis.progress',{current,total})});
-let entries=[],active,controller,running=false,settings=normalizeSettings(),mapping,allTags=[],playerURL;
+let entries=[],active,controller,running=false,settings=normalizeSettings(),mapping,allTags=[],playerURL,downloadURL;
 const rules=()=>({threshold:Number($('#threshold').value),coverage:Number($('#coverage').value)/100,excludedTags:settings.excludedTags});
 const percent=value=>value==null?'—':Math.round(value*100)+'%';
 const label=(node,key,params)=>localizedText(node,key,params);
@@ -26,7 +26,13 @@ function summary(){
  const current=comparisonMetrics(entries,entry=>entry.result.tags),experiment=comparisonMetrics(entries,candidate);
  label($('#metrics'),'review.metrics',{count:current.reviewed,baselinePrecision:percent(current.precision),baselineRecall:percent(current.recall),candidatePrecision:percent(experiment.precision),candidateRecall:percent(experiment.recall)});
 }
+function clearDownload(){
+ if(downloadURL)URL.revokeObjectURL(downloadURL);downloadURL=undefined;
+ $('#download-link').hidden=true;$('#download-link').removeAttribute('href');
+ $('#server-export').hidden=true;$('#server-link').hidden=true;$('#server-link').removeAttribute('href');
+}
 function renderQueue(){
+ clearDownload();
  $('#queue').replaceChildren();
  entries.forEach(entry=>{
   const button=node('button',entry.file.name);button.type='button';button.setAttribute('aria-current',String(entry===active));
@@ -40,6 +46,7 @@ function showPlayer(){
  playerURL=URL.createObjectURL(active.file);$('#player').src=playerURL;$('#filename').textContent=active.file.name;
 }
 function renderTags(){
+ clearDownload();
  $('#tags').replaceChildren();if(!active)return;
  $('#reviewed').checked=!!active.reviewed;$('#reviewed').disabled=!active.result;
  if(!active.result){label($('#counts'),'review.waiting');return;}
@@ -109,20 +116,35 @@ $('#reviewed').onchange=()=>{if(!active?.result)return;active.reviewed=$('#revie
 for(const id of ['threshold','coverage'])$('#'+id).oninput=()=>{summary();renderTags();};
 $('#search').oninput=renderTags;$('#all').onchange=renderTags;
 $('#language').onchange=()=>{setLanguage({language:$('#language').value});translatePage();renderQueue();renderTags();};
-$('#export').onclick=async()=>{
- if(running||!validRules())return;
+$('#export').onclick=()=>{
+ if(running)return;
+ if(!validRules()){label($('#status'),'review.invalidRules');$('#status').scrollIntoView({block:'center'});return;}
  $('#export').disabled=true;
  try{
-  // A short-lived in-memory snapshot supports browsers without Blob downloads.
+  const snapshot=createReviewSnapshot(entries,mapping,rules(),allTags);
+  clearDownload();
+  downloadURL=URL.createObjectURL(new Blob([JSON.stringify(snapshot)],{type:'application/json'}));
+  const link=$('#download-link');link.href=downloadURL;link.download='cake-tag-review.json';link.hidden=false;
+  // Keep a real, visible link if the browser declines an automatic download.
+  // No await separates the user's click from the initial download attempt.
+  $('#server-export').hidden=false;link.click();label($('#status'),'review.downloadReady');link.scrollIntoView({block:'nearest'});
+ }catch(error){label($('#status'),errorMessage(error));$('#status').scrollIntoView({block:'center'});}
+ finally{summary();}
+};
+// A server attachment is an explicit alternative for browsers that reject Blob
+// downloads. Keep the local snapshot available even if this request fails.
+$('#server-export').onclick=async()=>{
+ const button=$('#server-export');button.disabled=true;
+ try{
   const completed=entries.filter(entry=>entry.result);
   const payload={items:completed.map(makeRecord),evaluation:{comparisonRules:rules(),videos:completed.map(entry=>({sha256:entry.result.sha256,timestamps:entry.timestamps,modelScores:entry.scores.map(row=>Array.from(row))}))}};
   const response=await session.request('/api/export?evaluation=1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   const output=await response.json();if(!response.ok)throw messageError(output.error||'error.requestFailed');
   if(typeof output.download!=='string'||!/^\/api\/download\/[a-f0-9]{48}$/.test(output.download))throw messageError('error.requestFailed');
-  const link=node('a');link.href=output.download;link.download='cake-tag-review.json';document.body.append(link);link.click();link.remove();
-  label($('#status'),'export.started');
- }catch(error){label($('#status'),errorMessage(error));}
- finally{summary();}
+  const link=$('#server-link');link.href=output.download;link.download='cake-tag-review.json';link.hidden=false;
+  $('#download-link').hidden=true;button.hidden=true;label($('#status'),'review.downloadReady');link.scrollIntoView({block:'center'});
+ }catch(error){label($('#status'),errorMessage(error));$('#status').scrollIntoView({block:'center'});}
+ finally{button.disabled=false;}
 };
 window.addEventListener('beforeunload',event=>{if(entries.some(entry=>entry.result)){event.preventDefault();event.returnValue='';}});
 try{

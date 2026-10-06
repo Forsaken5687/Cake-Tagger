@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {candidateTags,comparisonMetrics,reviewExport} from '../src/shared/evaluation.mjs';
+import {candidateTags,comparisonMetrics,reviewExport,createReviewSnapshot} from '../src/shared/evaluation.mjs';
 test('comparison rejects isolated frame hits and keeps scores across the whole clip',()=>{
  const rows=candidateTags([[.99,.7],[.1,.8],[.1,.6],[.1,.9]],{tattoos:[0],glasses:[1]},{threshold:.5,coverage:.5});
  assert.deepEqual(rows.map(row=>row.tag),['glasses']);assert.equal(rows[0].supportingFrames,4);assert(Math.abs(rows[0].confidence-.75)<1e-6);
@@ -30,4 +30,18 @@ test('review exports validate raw scores and preserve separate reviews of identi
   assert.throws(()=>reviewExport({...evaluation,videos:[malformed]},[item],mapping));
  }
  assert.throws(()=>reviewExport({...evaluation,comparisonRules:{...rules,excludedTags:['unknown']}},[item,item],mapping));
+});
+
+
+test('local review snapshot preserves corrections and raw scores without a server request',()=>{
+ const sha='a'.repeat(64),scores=[Float32Array.from(Array(5813).fill(.8)),Float32Array.from(Array(5813).fill(.9))];
+ const entry={file:{name:'synthetic.mp4'},selected:new Map([['glasses',false],['tattoos',true]]),tagSources:{glasses:'suggestion',tattoos:'manual'},reviewed:true,
+  result:{sha256:sha,tags:[{tag:'glasses',confidence:.85,supportingFrames:2}],uncertain:[],sampledFrames:2,durationSeconds:3},scores,timestamps:[.5,2]};
+ const snapshot=JSON.parse(JSON.stringify(createReviewSnapshot([entry],{glasses:[0]},{threshold:.5,coverage:.5,excludedTags:[]},['glasses','tattoos'])));
+ assert.equal(snapshot.source,'cake-tagger-review');assert.equal(snapshot.items[0].reviewed,true);
+ assert.deepEqual(snapshot.items[0].tags,['tattoos']);assert.deepEqual(snapshot.items[0].addedTags,['tattoos']);assert.deepEqual(snapshot.items[0].removedTags,['glasses']);
+ assert.equal(snapshot.items[0].evaluation.modelScores[0].length,5813);
+ assert.equal(snapshot.items[0].tagSources.tattoos,'manual');
+ assert.equal(entry.selected.get('glasses'),false);
+ assert.throws(()=>createReviewSnapshot([],{},{}));
 });

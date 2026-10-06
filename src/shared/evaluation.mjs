@@ -2,6 +2,7 @@ import { excluded } from './tag-policy.mjs';
 import { ANALYSIS_VERSION } from './tagging.mjs';
 import { PREPROCESS_VERSION } from './analysis-settings.mjs';
 import { messageError } from './messages.mjs';
+import { exportItem } from './corrections.mjs';
 
 // Candidate rules are a local experiment, never the production tagging policy.
 export function candidateTags(frames,mapping,{threshold=.5,coverage=.5,excludedTags=[]}={}) {
@@ -47,4 +48,19 @@ export function reviewExport(evaluation,items,mapping,allowedTags=Object.keys(ma
     ||!Array.isArray(times)||times.length!==scores.length||times.some((time,index)=>!Number.isFinite(time)||time<0||time>=item.durationSeconds||(index>0&&time<=times[index-1])))throw messageError('error.invalidModelScores');
    return {...item,evaluation:{timestamps:times,modelScores:scores,candidateSuggestions:candidateTags(scores,mapping,rules)}};
   })};
+}
+
+
+// Export already computed scores locally. Saving annotations must not require
+// a running backend, an expiring session or another HTTP upload of all scores.
+export function createReviewSnapshot(entries,mapping,comparisonRules,allowedTags) {
+ const completed=entries.filter(entry=>entry.result);
+ if(!completed.length)throw messageError('error.noValidResults');
+ const items=completed.map(exportItem);
+ const evaluation={comparisonRules,videos:completed.map(entry=>({
+  sha256:entry.result.sha256,timestamps:entry.timestamps,
+  modelScores:entry.scores.map(row=>Array.from(row))
+ }))};
+ return {version:2,source:'cake-tagger-review',createdAt:new Date().toISOString(),
+  ...reviewExport(evaluation,items,mapping,allowedTags)};
 }

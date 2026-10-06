@@ -2,6 +2,9 @@
 export const messages = {
   "review.title": { en: "Review", de: "Bewertung" },
   "review.files": { en: "Choose videos", de: "Videos auswählen" },
+  "review.alternative": { en: "Prepare alternative download", de: "Alternativen Download vorbereiten" },
+  "review.downloadReady": { en: "Download prepared. If no file appears, click Download prepared JSON.", de: "Download vorbereitet. Falls keine Datei erscheint, klicke auf Vorbereitete JSON herunterladen." },
+  "review.downloadLink": { en: "Download prepared JSON", de: "Vorbereitete JSON herunterladen" },
   "review.intro": { en: "Choose local videos, analyze, then correct the tags.", de: "Lokale Videos auswählen, analysieren und anschließend die Tags korrigieren." },
   "review.comparison": { en: "Compare rules", de: "Regeln vergleichen" },
   "review.comparisonHint": { en: "Current production rules vs. experimental global rules. Changes reuse the same model scores.", de: "Aktuelle Erkennungsregeln im Vergleich zu experimentellen globalen Regeln. Änderungen nutzen dieselben Modellwerte." },
