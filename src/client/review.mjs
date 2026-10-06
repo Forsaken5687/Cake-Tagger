@@ -170,7 +170,6 @@ function renderTags(){
   tr.append(node('td',percent(scores.length?scores.slice(0,2).reduce((x,y)=>x+y,0)/Math.min(2,scores.length):null)));
   tr.append(node('td',frames.length?frames.filter(f=>f.matched).length+'/'+frames.length:'—'));
   for(const present of [baseline.has(tag),a.has(tag),b.has(tag)]){const cell=node('td',present?'✓':'—');cell.className='comparison-column'+(present?' yes':'');tr.append(cell);}
-
   $('#tags').append(tr);
  }
  label($('#counts'),'tags.selectedCount',{count:[...active.selected].filter(([tag,yes])=>yes&&!active.ignoredTags.has(tag)).length});
