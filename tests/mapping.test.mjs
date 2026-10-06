@@ -14,6 +14,7 @@ test('all mappings address valid labels and coverage matches the active policy',
     for (const index of indices) assert(Number.isInteger(index) && index >= 0 && index < labels.length, tag);
   }
   assert.equal(mapping.watermark, undefined);
+  assert.deepEqual(mapping.closeup.map(i => labels[i]), ['close-up']);
   assert.deepEqual(mapping.kissing.map(i => labels[i]), ['kiss', 'french_kiss']);
   assert.deepEqual(mapping.shower.map(i => labels[i]), ['showering']);
   assert.deepEqual(mapping.sweaty.map(i => labels[i]), ['sweat', 'sweating_profusely']);

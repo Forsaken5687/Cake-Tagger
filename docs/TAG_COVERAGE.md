@@ -1,6 +1,6 @@
 # Tag coverage
 
-Under default settings, 159 of 258 tags have an automatic model mapping. This describes coverage, not recognition accuracy.
+Under default settings, 160 of 258 tags have an automatic model mapping. This describes coverage, not recognition accuracy.
 
 ## Manual-only under default settings
 
@@ -34,7 +34,6 @@ These tags either lack a suitable mapping or are deliberately excluded from auto
 - interracial
 - watermark
 - no face
-- closeup
 - trans
 - public
 - squirting
