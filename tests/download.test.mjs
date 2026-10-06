@@ -13,7 +13,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['src/client/analysis.html', 'src/server/server.mjs', 'src/server/native-policy.mjs', 'src/shared/preferences.mjs', 'src/shared/tagging.mjs', 'src/shared/tag-policy.mjs','src/shared/evaluation.mjs', 'model/mapping.json', 'src/server/native-engine.mjs', 'src/client/native-client.mjs', 'src/client/local-session.mjs', 'src/client/diagnostics.html', 'src/client/diagnostics.mjs', 'src/client/runtime-metrics.mjs', 'src/shared/messages.mjs', 'src/shared/session-url.mjs', 'src/shared/corrections.mjs', 'src/client/sampling.mjs', 'src/shared/analysis-settings.mjs', 'model/tags.txt']) { fs.mkdirSync(path.dirname(path.join(root,name)),{recursive:true}); fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root,name)); }
+  for (const name of ['src/client/analysis.html', 'src/server/server.mjs', 'src/server/native-policy.mjs', 'src/shared/preferences.mjs', 'src/shared/tagging.mjs', 'src/shared/tag-policy.mjs', 'model/mapping.json', 'src/server/native-engine.mjs', 'src/client/native-client.mjs', 'src/client/local-session.mjs', 'src/client/diagnostics.html', 'src/client/diagnostics.mjs', 'src/client/runtime-metrics.mjs', 'src/shared/messages.mjs', 'src/shared/session-url.mjs', 'src/shared/corrections.mjs', 'src/client/sampling.mjs', 'src/shared/analysis-settings.mjs', 'model/tags.txt']) { fs.mkdirSync(path.dirname(path.join(root,name)),{recursive:true}); fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root,name)); }
   fs.mkdirSync(path.join(root, 'src/client'),{recursive:true});
   fs.copyFileSync(new URL('../src/client/auto-analysis.mjs', import.meta.url), path.join(root, 'src/client/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
@@ -54,6 +54,9 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.equal((await fetch(url.origin + '/api/runtime', { headers: { ...headers, Origin: 'https://cake.ski' } })).status, 403);
     assert.equal((await fetch(url.origin + '/src/client/auto-analysis.mjs')).status, 200);
     assert.equal((await fetch(url.origin + '/extension/background.js')).status, 404);
+    assert.equal((await fetch(url.origin + '/review.html')).status, 404);
+    assert.equal((await fetch(url.origin + '/src/shared/evaluation.mjs')).status, 404);
+    assert.equal((await fetch(url.origin + '/api/export?evaluation=1', {method:'POST', headers, body:'{}'})).status, 404);
     const caps = await (await fetch(url.origin + '/api/capabilities', { headers })).json();
     assert.equal(caps.testMaximum, caps.logicalProcessors);
     assert.equal((await fetch(url.origin + '/api/settings')).status, 401);

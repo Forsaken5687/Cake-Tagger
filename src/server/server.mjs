@@ -1,4 +1,3 @@
-import {reviewExport} from '../shared/evaluation.mjs';
 import { messageError, errorMessage } from '../shared/messages.mjs';
 import http from 'node:http';
 import os from 'node:os';
@@ -16,6 +15,10 @@ import { aggregate } from '../shared/tagging.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE } from '../shared/analysis-settings.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+// Review tools exist only in development checkouts, never in runtime releases.
+const reviewModule = new URL('../shared/evaluation.mjs', import.meta.url);
+const reviewEnabled = fs.existsSync(reviewModule) && fs.existsSync(path.join(root, 'src/client/review.html'));
+const { reviewExport } = reviewEnabled ? await import(reviewModule) : {};
 // Windows may downclassify a hidden service independently of Normal priority.
 // Apply explicit process QoS once; no global power plan or thread limit changes.
 let processPowerPolicy = 'unavailable';
@@ -30,12 +33,9 @@ const port = Number(process.env.CAKE_TAGGER_PORT ?? 8765);
 if (!Number.isInteger(port) || port < 0 || port > 65535) throw messageError('error.invalidPort');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.onnx': 'application/octet-stream' };
 // Serve only the reviewed browser module set; backend and private paths stay inaccessible.
-const aliases = {'/analysis.html':'src/client/analysis.html','/diagnostics.html':'src/client/diagnostics.html','/review.html':'src/client/review.html'};
+const aliases = {'/analysis.html':'src/client/analysis.html','/diagnostics.html':'src/client/diagnostics.html', ...(reviewEnabled ? {'/review.html':'src/client/review.html'} : {})};
 const publicFiles = new Set([
-  'src/client/review.html',
-  'src/client/review.mjs',
-  'src/client/review.css',
-  'src/shared/evaluation.mjs',
+  ...(reviewEnabled ? ['src/client/review.html', 'src/client/review.mjs', 'src/client/review.css', 'src/shared/evaluation.mjs'] : []),
   'src/client/analysis.html',
   'src/client/diagnostics.html',
   'src/client/app.js',
@@ -162,6 +162,7 @@ const server = http.createServer(async (req, res) => {
     try {
       if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'error.expectedJson' });
       const evaluation = new URL(req.url, 'http://' + ownHost).searchParams.get('evaluation') === '1';
+      if (evaluation && !reviewEnabled) return json(res, 404, { error: 'error.noValidResults' });
       const chunks = []; let size = 0;
       for await (const chunk of req) { size += chunk.length; if (size > (evaluation ? 64000000 : 16000000)) throw messageError('error.exportIsTooLarge'); chunks.push(chunk); }
       const input = JSON.parse(Buffer.concat(chunks).toString('utf8'));

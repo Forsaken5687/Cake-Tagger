@@ -27,13 +27,9 @@ Requires Windows x64 and a current Firefox or Chrome browser with video decoding
 3. Open cake.ski's upload area with the extension installed and select videos.
 4. Review suggestions on the cards, then apply them or download JSON.
 
-The separate analysis window has been removed. Direct Localhost navigation redirects to cake.ski. The optional local review tool is served separately at `/review.html`; the upload interface remains extension-only. Results are kept only for the current upload-page session. Download anything you want to retain before closing or reloading it. **Quit** cancels unfinished work, waits for the native worker to stop, and shuts down the local server. It is available on the upload toolbar and extension menu.
+The separate analysis window has been removed. Direct Localhost navigation redirects to cake.ski. The upload interface remains extension-only. Results are kept only for the current upload-page session. Download anything you want to retain before closing or reloading it. **Quit** cancels unfinished work, waits for the native worker to stop, and shuts down the local server. It is available on the upload toolbar and extension menu.
 
 A Git checkout omits large dependencies. Run `Setup.cmd` once to download pinned artifacts and verify SHA-256 checksums. Complete releases include the archives; `Start.cmd` verifies and extracts the native runtime on first use. Analysis works offline afterward.
-
-## Local evaluation
-
-Run `Review.cmd` to review local videos without cake.ski. Correct tags, compare experimental rules using the same inference scores, and download the annotations plus raw scores as JSON. Results stay in memory until the page closes. See [local tag review](docs/REVIEW.md).
 
 ## Settings
 
@@ -85,7 +81,7 @@ Settings are persisted; exports contain filenames and tags. Selecting files on c
 
 For unexpected slowdowns during analysis, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It uses the same native Node API and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
 
-Development tools and tests belong to the source checkout and are not included in runtime releases. Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Extension.mjs firefox` and `runtime/node.exe scripts/Build-Extension.mjs chrome`.
+The `dev` branch includes the local review tool (`Review.cmd`), experiments and synthetic tests. These remain available in the source checkout. Development tools and tests belong to the source checkout and are not included in runtime releases. Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Extension.mjs firefox` and `runtime/node.exe scripts/Build-Extension.mjs chrome`.
 
 
 `scripts/Package.ps1` builds `outputs/Cake-Tagger.zip` from an explicit runtime file list and checksum-verified assets. It includes `extensions/Cake-Tagger-Firefox.zip` and the unpacked `extensions/chrome/` directory. Tests, developer tooling, redundant extension sources, private data, media, scratch files and Git history are excluded. Share this package rather than the working directory.
