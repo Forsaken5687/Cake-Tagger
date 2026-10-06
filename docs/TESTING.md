@@ -4,9 +4,10 @@ Run `scripts/Test.ps1` from a writable checkout with the bundled runtime availab
 
 ## Automated coverage
 
-Native checks cover shared-session queue limits, cancellation isolation, worker recovery, batch streaming, chronological scores, effective overrides above eight, hardware limits, provider metadata, origin boundaries and malformed input bodies. Also run a production API smoke check with restored native dependencies; mocked workers do not establish inference compatibility or speed. Use identical decoded RGBA inputs, thread settings and exclusion policies when comparing paths. Record cold and warm runs separately; CPU time and RSS snapshots are not CPU utilization or peak model memory.
+Native checks cover shared-session queue limits, cancellation isolation, worker recovery, batch streaming, chronological scores, effective hardware-derived thread overrides, hardware limits, provider metadata, origin boundaries and malformed input bodies. Also run a production API smoke check with restored native dependencies; mocked workers do not establish inference compatibility or speed. Use identical decoded RGBA inputs, thread settings and exclusion policies when comparing paths. Record cold and warm runs separately; CPU time and RSS snapshots are not CPU utilization or peak model memory.
 
 - Frame sampling boundaries, tag aggregation and uncertain candidate scores.
+- Review-session restoration, import validation, ignored judgments, per-tag rules and A/B comparisons.
 - Mapping coverage and manual-category exclusions.
 - Central preference normalization, legacy migration without overwriting originals, and browser message relays.
 - Automatic analysis queues, latest-selection behavior, disabling, failures and retained corrections.
@@ -33,6 +34,10 @@ Use local fixtures when no upload is permitted. Real cake.ski Bulk selection may
 9. Open runtime diagnostics and run its synthetic single-image check. Record cold and warm runs separately.
 
 Keep personal media and test reports outside Git and release packages.
+
+## Review lab checks
+
+From a source checkout, start `Review.cmd` and use synthetic videos. Check annotation and status changes, frame seeking, per-tag overrides, holdout visibility and A/B example navigation. Verify autosave restoration and JSON import/export without losing judgments. Check desktop and narrow layouts, evidence dismissal and startup failure reporting. See [review lab](REVIEW.md).
 
 ## Release checks
 

@@ -1,37 +1,49 @@
 # Review lab
 
-The review lab is a development-only tool. Start `Review.cmd` from a source checkout. It uses the production sampling implementation and central native inference queue, but its experimental rules never change upload suggestions.
+Start `Review.cmd` from a source checkout. The lab uses the local inference service to evaluate tag suggestions. Its experimental rules do not change the upload extension's suggestions. It is excluded from release packages.
 
-After updates that add browser modules, restart the local service before opening the lab. The page reports a startup failure if an older running service cannot serve the session module; saved reviews are retained.
+## Review videos
 
-## Workflow
+1. Choose videos and run **Suggest tags**. Select a video from the queue.
+2. Choose **Correct**, **Incorrect** or **Unclear** for each tag. Unclear judgments are excluded from evaluation. Search or enable **Show all tags** to add missing labels.
+3. Click a tag name to inspect sampled frames and scores. Click a frame to seek the video. Close the evidence drawer with its close button, Escape or a click outside.
+4. Choose **Complete & next** after reviewing the whole clip. **Previous** and **Next** navigate without completing a review. **Reopen review** returns a completed video to pending.
 
-1. Choose local videos and analyze them. **Review videos** opens by default, with the video and judgments side by side. Desktop panes use the full window width and remaining height, with independent scrolling for the queue and tags. Narrow or short windows retain document scrolling. Select a video in the queue; the progress counter tracks completed reviews. Frame count, import, explicit saving and starting a new session are under **Session options**.
-2. Use the inline **Correct**, **Incorrect** or **Unclear** choices (one per tag) for each tag. **Unclear** marks a tag as not assessable. **Show all tags** exposes the entire catalog, including manual-only tags. Mark ambiguous tags **Not assessable** rather than guessing; their judgments are excluded from precision, recall, problem reports and A/B improvements.
-3. Use **Complete & next** after checking the whole clip to mark it reviewed and move to the next analyzed, unreviewed video with visible results. **Previous** and **Next** navigate without marking a review complete; The heading displays the review status. For completed videos, **Reopen review** sets the status back to pending without changing annotations. Changing annotations clears this mark. Rules and resampling preserve annotations; metrics only use completed reviews.
-4. Click a tag name to inspect its sampled frames, individual scores and timestamps. Click a frame to seek the original video. Close the evidence drawer using its close button, Escape or a click outside; outside clicks still activate the underlying control. Highlighted frames meet the selected experimental variant's threshold, not necessarily production's per-tag support rules.
-5. Open the **Compare rules** tab to compare **Variant A** and **Variant B**. Enable **Compare columns** in the review workspace when you need predictions alongside judgments. Each has global threshold and required-frame coverage. Expand **Adjust tag rule** in the evidence drawer to override both values for one mapped tag; **Use global rule** removes that override. Every rule requires at least two matching frames. All experiments reuse existing scores and do not rerun inference.
-6. Open **Problem tags** for frequent incorrect suggestions and missing tags. Select production, A or B and open an example directly. A/B changes identify improvements and regressions only on reviewed, assessable judgments.
-7. Tune using the **Development** group. Approximately one quarter of clips are assigned to **Holdout** by a stable content-hash partition. Adding videos does not move existing clips. You can assign a group explicitly; identical hashes always move together. Holdout suggestions and metrics stay hidden until **Reveal holdout results**. Reveal them for a final check, not repeated tuning. Related footage and the same performer can still leak across groups; this partition does not establish independent accuracy.
+Changing a judgment marks the review as pending. Changing experimental rules or resampling preserves annotations. Only completed reviews contribute to accuracy metrics.
 
-## Saving and restoration
+**Confidence score** averages the two strongest frame scores. **Matching frames (A)** shows how many frames meet Variant A's threshold. Neither is a guaranteed probability of correctness.
 
-The lab automatically saves annotations, raw scores, both variants, grouping and sampled JPEG previews to IndexedDB in the current browser after changes and after each successful analysis. **Save now** flushes pending changes. Wait for **Saved locally** before closing. If storage is blocked or full, the page reports the failure and retains the working session; download JSON instead. Browser storage is tied to the browser profile and exact origin/port, can be cleared by the browser and is not a substitute for a separate backup.
+## Compare and improve rules
 
-On reopening, **Restore session** restores the saved draft. It never silently overwrites an existing session. Original videos are not stored: select them again to play or resample. Restored files are matched by SHA-256, not guessed by filename. Scores and annotations can be inspected without a video. **New session** removes this lab's backup after confirmation; it does not touch upload corrections, exports or backend preferences.
+**Compare rules** evaluates two variants against your annotations using the existing scores; no new inference is needed. Each variant has a score threshold and required frame coverage. Rules require at least two matching frames.
 
-**Download JSON** preserves completed reviews, raw scores, timestamps, both variants, per-tag overrides, not-assessable tags and group assignments. It deliberately omits videos and preview images. **Import JSON** accepts current lab downloads, older version-2 review exports and draft snapshots. Known renamed tags are canonicalized on a copied record; imported files are not rewritten. Malformed data is rejected before replacing the current session. Imports are limited to 256 MB and 1,000 videos. A draft may also contain queued videos; standard review exports contain only completed analyses.
+Enable **Compare columns** to see current, A and B predictions beside your judgments. In the evidence drawer, **Adjust tag rule** sets a custom threshold and coverage for one mapped tag. **Use global rule** removes the override.
 
-The visible **Download prepared JSON** link remains available if an automatic Blob download is declined. **Prepare alternative download** uses the backend attachment fallback, includes the same lab metadata and expires after five minutes. That fallback is subject to the server's 64 MB request limit and accepts the backend's current taxonomy. Historic retired annotations should use the local download path instead.
+**Problem tags** lists incorrect suggestions and missed tags. Choose current suggestions, A or B, then click an example to open its video and evidence.
 
-## Interpreting results
+- **Precision:** the fraction of suggested tags that agree with your annotations.
+- **Recall:** the fraction of your positive tags detected.
 
-Precision is the fraction of suggested tags that agree with your reviewed labels. Recall is the fraction of reviewed positive tags detected. Empty denominators show a dash; manual-only labels can lower complete recall. Counts are over reviewed video records. Exact duplicate imports stay in the same group but may contribute multiple records, so use one review per clip when comparing results. The confidence score is a model signal, not a calibrated probability.
+Manual-only tags can lower recall. Use one review per clip to avoid counting duplicates. A/B scores use the mean across sampled frames; the displayed confidence score and production rules use their own aggregation.
 
-Production keeps its own thresholds, temporal rules and top-two confidence score. Experimental A/B confidence uses the mean across sampled frames. A custom threshold alone does not make an unavailable model label recognizable.
+## Development and holdout groups
 
-## Offline analysis
+Use **Development** videos to tune rules. Reserve **Holdout** videos for checking the final changes. About a quarter of videos are assigned to holdout by content hash; you can change the group explicitly. Identical content stays in the same group.
 
-Run `runtime/node.exe scripts/Analyze-Reviews.mjs <review.json> work/review-analysis/report.md`. The script accepts review downloads and recovered request bodies, excludes unreviewed/ambiguous judgments, groups identical content, rejects conflicting duplicates and respects recorded exclusions. It uses the same stable content-hash split and explicit group assignments. Markdown and JSON reports are written only under ignored `work/`.
+Holdout suggestions and metrics remain hidden until **Reveal holdout results** is enabled. Closely related clips can still bias the comparison, so this split alone does not establish independent accuracy.
 
-The review UI, session module, evaluator, development launcher and tests are excluded from production packages and extensions. No additional dependency or model download is required.
+## Sessions and downloads
+
+The lab automatically saves annotations, scores, rules and preview images in the current browser. Wait for **Saved locally** before closing. Browser storage can be cleared; download JSON as a separate backup.
+
+Under **Session options** you can change frame count, import JSON, save immediately or start a new session. **New session** clears this lab's browser backup after confirmation. **Restore session** reloads a saved session. Original videos are not stored: select them again for playback or resampling; they are matched by content hash.
+
+**Download JSON** includes analyzed videos, annotations, scores, timestamps and rules, but no video files or previews. **Import JSON** restores these results. Unreviewed analyzed videos are included, but excluded from accuracy metrics.
+
+If the download does not appear, use **Download prepared JSON** or **Prepare alternative download**. The alternative link expires after five minutes and supports exports up to the server's 64 MB request limit. For historic tags no longer in the current catalog, use the local download.
+
+Restart the local service after updating application files. Saved sessions remain in the browser.
+
+## Offline reports
+
+Run `runtime/node.exe scripts/Analyze-Reviews.mjs <review.json> work/review-analysis/report.md` to create Markdown and JSON reports from a review export. Reports use completed, assessable judgments and the recorded group assignments and exclusions.

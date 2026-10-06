@@ -4,7 +4,7 @@ Cake Tagger is a local application and browser extension under development. Code
 
 ## Data flow
 
-Video decoding and frame extraction run in the browser. Binary 448 × 448 RGBA samples are sent only to the local Node server for native CPU inference. The server does not accept file paths or save samples. Full videos and filenames are not sent for inference. Results stay in page memory; there is no project telemetry. Exported JSON contains filenames and content tags and can therefore contain private information.
+Video decoding and frame extraction run in the browser. Binary 448 × 448 RGBA samples are sent only to the local Node server for native CPU inference. The server does not accept file paths or save samples. Full videos and filenames are not sent for inference. Upload results stay in page memory. The development review lab stores annotations, scores and sampled previews in browser-local IndexedDB; original videos are not stored. There is no project telemetry. Exported JSON contains filenames and content tags and can therefore contain private information.
 
 Settings persist in ignored `data/preferences.json` on the local server. Original legacy browser preferences remain untouched after migration. The standalone server also writes an ignored `data/session.json` containing its random session token and process ID. Treat this file as private. Legacy corrections are not loaded or overwritten.
 
@@ -27,11 +27,11 @@ The extension's analysis does not upload videos, but cake.ski may stage Bulk dra
 
 `/api/infer` requires a bearer token, validates content type, frame size and thread settings, and uses a bounded queue. Local pages acquire and renew the token with a same-origin custom-header handshake; local handshakes require the exact loopback Origin. Unrelated origins and requests missing that Origin are rejected. Authentication rejections are retried once; processing failures are never automatically replayed. Extension pages request loopback access and acquire the token through a custom-header connection request. CORS permits extension origins and rejects unrelated website/null origins. Privileged extension requests may omit Origin. Installed extensions with loopback permission and local processes are inside the trust boundary; the handshake does not establish extension identity. The bridge passes the token only in the Localhost frame's URL fragment; the application moves it to session storage and removes the fragment. The token is never sent to cake.ski. Inference responses include optional system and Node memory snapshots with separate scopes. They do not inspect other processes or measure peak model RAM.
 
-The browser, local operating system, pinned Node runtime, ONNX Runtime Node, community-converted model and cake.ski page remain trusted components. Checksums establish artifact identity; they do not prove that an artifact is safe. This project does not sandbox other applications running under the same local account.
+The browser, local operating system, pinned Node runtime, ONNX Runtime Node, pinned JoyTag model and cake.ski page remain trusted components. Checksums establish artifact identity; they do not prove that an artifact is safe. This project does not sandbox other applications running under the same local account.
 
 Browsers decode media and Node loads native runtime binaries; keep supported browsers updated. Large batches can consume substantial CPU and memory despite per-video limits. The model's semantic accuracy and frame-coverage heuristics need an independently reviewed dataset.
 
-The adapter depends on a changing website DOM. Unsupported changes should stop transfer, but complete target-browser and real-site checks remain necessary. Only filenames link separate-view analyses to upload cards; the extension does not verify the site's uploaded bytes.
+The adapter depends on a changing website DOM. Unsupported changes should stop transfer, but complete target-browser and real-site checks remain necessary. Upload cards are matched by filename; the extension does not verify the site's uploaded bytes.
 
 Do not expose the standalone server to a LAN or public network. Do not share the working folder or session files; share the generated release instead. Keep licenses and asset provenance when distributing it.
 

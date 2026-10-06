@@ -1,6 +1,6 @@
 # Browser integration
 
-Firefox and Chrome connect to one Localhost UI and native backend, using the same upload adapter. All analysis views use the local Node inference server; the separate standalone analysis window has been removed. Start the server before analyzing videos.
+Firefox and Chrome use the same upload adapter and local Node inference service. The embedded processing document handles browser decoding and session state. Start the service before analyzing videos.
 
 ## Upload contract
 

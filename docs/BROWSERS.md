@@ -11,7 +11,7 @@ Requires Firefox Desktop 140 or later. The development package is unsigned.
 3. Choose **Load Temporary Add-on** and select the extracted `manifest.json`.
 4. Allow access to cake.ski and loopback when requested, then reload cake.ski.
 
-To update, replace the extracted files, reload the add-on in about:debugging, then reload cake.ski. Temporary add-ons are removed when Firefox restarts. Permanent distribution requires signing; packages are not submitted automatically.
+To update, replace the extracted files, reload the add-on in about:debugging, then reload cake.ski. Temporary add-ons are removed when Firefox restarts. Permanent Firefox installation requires a signed extension.
 
 ## Chrome
 
