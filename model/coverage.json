@@ -1002,7 +1002,7 @@
       "tag": "animated",
       "status": "manual",
       "labels": [],
-      "reason": "Editing or media-type category; no reliable equivalent model label."
+      "reason": "Anime content; the anime_coloring label describes shading style rather than a general anime-content category."
     },
     {
       "tag": "cleavage",

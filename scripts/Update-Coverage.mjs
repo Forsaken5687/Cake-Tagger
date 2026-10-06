@@ -19,7 +19,7 @@ group('hairy', 'Mapped, but excluded by default following recognition mismatches
 group('watermark', 'Excluded by default; no suitable model label.');
 group('tease|amateur|rough|alternative|sloppy|egirl|dirty talk|edging|pet play|maledom', 'Requires context or a category distinction absent from the model vocabulary.');
 group('ass shake|twerking|tit drop|slow motion', 'Requires motion or timing evidence; no suitable model label.');
-group('compilation|pmv|animated', 'Editing or media-type category; no reliable equivalent model label.');
+group('compilation|pmv', 'Editing or media-type category; no reliable equivalent model label.');
 group('fisting|side fuck|cum on pussy|chastity cage|gagging|pillow humping|rimming|gloryhole|ball sucking|held down|strap on|ball fondling|pegging', 'No suitable label in the pinned model vocabulary.');
 group('clothed|sfw|shaved|no face', 'Cannot be inferred from the absence of nudity, hair or face detections.');
 group('thick', 'Body category is broader than the available thick-thigh label.');
@@ -36,6 +36,7 @@ group('gym', 'Gym clothing does not establish the setting.');
 group('clown', 'Character-name labels are not a generic clown category.');
 group('hijab', 'Generic kerchief labels do not establish this garment.');
 group('scissoring', 'The available tribadism label is broader than this specific action.');
+group('animated', 'Anime content; the anime_coloring label describes shading style rather than a general anime-content category.');
 const scopes = {
   public: 'Public nudity only; other public scenes are not covered.',
   'changing room': 'Locker rooms only; other changing rooms are not covered.',

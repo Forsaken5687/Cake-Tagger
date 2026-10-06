@@ -220,7 +220,7 @@ Mappings combine explicit aliases and concrete subtypes. They do not infer a tag
 | cuck | default-excluded | Narrative or consent context; excluded by policy. |
 | milf | default-excluded | Age, identity or relationship category; excluded by policy. |
 | pmv | manual | Editing or media-type category; no reliable equivalent model label. |
-| animated | manual | Editing or media-type category; no reliable equivalent model label. |
+| animated | manual | Anime content; the anime_coloring label describes shading style rather than a general anime-content category. |
 | tit drop | manual | Requires motion or timing evidence; no suitable model label. |
 | freeuse | default-excluded | Narrative or consent context; excluded by policy. |
 | sloppy | manual | Requires context or a category distinction absent from the model vocabulary. |
