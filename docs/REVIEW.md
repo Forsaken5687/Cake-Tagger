@@ -1,6 +1,6 @@
 # Local tag review
 
-This developer tool is available in the `dev` source checkout only. It is excluded from runtime releases and both extensions.
+This developer tool is available in the source checkout only. It is excluded from runtime releases and both extensions.
 
 Run `Review.cmd` to start or reuse the local backend and open `http://127.0.0.1:8765/review.html`. No browser extension or cake.ski account is required. The normal upload workflow remains separate.
 

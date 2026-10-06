@@ -81,7 +81,7 @@ Settings are persisted; exports contain filenames and tags. Selecting files on c
 
 For unexpected slowdowns during analysis, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the server is running. It uses the same native Node API and can time a single synthetic image without selecting videos. Download the report to compare thread settings and timings across browsers. The configured thread count describes the runtime setting, not measured CPU utilization. Keep the original application tab open to preserve its results.
 
-The `dev` branch includes the local review tool (`Review.cmd`), experiments and synthetic tests. These remain available in the source checkout. Development tools and tests belong to the source checkout and are not included in runtime releases. Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Extension.mjs firefox` and `runtime/node.exe scripts/Build-Extension.mjs chrome`.
+The source checkout includes the local review tool (`Review.cmd`) and synthetic tests. Development tools and tests are excluded from runtime releases. Run `scripts/Test.ps1` after changes. Build extensions with `runtime/node.exe scripts/Build-Extension.mjs firefox` and `runtime/node.exe scripts/Build-Extension.mjs chrome`.
 
 
 `scripts/Package.ps1` builds `outputs/Cake-Tagger.zip` from an explicit runtime file list and checksum-verified assets. It includes `extensions/Cake-Tagger-Firefox.zip` and the unpacked `extensions/chrome/` directory. Tests, developer tooling, redundant extension sources, private data, media, scratch files and Git history are excluded. Share this package rather than the working directory.
