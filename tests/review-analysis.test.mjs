@@ -1,0 +1,19 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {analyzeReviews} from '../scripts/Analyze-Reviews.mjs';
+const make=(id,reviewed=true,tags=['glasses'])=>({sha256:id.repeat(64),tags,reviewed,result:{threshold:.4,analysisPolicy:'coverage-v5:majority:["hairy","watermark"]',sampledFrames:2,tags:[{tag:'glasses'}]}});
+const video=item=>({sha256:item.sha256,modelScores:[Array(5813).fill(.9),Array(5813).fill(.9)]});
+const input=items=>({items,evaluation:{videos:items.map(video)}});
+test('review analysis separates content and excludes unreviewed and duplicate labels',()=>{
+ const report=analyzeReviews(input([make('a'),make('b'),make('c'),make('d'),make('a'),make('e',false)]),{glasses:[0]},['glasses']);
+ assert.equal(report.reviewed,4);assert.equal(report.unreviewed,1);assert.equal(report.duplicates,1);
+ assert.equal(report.development.count,3);assert.equal(report.holdout.count,1);assert.equal(report.all.precision,1);assert.equal(report.baselineMismatches,0);
+ assert.throws(()=>analyzeReviews(input([make('a'),make('a',true,[])]),{glasses:[0]},['glasses']));
+});
+test('eligible recall separates manual-only labels and validates score association',()=>{
+ const data=input([make('a',true,['glasses','watermark'])]);
+ const report=analyzeReviews(data,{glasses:[0]},['glasses','watermark']);
+ assert.equal(report.all.recall,.5);assert.equal(report.automaticallyEligible.recall,1);
+ data.evaluation.videos[0].sha256='b'.repeat(64);
+ assert.throws(()=>analyzeReviews(data,{glasses:[0]},['glasses','watermark']));
+});
