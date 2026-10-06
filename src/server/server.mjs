@@ -1,3 +1,4 @@
+import {reviewExport} from '../shared/evaluation.mjs';
 import { messageError, errorMessage } from '../shared/messages.mjs';
 import http from 'node:http';
 import os from 'node:os';
@@ -29,8 +30,12 @@ const port = Number(process.env.CAKE_TAGGER_PORT ?? 8765);
 if (!Number.isInteger(port) || port < 0 || port > 65535) throw messageError('error.invalidPort');
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.wasm': 'application/wasm', '.onnx': 'application/octet-stream' };
 // Serve only the reviewed browser module set; backend and private paths stay inaccessible.
-const aliases = {'/analysis.html':'src/client/analysis.html','/diagnostics.html':'src/client/diagnostics.html'};
+const aliases = {'/analysis.html':'src/client/analysis.html','/diagnostics.html':'src/client/diagnostics.html','/review.html':'src/client/review.html'};
 const publicFiles = new Set([
+  'src/client/review.html',
+  'src/client/review.mjs',
+  'src/client/review.css',
+  'src/shared/evaluation.mjs',
   'src/client/analysis.html',
   'src/client/diagnostics.html',
   'src/client/app.js',
@@ -149,23 +154,25 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && requested.startsWith('/api/download/')) {
     const id = requested.slice('/api/download/'.length), item = downloads.get(id);
     if (!item || item.expires < Date.now()) { downloads.delete(id); return json(res, 404, { error: 'error.downloadExpired' }); }
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': 'attachment; filename="cake-tags.json"', 'Content-Length': item.data.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Disposition': 'attachment; filename="' + item.filename + '"', 'Content-Length': item.data.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
     return res.end(item.data);
   }
   if (requested === '/api/export' && req.method === 'POST') {
     if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'error.openUsingStart' });
     try {
       if (!req.headers['content-type']?.startsWith('application/json')) return json(res, 415, { error: 'error.expectedJson' });
+      const evaluation = new URL(req.url, 'http://' + ownHost).searchParams.get('evaluation') === '1';
       const chunks = []; let size = 0;
-      for await (const chunk of req) { size += chunk.length; if (size > 16000000) throw messageError('error.exportIsTooLarge'); chunks.push(chunk); }
+      for await (const chunk of req) { size += chunk.length; if (size > (evaluation ? 64000000 : 16000000)) throw messageError('error.exportIsTooLarge'); chunks.push(chunk); }
       const input = JSON.parse(Buffer.concat(chunks).toString('utf8'));
       if (!Array.isArray(input.items) || !input.items.length || input.items.length > 10000) throw messageError('error.noValidResults');
       const items = input.items.map(item => { const record = validateRecord(item, tagList); return exportItem(applyRecord({ file: { name: record.filename } }, record)); });
-      const snapshot = Buffer.from(JSON.stringify({ version: 2, source: 'cake-tagger-local', createdAt: new Date().toISOString(), items }, null, 2), 'utf8');
+      const extra = evaluation ? reviewExport(input.evaluation, items, mapping, tagList) : {};
+      const snapshot = Buffer.from(JSON.stringify({ version: 2, source: evaluation ? 'cake-tagger-review' : 'cake-tagger-local', createdAt: new Date().toISOString(), items, ...extra }, null, evaluation ? 0 : 2), 'utf8');
       for (const [id, item] of downloads) if (item.expires < Date.now()) downloads.delete(id);
       while (downloads.size >= 3) downloads.delete(downloads.keys().next().value);
       const id = randomBytes(24).toString('hex');
-      downloads.set(id, { data: snapshot, expires: Date.now() + 5 * 60 * 1000 });
+      downloads.set(id, { data: snapshot, filename: evaluation ? 'cake-tag-review.json' : 'cake-tags.json', expires: Date.now() + 5 * 60 * 1000 });
       return json(res, 200, { download: '/api/download/' + id });
     } catch (e) { return json(res, 400, { error: errorMessage(e) }); }
   }

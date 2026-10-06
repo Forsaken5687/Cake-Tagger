@@ -1,7 +1,7 @@
 import { message, messageError, errorMessage } from '../shared/messages.mjs';
 import { ANALYSIS_VERSION } from '../shared/tagging.mjs';
 import { makeRecord, applyRecord, tagSource } from '../shared/corrections.mjs';
-import { samplingPlan } from './sampling.mjs';
+import { samplingPlan, hashFile, sampleVideo as sample } from './sampling.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from '../shared/analysis-settings.mjs';
 import { createSettingsStore, suggestionPolicy } from '../shared/preferences.mjs';
 import { createUploadAutoAnalysis } from './auto-analysis.mjs';
@@ -77,11 +77,6 @@ async function restore(entry, record) {
   applyRecord(entry, record);
   entry.state = 'analysis.restored';
 }
-async function hashFile(file) {
-  // Match session results by content, independently of a file's display name.
-  if (file.size > 250 * 1024 * 1024) throw messageError('error.videoSize');
-  return [...new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()))].map(b => b.toString(16).padStart(2, '0')).join('');
-}
 async function status() {
   if (stopping) return;
   try {
@@ -136,46 +131,6 @@ $('#files').onchange = e => receiveFiles(e.target.files);
 $('#drop').ondragover = e => { e.preventDefault(); $('#drop').classList.add('over'); };
 $('#drop').ondragleave = () => $('#drop').classList.remove('over');
 $('#drop').ondrop = e => { e.preventDefault(); $('#drop').classList.remove('over'); receiveFiles(e.dataTransfer.files); };
-function waitEvent(target, name, action, signal, timeout = 20000) {
-  return new Promise((resolve, reject) => {
-    const cleanup = () => { clearTimeout(timer); target.removeEventListener(name, ok); target.removeEventListener('error', fail); signal?.removeEventListener('abort', abort); };
-    const ok = () => { cleanup(); resolve(); };
-    const fail = () => { cleanup(); reject(messageError('error.videoDecode')); };
-    const abort = () => { cleanup(); reject(new DOMException('analysis.cancelled', 'AbortError')); };
-    const timer = setTimeout(() => { cleanup(); reject(messageError('error.videoTimeout')); }, timeout);
-    target.addEventListener(name, ok, { once: true }); target.addEventListener('error', fail, { once: true }); signal?.addEventListener('abort', abort, { once: true });
-    if (signal?.aborted) return abort();
-    try { action(); } catch(e) { cleanup(); reject(e); }
-  });
-}
-async function sample(file, setting, signal, knownHash) {
-  if (file.size > 250 * 1024 * 1024) throw messageError('error.videoSize');
-  const video = document.createElement('video'); video.muted = true; video.preload = 'auto'; video.playsInline = true;
-  const url = URL.createObjectURL(file);
-  try {
-    await waitEvent(video, 'loadeddata', () => { video.src = url; video.load(); }, signal);
-    if (!Number.isFinite(video.duration) || video.duration <= 0 || !video.videoWidth) throw messageError('error.invalidVideoDurationOrResolution');
-    const plan = samplingPlan(video.duration, setting);
-    const canvas = document.createElement('canvas');
-    const scale = Math.min(1, 640 / Math.max(video.videoWidth, video.videoHeight));
-    canvas.width = Math.max(1, Math.round(video.videoWidth * scale)); canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
-    const ctx = canvas.getContext('2d'), frames = [], inputs = [];
-    const modelCanvas = document.createElement('canvas'); modelCanvas.width = modelCanvas.height = 448;
-    const modelCtx = modelCanvas.getContext('2d', { willReadFrequently: true });
-    modelCtx.imageSmoothingEnabled = true; modelCtx.imageSmoothingQuality = 'high';
-    const edge = Math.max(canvas.width, canvas.height), modelScale = 448 / edge;
-    for (const time of plan.timestamps) {
-      signal.throwIfAborted();
-      await waitEvent(video, 'seeked', () => { video.currentTime = time; }, signal);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height); if (!document.body.classList.contains('embedded')) frames.push(canvas.toDataURL('image/jpeg', 0.82));
-      modelCtx.fillStyle = '#fff'; modelCtx.fillRect(0, 0, 448, 448);
-      modelCtx.drawImage(canvas, Math.floor((edge - canvas.width) / 2) * modelScale, Math.floor((edge - canvas.height) / 2) * modelScale, canvas.width * modelScale, canvas.height * modelScale);
-      inputs.push(modelCtx.getImageData(0, 0, 448, 448).data);
-    }
-    const sha256 = knownHash || await hashFile(file); signal.throwIfAborted();
-    return { frames, inputs, sha256, sampledFrames: plan.count, samplingMode: plan.mode, durationSeconds: plan.durationSeconds };
-  } finally { video.removeAttribute('src'); video.load(); URL.revokeObjectURL(url); }
-}
 async function analyze(targets = entries, automatic = false) {
   if (running || preparing || !mapping) return;
   // Allocate the cancellation signal before the first asynchronous step.

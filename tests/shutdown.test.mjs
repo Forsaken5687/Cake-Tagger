@@ -11,7 +11,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 test('shutdown completes after the initiating browser disconnects during cleanup',async()=>{
  const work=fileURLToPath(new URL('../work/',import.meta.url));fs.mkdirSync(work,{recursive:true});
  const parent=fs.realpathSync(work),root=fs.mkdtempSync(path.join(parent,'shutdown-'));
- for(const file of ['src/server/server.mjs','src/server/native-engine.mjs','src/server/native-policy.mjs','src/shared/messages.mjs','src/shared/session-url.mjs','src/shared/corrections.mjs','src/client/sampling.mjs','src/shared/analysis-settings.mjs','src/shared/preferences.mjs','src/shared/tagging.mjs','src/shared/tag-policy.mjs','model/mapping.json','model/tags.txt']) { fs.mkdirSync(path.dirname(path.join(root,file)),{recursive:true}); fs.copyFileSync(new URL('../'+file,import.meta.url),path.join(root,file)); }
+ for(const file of ['src/server/server.mjs','src/server/native-engine.mjs','src/server/native-policy.mjs','src/shared/messages.mjs','src/shared/session-url.mjs','src/shared/corrections.mjs','src/client/sampling.mjs','src/shared/analysis-settings.mjs','src/shared/preferences.mjs','src/shared/tagging.mjs','src/shared/tag-policy.mjs','src/shared/evaluation.mjs','model/mapping.json','model/tags.txt']) { fs.mkdirSync(path.dirname(path.join(root,file)),{recursive:true}); fs.copyFileSync(new URL('../'+file,import.meta.url),path.join(root,file)); }
  // Delay only this synthetic fixture to make a disconnected acknowledgement reproducible.
  const engineFile=path.join(root,'src/server/native-engine.mjs');
  fs.writeFileSync(engineFile,fs.readFileSync(engineFile,'utf8').replace(/\r\n/g,'\n').replace('async function stop() {','async function stop() { await new Promise(resolve=>setTimeout(resolve,300));'));
