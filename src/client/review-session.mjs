@@ -2,8 +2,7 @@ import { validateRecord, makeRecord } from '../shared/corrections.mjs';
 import { reviewExport, validateVariants, reviewPartition } from '../shared/evaluation.mjs';
 
 export const REVIEW_DATABASE = 'cake-tagger-review-v1';
-const renames = { supine: 'lying on back', 'side fuck': 'lying on side', couch: 'on couch', 'League of Legends': 'league of legends', 'ai-tagged-bare': 'ai tagged bare', 'ai-needs-review': 'ai needs review' };
-const canonical = tag => Object.hasOwn(renames, tag) ? renames[tag] : tag;
+import { canonicalTagName as canonical } from '../shared/tag-policy.mjs';
 const tagName = tag => typeof tag === 'string' && tag.length > 0 && tag.length <= 80 && !['__proto__', 'prototype', 'constructor'].includes(tag);
 
 // Persist annotations and typed score arrays, never video bytes or credentials.

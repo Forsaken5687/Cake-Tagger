@@ -46,4 +46,10 @@ Restart the local service after updating application files. Saved sessions remai
 
 ## Offline reports
 
-Run `runtime/node.exe scripts/Analyze-Reviews.mjs <review.json> work/review-analysis/report.md` to create Markdown and JSON reports from a review export. Reports use completed, assessable judgments and the recorded group assignments and exclusions.
+Open PowerShell in the project folder and run:
+
+```powershell
+.\runtime\node.exe .\scripts\Analyze-Reviews.mjs "$env:USERPROFILE\Downloads\cake-tag-review.json" .\work\review-analysis\report.md
+```
+
+Change the input filename to match your downloaded export. The reports are written to `work/review-analysis/report.md` and `report.json`. Reports use completed, assessable judgments and the recorded group assignments and exclusions. Known website renames are resolved without changing the export. Other historical labels absent from the current catalog are preserved and listed; rule replay uses the available mapping.

@@ -24,3 +24,33 @@ test('offline reports accept v6, ignore ambiguous judgments and respect explicit
  const report=analyzeReviews(data,{glasses:[0]},['glasses']);
  assert.equal(report.all.precision,null);assert.equal(report.all.recall,null);assert.equal(report.holdout.count,1);assert.equal(report.development.count,0);assert.equal(report.baselineMismatches,0);
 });
+
+
+test('offline analysis preserves historical labels without accepting malformed names',()=>{
+ const item=make('a',true,['glasses','couch']);item.result.tags.push({tag:'supine'});
+ const data=input([item]);data.evaluation.videos[0].ignoredTags=['retired tag'];
+ const report=analyzeReviews(data,{glasses:[0]},['glasses']);
+ assert.deepEqual(report.historicalTags,['lying on back','on couch','retired tag']);
+ assert.equal(report.all.truePositive,1);assert.equal(report.all.falsePositive,1);assert.equal(report.all.falseNegative,1);
+ assert.equal(report.perTag.find(row=>row.tag==='on couch').positives,1);
+ for(const invalid of [null,{},'', ' padded ', 'bad|table', 'bad\nline', '<script>', 'x'.repeat(81)]){
+  const invalidData=input([make('b',true,[invalid])]);
+  assert.throws(()=>analyzeReviews(invalidData,{glasses:[0]},['glasses']),/Invalid reviewed labels/);
+ }
+});
+
+
+test('offline reports match renamed annotations, originals and recorded mappings',()=>{
+ const item=make('a',true,['couch','supine']);item.result.tags=[{tag:'on couch'},{tag:'supine'}];
+ const report=analyzeReviews(input([item]),{couch:[0],supine:[1]},['on couch','lying on back']);
+ assert.deepEqual(report.historicalTags,[]);assert.equal(report.all.precision,1);assert.equal(report.all.recall,1);
+ assert.equal(report.automaticallyEligible.recall,1);assert.equal(report.baselineMismatches,0);
+ assert.deepEqual(report.perTag.map(row=>row.tag),['lying on back','on couch']);
+});
+
+
+test('canonicalization retains combined rules and rejects conflicting rename mappings',()=>{
+ const data=input([make('a')]);
+ assert.equal(analyzeReviews(data,{glasses:{all:[[0],[1]]}},['glasses']).baselineMismatches,0);
+ assert.throws(()=>analyzeReviews(data,{couch:[0],'on couch':[1]},['glasses']),/Conflicting mappings/);
+});

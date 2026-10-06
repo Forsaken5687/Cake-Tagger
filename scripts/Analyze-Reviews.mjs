@@ -3,11 +3,14 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {reviewPartition} from '../src/shared/evaluation.mjs';
 import {aggregate} from '../src/shared/tagging.mjs';
-import {excluded,readTags} from '../src/shared/tag-policy.mjs';
+import {excluded,readTags,canonicalTagName as canonical} from '../src/shared/tag-policy.mjs';
 import {validateAnalysisPolicy} from '../src/shared/analysis-settings.mjs';
 
 const root=new URL('../',import.meta.url);
 const ratio=(a,b)=>b?a/b:null;
+// Offline exports may predate catalog changes. Keep historical labels, but reject
+// malformed names and Markdown table delimiters before including them in reports.
+const validLabel=tag=>typeof tag==='string'&&tag.length>0&&tag.length<=80&&tag===tag.trim()&&!/[\u0000-\u001f\u007f|<>`]/.test(tag);
 function metrics(rows,eligibleOnly=false){
  let tp=0,fp=0,fn=0;
  for(const row of rows){
@@ -22,23 +25,30 @@ function metrics(rows,eligibleOnly=false){
 // Only explicit reviewed labels count; duplicate content cannot cross the split.
 export function analyzeReviews(input,mapping,allowedTags){
  if(!Array.isArray(input?.items))throw Error('Missing review items');
- const allowed=new Set(allowedTags),unique=new Map();let unreviewed=0,duplicates=0;
+ // Canonicalize a copy; the downloaded export and its annotations stay intact.
+ mapping=Object.entries(mapping).reduce((result,[tag,indices])=>{
+  const name=canonical(tag);
+  if(Object.hasOwn(result,name)&&JSON.stringify(result[name])!==JSON.stringify(indices))throw Error('Conflicting mappings for renamed tag: '+name);
+  result[name]=indices;return result;
+ },Object.create(null));
+ const allowed=new Set(allowedTags),unique=new Map(),historical=new Set();let unreviewed=0,duplicates=0;
  for(const [index,item]of input.items.entries()){
   if(item.reviewed!==true){unreviewed++;continue;}
   const result=item.result??item,video=item.evaluation??input.evaluation?.videos?.[index];
-  if(!/^[a-f0-9]{64}$/.test(item.sha256)||!Array.isArray(item.tags)||item.tags.some(tag=>!allowed.has(tag)))throw Error('Invalid reviewed labels');
+  if(!/^[a-f0-9]{64}$/.test(item.sha256)||!Array.isArray(item.tags)||item.tags.some(tag=>!validLabel(tag)))throw Error('Invalid reviewed labels');
   if(!video||video.sha256!=null&&video.sha256!==item.sha256||!Array.isArray(video.modelScores)||video.modelScores.length!==result.sampledFrames||video.modelScores.some(row=>!Array.isArray(row)||row.length!==5813||row.some(score=>!Number.isFinite(score)||score<0||score>1)))throw Error('Invalid review score association');
   const originals=item.result?.tags??item.originalSuggestions;
-  if(!Array.isArray(originals)||originals.some(row=>!allowed.has(row.tag)))throw Error('Original suggestions are required');
+  if(!Array.isArray(originals)||originals.some(row=>!validLabel(row?.tag)))throw Error('Original suggestions are required');
   validateAnalysisPolicy(result.analysisPolicy);
   const policy=result.analysisPolicy?.match(/^coverage-v[23456]:(majority|brief)(?::(.+))?$/);
   if(!policy||!Number.isFinite(result.threshold))throw Error('Original policy is required');
-  const blocked=new Set(policy[2]?JSON.parse(policy[2]):['hairy','watermark']);
+  const blocked=new Set((policy[2]?JSON.parse(policy[2]):['hairy','watermark']).map(canonical));
   const eligible=new Set(Object.keys(mapping).filter(tag=>!blocked.has(tag)&&(!excluded.has(tag)||['hairy','watermark'].includes(tag))));
   if(!Array.isArray(video.ignoredTags??[]))throw Error('Invalid review metadata');
-  const ignored=new Set(video.ignoredTags??[]);
-  if([...ignored].some(tag=>!allowed.has(tag))||!['auto','development','holdout'].includes(video.partition??'auto'))throw Error('Invalid review metadata');
-  const row={sha256:item.sha256,partition:video.partition??'auto',ignored,expected:new Set(item.tags.filter(tag=>!ignored.has(tag))),baseline:new Set(originals.map(x=>x.tag).filter(tag=>!ignored.has(tag))),eligible};
+  const ignored=new Set((video.ignoredTags??[]).map(canonical));
+  if([...ignored].some(tag=>!validLabel(tag))||!['auto','development','holdout'].includes(video.partition??'auto'))throw Error('Invalid review metadata');
+  for(const tag of [...item.tags,...originals.map(row=>row.tag),...ignored])if(!allowed.has(canonical(tag)))historical.add(canonical(tag));
+  const row={sha256:item.sha256,partition:video.partition??'auto',ignored,expected:new Set(item.tags.map(canonical).filter(tag=>!ignored.has(tag))),baseline:new Set(originals.map(x=>canonical(x.tag)).filter(tag=>!ignored.has(tag))),eligible};
   row.reproduced=new Set(aggregate(video.modelScores,mapping,result.threshold,policy[1],{excludedTags:[...blocked]}).tags.map(x=>x.tag).filter(tag=>!ignored.has(tag)));
   const previous=unique.get(item.sha256);
   if(previous){
@@ -55,7 +65,7 @@ export function analyzeReviews(input,mapping,allowedTags){
   const positive=rows.filter(row=>row.expected.has(tag)),tp=positive.filter(row=>row.baseline.has(tag)).length;
   return {tag,positives:positive.length,truePositive:tp,falsePositive:rows.filter(row=>!row.ignored.has(tag)&&!row.expected.has(tag)&&row.baseline.has(tag)).length,falseNegative:positive.length-tp,mapped:!!mapping[tag],manualOnly:excluded.has(tag),eligiblePositives:positive.filter(row=>row.eligible.has(tag)).length};
  }).sort((a,b)=>b.falseNegative-a.falseNegative||a.tag.localeCompare(b.tag));
- return {version:1,reviewed:rows.length,unreviewed,duplicates,baselineMismatches:rows.filter(row=>row.baseline.size!==row.reproduced.size||[...row.baseline].some(tag=>!row.reproduced.has(tag))).length,
+ return {version:1,historicalTags:[...historical].sort(),reviewed:rows.length,unreviewed,duplicates,baselineMismatches:rows.filter(row=>row.baseline.size!==row.reproduced.size||[...row.baseline].some(tag=>!row.reproduced.has(tag))).length,
   all:metrics(rows),automaticallyEligible:metrics(rows,true),development:{count:development.length,metrics:metrics(development)},holdout:{count:holdout.length,metrics:metrics(holdout)},perTag};
 }
 
@@ -64,6 +74,7 @@ function markdown(report){
  const lines=['# Review analysis','',`Reviewed unique videos: ${report.reviewed}. Unreviewed omitted: ${report.unreviewed}. Duplicate reviews omitted: ${report.duplicates}.`,'',
   '| Scope | Precision | Recall | F1 |','| --- | ---: | ---: | ---: |'];
  for(const [name,m]of [['All annotations',report.all],['Automatically eligible annotations',report.automaticallyEligible],['Development partition',report.development.metrics],['Holdout partition',report.holdout.metrics]])lines.push(`| ${name} | ${pct(m.precision)} | ${pct(m.recall)} | ${pct(m.f1)} |`);
+ if(report.historicalTags.length)lines.push('',`Historical labels absent from the current catalog: ${report.historicalTags.join(', ')}. Preserved in annotation metrics; rule replay uses the available mapping.`);
  lines.push('',`Development/holdout sizes: ${report.development.count}/${report.holdout.count}. Current-rule replay mismatches: ${report.baselineMismatches}.`,'',
  'Metrics describe agreement with annotations, not independently established accuracy. Automatic eligibility respects the recorded exclusions and manual-only policy. Partitions are deterministic by content hash; related footage or the same performer may still occur in both. Do not tune repeatedly against the holdout.','',
  '| Tag | Reviewed positives | Correct suggestions | Wrong suggestions | Missed | Model mapping |','| --- | ---: | ---: | ---: | ---: | --- |');
@@ -73,7 +84,7 @@ function markdown(report){
 
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const [inputPath,outputPath]=process.argv.slice(2);
- if(!inputPath||!outputPath)throw Error('Usage: node scripts/Analyze-Reviews.mjs <review.json> <report.md>');
+ if(!inputPath||!outputPath)throw Error('Usage (from project root): ./runtime/node.exe scripts/Analyze-Reviews.mjs "review.json" work/review-analysis/report.md');
  // Personal results must never be written into tracked source or release folders.
  const output=path.resolve(outputPath),work=path.resolve(fileURLToPath(new URL('work/',root)));
  if(!output.startsWith(work+path.sep)||path.extname(output)!=='.md')throw Error('Reports must use an .md path inside ignored work/');
