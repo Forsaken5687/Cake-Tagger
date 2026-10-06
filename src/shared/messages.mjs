@@ -1,5 +1,21 @@
 // Stable message IDs keep wording and runtime data independent of each other.
 export const messages = {
+  "review.unclear": {"en":"Unclear","de":"Unklar"},
+  "review.confidence": {"en":"Confidence score","de":"Confidence Score"},
+  "review.sessionOptions": {"en":"Session options","de":"Sitzungsoptionen"},
+  "review.views": {"en":"Review tools","de":"Bewertungswerkzeuge"},
+  "review.reviewView": {"en":"Review videos","de":"Videos bewerten"},
+  "review.empty": {"en":"Choose videos to start, or import an existing review from Session options.","de":"Wähle Videos aus oder importiere eine Bewertung über die Sitzungsoptionen."},
+  "review.details": {"en":"Compare columns","de":"Vergleichsspalten"},
+  "review.verdict": {"en":"Assessment","de":"Bewertung"},
+  "review.correct": {"en":"Correct","de":"Richtig"},
+  "review.incorrect": {"en":"Incorrect","de":"Falsch"},
+  "review.previous": {"en":"Previous","de":"Zurück"},
+  "review.next": {"en":"Next","de":"Weiter"},
+  "review.completeNext": {"en":"Complete & next","de":"Abschließen & weiter"},
+  "review.editRule": {"en":"Adjust tag rule","de":"Tag-Regel anpassen"},
+  "review.progress": {"en":"{done} of {total} reviewed","de":"{done} von {total} geprüft"},
+
   "review.holdoutQueue": {"en":"Holdout video · results hidden","de":"Video der Kontrollgruppe · Ergebnisse ausgeblendet"},
   "review.noPartition": {"en":"Group is assigned after analysis.","de":"Die Gruppe wird nach der Analyse zugewiesen."},
   "review.needVideo": {"en":"Select the original video to jump to this frame.","de":"Wähle das ursprüngliche Video aus, um zu diesem Bild zu springen."},
