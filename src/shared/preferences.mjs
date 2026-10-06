@@ -1,5 +1,5 @@
 export const SETTINGS_KEY = 'cake-tagger-settings-v1';
-export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', frames: 'auto', parallelism: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, autoAnalyzeEmbed: true });
+export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', frames: 'auto', parallelism: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, autoAnalyzeEmbed: true, hideSiteAI: false });
 export function normalizeSettings(value = {}) {
   // This allowlist is also the persistence boundary: unrelated fields are discarded.
   if (!value || typeof value !== 'object' || Array.isArray(value)) value = {};
@@ -11,7 +11,8 @@ export function normalizeSettings(value = {}) {
     excludedTags: Array.isArray(value.excludedTags) ? [...new Set(value.excludedTags.filter(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.trim().length <= 80).map(tag => tag.trim().toLowerCase()))].slice(0, 258) : [...DEFAULT_SETTINGS.excludedTags],
     showScores: typeof value.showScores === 'boolean' ? value.showScores : true,
     showUncertain: typeof value.showUncertain === 'boolean' ? value.showUncertain : true,
-    autoAnalyzeEmbed: typeof value.autoAnalyzeEmbed === 'boolean' ? value.autoAnalyzeEmbed : true
+    autoAnalyzeEmbed: typeof value.autoAnalyzeEmbed === 'boolean' ? value.autoAnalyzeEmbed : true,
+    hideSiteAI: typeof value.hideSiteAI === 'boolean' ? value.hideSiteAI : false
   };
 }
 export function resolvedLanguage(settings, browserLanguage = 'de') {

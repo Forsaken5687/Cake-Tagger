@@ -33,6 +33,7 @@ export function settingsForm(store, tags, onSaved = () => {}, context = {}) {
   const check = (label, key) => { const input = doc.createElement('input'); input.type = 'checkbox'; input.checked = draft[key]; field(label, input).classList.add('settings-check'); return input; };
   const scores = check('settings.scores', 'showScores'), uncertain = check('settings.uncertain', 'showUncertain');
   const autoAnalyze = check('settings.autoAnalyze', 'autoAnalyzeEmbed');
+  const hideSiteAI = check('settings.hideSiteAI', 'hideSiteAI');
   const exclusions = doc.createElement('section'); exclusions.className = 'settings-exclusions';
   const title = doc.createElement('h3'); localizedText(title, 'settings.exclusions');
   const hint = doc.createElement('p'); localizedText(hint, 'settings.exclusionsHint');
@@ -61,13 +62,13 @@ export function settingsForm(store, tags, onSaved = () => {}, context = {}) {
   const actions = doc.createElement('div'); actions.className = 'settings-actions';
   const reset = doc.createElement('button'); reset.type = 'button'; reset.className = 'quiet'; localizedText(reset, 'action.defaults');
   const save = doc.createElement('button'); save.type = 'submit'; localizedText(save, 'action.save');
-  reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; parallelism.value = ''; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; autoAnalyze.checked = draft.autoAnalyzeEmbed; renderExclusions(); localizedText(status, ''); };
+  reset.onclick = () => { draft = { ...DEFAULT_SETTINGS, excludedTags: [...DEFAULT_SETTINGS.excludedTags] }; language.value = draft.language; frames.value = draft.frames; parallelism.value = ''; scores.checked = draft.showScores; uncertain.checked = draft.showUncertain; autoAnalyze.checked = draft.autoAnalyzeEmbed; hideSiteAI.checked = draft.hideSiteAI; renderExclusions(); localizedText(status, ''); };
   form.onsubmit = async event => {
     event.preventDefault();
     if (context.requireTrusted && !isTrustedEvent(event)) return;
     save.disabled = reset.disabled = true;
     try {
-      await store.save({ ...draft, language: language.value, frames: frames.value, parallelism: parallelism.value || 'auto', showScores: scores.checked, showUncertain: uncertain.checked, autoAnalyzeEmbed: autoAnalyze.checked });
+      await store.save({ ...draft, language: language.value, frames: frames.value, parallelism: parallelism.value || 'auto', showScores: scores.checked, showUncertain: uncertain.checked, autoAnalyzeEmbed: autoAnalyze.checked, hideSiteAI: hideSiteAI.checked });
       onSaved();
     } catch (error) { localizedText(status, errorMessage(error)); }
     finally { save.disabled = reset.disabled = false; }

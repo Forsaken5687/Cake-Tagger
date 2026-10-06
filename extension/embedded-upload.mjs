@@ -87,6 +87,7 @@ export function mountUploadPanel(doc, runtime) {
       return;
     }
     if (next !== mount) {
+      mount?.classList.remove('cake-tagger-hide-site-ai');
       ui?.dispose(); panel?.remove(); mount = next; ready = false; frame = undefined; lastSelection = '';
       panel = doc.createElement('section'); panel.className = 'cake-tagger-panel'; panel.setAttribute('aria-label', 'Cake Tagger');
       mount.before(panel);
@@ -95,9 +96,10 @@ export function mountUploadPanel(doc, runtime) {
        return ensureConnection().then(()=>runtime.sendMessage({type:'cake-tagger:ui-command',channel,command})).then(response=>{
         if(!response?.accepted)ui.error(label(response?.error || 'error.uploadConnection'));
        }).catch(error=>ui.error(translate(errorMessage(error),english?'en':'de')));
-      }, {save:settings=>runtime.sendMessage({type:'cake-tagger:settings-save',settings}),capabilities:()=>runtime.sendMessage({type:'cake-tagger:capabilities'})});
+      }, {save:async settings=>{const response=await runtime.sendMessage({type:'cake-tagger:settings-save',settings});if(response?.settings){applyLanguage(response.settings);refresh();}return response;},capabilities:()=>runtime.sendMessage({type:'cake-tagger:capabilities'})});
       void open();
     }
+    mount.classList.toggle('cake-tagger-hide-site-ai', preferences.hideSiteAI === true);
     syncFiles(); ui?.refresh();
   }
 

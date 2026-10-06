@@ -26,3 +26,6 @@
 .cake-tagger-settings-dialog .tag-add input{flex:1}.cake-tagger-settings-dialog .settings-actions{justify-content:flex-end}
 .cake-tagger-settings-dialog button[type=submit]{background:var(--cake-accent,#fe2c55);border-color:var(--cake-accent,#fe2c55);color:var(--cake-on-accent,#fff)}
 @media(max-width:780px){.cake-tagger-settings-dialog .settings-field{grid-template-columns:1fr}.cake-tagger-settings-dialog .settings-check{grid-template-columns:1fr auto}}
+
+/* Hide only the site's AI suggestions; retain upload fields and extension results. */
+.stok-up-mount.cake-tagger-hide-site-ai .stok-ai-suggestions{display:none!important}

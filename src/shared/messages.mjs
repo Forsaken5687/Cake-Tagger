@@ -167,6 +167,7 @@ export const messages = {
   'results.title': { en: 'Videos & tags', de: 'Videos & Tags' },
 
   // Settings messages.
+  'settings.hideSiteAI': { en: 'Hide cake.ski AI tag suggestions', de: 'KI-Tag-Vorschläge von cake.ski ausblenden' },
   'settings.autoAnalyze': { en: 'Automatically analyze upload videos', de: 'Upload-Videos automatisch analysieren' },
   'settings.autoFrames': { en: 'Automatic by video length', de: 'Automatisch nach Videolänge' },
   'settings.automatic': { en: 'Automatic', de: 'Automatisch' },
