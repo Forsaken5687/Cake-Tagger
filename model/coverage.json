@@ -1,5 +1,5 @@
 {
-  "supportedCount": 160,
+  "supportedCount": 174,
   "totalCount": 258,
   "supported": [
     "solo",
@@ -23,9 +23,12 @@
     "black hair",
     "piercings",
     "doggy",
+    "cumshot",
     "dildo",
     "handjob",
     "dance",
+    "partially clothed",
+    "tit shake",
     "deepthroat",
     "sex toy",
     "anal penetration",
@@ -38,11 +41,15 @@
     "closeup",
     "fingering",
     "on floor",
+    "public",
     "red hair",
+    "squirting",
     "swimsuit",
+    "creampie",
     "2girls",
     "feet",
     "cowgirl",
+    "stripping",
     "curly hair",
     "glasses",
     "couch",
@@ -87,8 +94,11 @@
     "school uniform",
     "white hair",
     "drooling",
+    "chubby",
     "cum on ass",
+    "titjob",
     "butt plug",
+    "thighjob",
     "pink hair",
     "swimming pool",
     "thigh gap",
@@ -103,7 +113,9 @@
     "on all fours",
     "beach",
     "bdsm",
+    "choking",
     "green eyes",
+    "pissing",
     "spitroast",
     "bent over",
     "gangbang",
@@ -146,10 +158,12 @@
     "torn pants",
     "69",
     "cheerleader",
+    "slime",
     "ropes",
     "hatsune miku",
     "purple hair",
     "bodywriting",
+    "changing room",
     "bondage",
     "League of Legends",
     "yellow eyes",
@@ -178,11 +192,8 @@
     "shaved",
     "caption",
     "ass shake",
-    "cumshot",
     "incest",
     "thick",
-    "partially clothed",
-    "tit shake",
     "rough",
     "taboo",
     "long video",
@@ -193,10 +204,6 @@
     "watermark",
     "no face",
     "trans",
-    "public",
-    "squirting",
-    "creampie",
-    "stripping",
     "russian",
     "lesbian",
     "compilation",
@@ -215,16 +222,11 @@
     "forced",
     "hair pull",
     "fisting",
-    "chubby",
-    "titjob",
-    "thighjob",
     "side fuck",
     "ai-tagged-bare",
     "twerking",
     "cum on pussy",
     "latina",
-    "choking",
-    "pissing",
     "dirty talk",
     "ebony",
     "fuck machine",
@@ -249,18 +251,1802 @@
     "german",
     "clown",
     "pet play",
-    "slime",
     "ball fondling",
     "pegging",
     "hijab",
     "ai-needs-review",
     "scissoring",
-    "changing room",
     "slow motion",
     "used",
     "tomboy",
     "maledom",
     "gilf",
     "degrading"
+  ],
+  "entries": [
+    {
+      "tag": "vertical",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "hd",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "teen",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "solo",
+      "status": "automatic",
+      "labels": [
+        "solo"
+      ]
+    },
+    {
+      "tag": "long hair",
+      "status": "automatic",
+      "labels": [
+        "long_hair"
+      ]
+    },
+    {
+      "tag": "nude",
+      "status": "automatic",
+      "labels": [
+        "nude"
+      ]
+    },
+    {
+      "tag": "sd",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "tease",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "big tits",
+      "status": "automatic",
+      "labels": [
+        "large_breasts",
+        "huge_breasts",
+        "gigantic_breasts"
+      ]
+    },
+    {
+      "tag": "clothed",
+      "status": "manual",
+      "labels": [],
+      "reason": "Cannot be inferred from the absence of nudity, hair or face detections."
+    },
+    {
+      "tag": "couple",
+      "status": "automatic",
+      "labels": [
+        "couple"
+      ]
+    },
+    {
+      "tag": "featured",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "bedroom",
+      "status": "automatic",
+      "labels": [
+        "bedroom"
+      ]
+    },
+    {
+      "tag": "brunette",
+      "status": "automatic",
+      "labels": [
+        "brown_hair"
+      ]
+    },
+    {
+      "tag": "vaginal penetration",
+      "status": "automatic",
+      "labels": [
+        "vaginal"
+      ]
+    },
+    {
+      "tag": "blonde",
+      "status": "automatic",
+      "labels": [
+        "blonde_hair"
+      ]
+    },
+    {
+      "tag": "amateur",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "petite",
+      "status": "automatic",
+      "labels": [
+        "petite"
+      ]
+    },
+    {
+      "tag": "small tits",
+      "status": "automatic",
+      "labels": [
+        "small_breasts"
+      ]
+    },
+    {
+      "tag": "horizontal",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "blowjob",
+      "status": "automatic",
+      "labels": [
+        "fellatio"
+      ]
+    },
+    {
+      "tag": "thighs",
+      "status": "automatic",
+      "labels": [
+        "thighs"
+      ]
+    },
+    {
+      "tag": "no sound",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "sfw",
+      "status": "manual",
+      "labels": [],
+      "reason": "Cannot be inferred from the absence of nudity, hair or face detections."
+    },
+    {
+      "tag": "shaved",
+      "status": "manual",
+      "labels": [],
+      "reason": "Cannot be inferred from the absence of nudity, hair or face detections."
+    },
+    {
+      "tag": "masturbating",
+      "status": "automatic",
+      "labels": [
+        "masturbation",
+        "female_masturbation",
+        "male_masturbation"
+      ]
+    },
+    {
+      "tag": "music",
+      "status": "automatic",
+      "labels": [
+        "music"
+      ]
+    },
+    {
+      "tag": "skinny",
+      "status": "automatic",
+      "labels": [
+        "skinny"
+      ]
+    },
+    {
+      "tag": "tattoos",
+      "status": "automatic",
+      "labels": [
+        "tattoo",
+        "shoulder_tattoo",
+        "arm_tattoo",
+        "pubic_tattoo",
+        "facial_tattoo",
+        "chest_tattoo",
+        "leg_tattoo",
+        "number_tattoo",
+        "stomach_tattoo",
+        "heart_tattoo",
+        "breast_tattoo"
+      ]
+    },
+    {
+      "tag": "caption",
+      "status": "manual",
+      "labels": [],
+      "reason": "Text or speech-bubble detection does not establish a caption."
+    },
+    {
+      "tag": "underwear",
+      "status": "automatic",
+      "labels": [
+        "underwear",
+        "bra",
+        "panties",
+        "boxers"
+      ]
+    },
+    {
+      "tag": "black hair",
+      "status": "automatic",
+      "labels": [
+        "black_hair"
+      ]
+    },
+    {
+      "tag": "piercings",
+      "status": "automatic",
+      "labels": [
+        "piercing",
+        "nipple_piercing",
+        "navel_piercing",
+        "nose_piercing",
+        "lip_piercing",
+        "tongue_piercing"
+      ]
+    },
+    {
+      "tag": "ass shake",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires motion or timing evidence; no suitable model label."
+    },
+    {
+      "tag": "doggy",
+      "status": "automatic",
+      "labels": [
+        "doggystyle"
+      ]
+    },
+    {
+      "tag": "cumshot",
+      "status": "automatic",
+      "labels": [
+        "ejaculation",
+        "projectile_cum"
+      ]
+    },
+    {
+      "tag": "incest",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Narrative or consent context; excluded by policy."
+    },
+    {
+      "tag": "dildo",
+      "status": "automatic",
+      "labels": [
+        "dildo"
+      ]
+    },
+    {
+      "tag": "thick",
+      "status": "manual",
+      "labels": [],
+      "reason": "Body category is broader than the available thick-thigh label."
+    },
+    {
+      "tag": "handjob",
+      "status": "automatic",
+      "labels": [
+        "handjob"
+      ]
+    },
+    {
+      "tag": "dance",
+      "status": "automatic",
+      "labels": [
+        "dancing"
+      ],
+      "scope": "Visual dancing label; sampled images do not track motion."
+    },
+    {
+      "tag": "partially clothed",
+      "status": "automatic",
+      "labels": [
+        "partially_undressed"
+      ]
+    },
+    {
+      "tag": "tit shake",
+      "status": "automatic",
+      "labels": [
+        "bouncing_breasts"
+      ],
+      "scope": "Visual bouncing-breast label; sampled images do not track motion."
+    },
+    {
+      "tag": "deepthroat",
+      "status": "automatic",
+      "labels": [
+        "deepthroat"
+      ]
+    },
+    {
+      "tag": "sex toy",
+      "status": "automatic",
+      "labels": [
+        "sex_toy",
+        "dildo",
+        "vibrator",
+        "egg_vibrator",
+        "remote_control_vibrator",
+        "vibrator_under_clothes",
+        "butt_plug",
+        "anal_beads"
+      ]
+    },
+    {
+      "tag": "rough",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "taboo",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Narrative or consent context; excluded by policy."
+    },
+    {
+      "tag": "long video",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "stockings",
+      "status": "manual",
+      "labels": [],
+      "reason": "Available legwear labels do not distinguish stockings from other garments."
+    },
+    {
+      "tag": "asian",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "anal penetration",
+      "status": "automatic",
+      "labels": [
+        "anal"
+      ]
+    },
+    {
+      "tag": "cosplay",
+      "status": "automatic",
+      "labels": [
+        "cosplay"
+      ]
+    },
+    {
+      "tag": "alternative",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "interracial",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "short hair",
+      "status": "automatic",
+      "labels": [
+        "short_hair"
+      ]
+    },
+    {
+      "tag": "missionary",
+      "status": "automatic",
+      "labels": [
+        "missionary"
+      ]
+    },
+    {
+      "tag": "watermark",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Excluded by default; no suitable model label."
+    },
+    {
+      "tag": "no face",
+      "status": "manual",
+      "labels": [],
+      "reason": "Cannot be inferred from the absence of nudity, hair or face detections."
+    },
+    {
+      "tag": "curvy",
+      "status": "automatic",
+      "labels": [
+        "curvy"
+      ]
+    },
+    {
+      "tag": "cum in mouth",
+      "status": "automatic",
+      "labels": [
+        "cum_in_mouth"
+      ]
+    },
+    {
+      "tag": "facial",
+      "status": "automatic",
+      "labels": [
+        "facial"
+      ]
+    },
+    {
+      "tag": "closeup",
+      "status": "automatic",
+      "labels": [
+        "close-up"
+      ]
+    },
+    {
+      "tag": "trans",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "fingering",
+      "status": "automatic",
+      "labels": [
+        "fingering"
+      ]
+    },
+    {
+      "tag": "on floor",
+      "status": "automatic",
+      "labels": [
+        "on_floor"
+      ]
+    },
+    {
+      "tag": "public",
+      "status": "automatic",
+      "labels": [
+        "public_nudity"
+      ],
+      "scope": "Public nudity only; other public scenes are not covered."
+    },
+    {
+      "tag": "red hair",
+      "status": "automatic",
+      "labels": [
+        "red_hair"
+      ]
+    },
+    {
+      "tag": "squirting",
+      "status": "automatic",
+      "labels": [
+        "female_ejaculation"
+      ]
+    },
+    {
+      "tag": "swimsuit",
+      "status": "automatic",
+      "labels": [
+        "swimsuit"
+      ]
+    },
+    {
+      "tag": "creampie",
+      "status": "automatic",
+      "labels": [
+        "cum_in_pussy",
+        "cum_in_ass",
+        "internal_cumshot"
+      ]
+    },
+    {
+      "tag": "2girls",
+      "status": "automatic",
+      "labels": [
+        "2girls"
+      ]
+    },
+    {
+      "tag": "feet",
+      "status": "automatic",
+      "labels": [
+        "feet"
+      ]
+    },
+    {
+      "tag": "cowgirl",
+      "status": "automatic",
+      "labels": [
+        "cowgirl_position"
+      ]
+    },
+    {
+      "tag": "stripping",
+      "status": "automatic",
+      "labels": [
+        "undressing"
+      ]
+    },
+    {
+      "tag": "russian",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "curly hair",
+      "status": "automatic",
+      "labels": [
+        "curly_hair"
+      ]
+    },
+    {
+      "tag": "glasses",
+      "status": "automatic",
+      "labels": [
+        "glasses"
+      ]
+    },
+    {
+      "tag": "lesbian",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "couch",
+      "status": "automatic",
+      "labels": [
+        "couch"
+      ]
+    },
+    {
+      "tag": "lingerie",
+      "status": "automatic",
+      "labels": [
+        "lingerie"
+      ]
+    },
+    {
+      "tag": "compilation",
+      "status": "manual",
+      "labels": [],
+      "reason": "Editing or media-type category; no reliable equivalent model label."
+    },
+    {
+      "tag": "tanlines",
+      "status": "automatic",
+      "labels": [
+        "tanlines"
+      ]
+    },
+    {
+      "tag": "pussy spread",
+      "status": "automatic",
+      "labels": [
+        "spread_pussy"
+      ]
+    },
+    {
+      "tag": "pov",
+      "status": "automatic",
+      "labels": [
+        "pov"
+      ]
+    },
+    {
+      "tag": "oiled",
+      "status": "manual",
+      "labels": [],
+      "reason": "Wet appearance does not establish applied oil."
+    },
+    {
+      "tag": "blue hair",
+      "status": "automatic",
+      "labels": [
+        "blue_hair"
+      ]
+    },
+    {
+      "tag": "bathroom",
+      "status": "automatic",
+      "labels": [
+        "bathroom"
+      ]
+    },
+    {
+      "tag": "ahegao",
+      "status": "automatic",
+      "labels": [
+        "ahegao"
+      ]
+    },
+    {
+      "tag": "outside",
+      "status": "automatic",
+      "labels": [
+        "outdoors"
+      ]
+    },
+    {
+      "tag": "eye shadow",
+      "status": "automatic",
+      "labels": [
+        "eyeshadow"
+      ]
+    },
+    {
+      "tag": "threesome",
+      "status": "automatic",
+      "labels": [
+        "threesome"
+      ]
+    },
+    {
+      "tag": "skirt",
+      "status": "automatic",
+      "labels": [
+        "skirt"
+      ]
+    },
+    {
+      "tag": "cuck",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Narrative or consent context; excluded by policy."
+    },
+    {
+      "tag": "car",
+      "status": "automatic",
+      "labels": [
+        "car"
+      ]
+    },
+    {
+      "tag": "fishnet",
+      "status": "automatic",
+      "labels": [
+        "fishnets"
+      ]
+    },
+    {
+      "tag": "milf",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "on knees",
+      "status": "automatic",
+      "labels": [
+        "kneeling"
+      ]
+    },
+    {
+      "tag": "thigh highs",
+      "status": "automatic",
+      "labels": [
+        "thighhighs"
+      ]
+    },
+    {
+      "tag": "reverse cowgirl",
+      "status": "automatic",
+      "labels": [
+        "reverse_cowgirl_position"
+      ]
+    },
+    {
+      "tag": "pmv",
+      "status": "manual",
+      "labels": [],
+      "reason": "Editing or media-type category; no reliable equivalent model label."
+    },
+    {
+      "tag": "makeup",
+      "status": "automatic",
+      "labels": [
+        "makeup",
+        "eyeshadow",
+        "lipstick",
+        "eyeliner",
+        "mascara"
+      ]
+    },
+    {
+      "tag": "groping",
+      "status": "automatic",
+      "labels": [
+        "groping"
+      ]
+    },
+    {
+      "tag": "kitchen",
+      "status": "automatic",
+      "labels": [
+        "kitchen"
+      ]
+    },
+    {
+      "tag": "pussy juice",
+      "status": "automatic",
+      "labels": [
+        "pussy_juice"
+      ]
+    },
+    {
+      "tag": "animated",
+      "status": "manual",
+      "labels": [],
+      "reason": "Editing or media-type category; no reliable equivalent model label."
+    },
+    {
+      "tag": "cleavage",
+      "status": "automatic",
+      "labels": [
+        "cleavage"
+      ]
+    },
+    {
+      "tag": "cunnilingus",
+      "status": "automatic",
+      "labels": [
+        "cunnilingus"
+      ]
+    },
+    {
+      "tag": "choker",
+      "status": "automatic",
+      "labels": [
+        "choker",
+        "black_choker",
+        "ribbon_choker",
+        "red_choker",
+        "blue_choker",
+        "white_choker",
+        "pink_choker",
+        "frilled_choker",
+        "heart_choker",
+        "orange_choker",
+        "green_choker",
+        "purple_choker",
+        "yellow_choker",
+        "star_choker"
+      ]
+    },
+    {
+      "tag": "blue eyes",
+      "status": "automatic",
+      "labels": [
+        "blue_eyes"
+      ]
+    },
+    {
+      "tag": "freckles",
+      "status": "automatic",
+      "labels": [
+        "freckles"
+      ]
+    },
+    {
+      "tag": "earrings",
+      "status": "automatic",
+      "labels": [
+        "earrings"
+      ]
+    },
+    {
+      "tag": "dress",
+      "status": "automatic",
+      "labels": [
+        "dress"
+      ]
+    },
+    {
+      "tag": "female orgasm",
+      "status": "automatic",
+      "labels": [
+        "female_orgasm"
+      ]
+    },
+    {
+      "tag": "tit drop",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires motion or timing evidence; no suitable model label."
+    },
+    {
+      "tag": "kissing",
+      "status": "automatic",
+      "labels": [
+        "kiss",
+        "french_kiss"
+      ]
+    },
+    {
+      "tag": "legs up",
+      "status": "automatic",
+      "labels": [
+        "legs_up"
+      ]
+    },
+    {
+      "tag": "freeuse",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Narrative or consent context; excluded by policy."
+    },
+    {
+      "tag": "sloppy",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "shower",
+      "status": "automatic",
+      "labels": [
+        "showering"
+      ]
+    },
+    {
+      "tag": "vibrator",
+      "status": "automatic",
+      "labels": [
+        "vibrator",
+        "egg_vibrator",
+        "remote_control_vibrator",
+        "vibrator_under_clothes"
+      ]
+    },
+    {
+      "tag": "femboy",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "cum on tits",
+      "status": "automatic",
+      "labels": [
+        "cum_on_breasts"
+      ]
+    },
+    {
+      "tag": "spit",
+      "status": "automatic",
+      "labels": [
+        "spitting"
+      ]
+    },
+    {
+      "tag": "bikini",
+      "status": "automatic",
+      "labels": [
+        "bikini"
+      ]
+    },
+    {
+      "tag": "egirl",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "gay",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "hairy",
+      "status": "default-excluded",
+      "labels": [
+        "pubic_hair"
+      ],
+      "reason": "Mapped, but excluded by default following recognition mismatches."
+    },
+    {
+      "tag": "forced",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Narrative or consent context; excluded by policy."
+    },
+    {
+      "tag": "mirror",
+      "status": "automatic",
+      "labels": [
+        "mirror"
+      ]
+    },
+    {
+      "tag": "standing fuck",
+      "status": "automatic",
+      "labels": [
+        "standing_sex"
+      ]
+    },
+    {
+      "tag": "pigtails",
+      "status": "automatic",
+      "labels": [
+        "twintails"
+      ]
+    },
+    {
+      "tag": "school uniform",
+      "status": "automatic",
+      "labels": [
+        "school_uniform"
+      ]
+    },
+    {
+      "tag": "hair pull",
+      "status": "manual",
+      "labels": [],
+      "reason": "The hair-pulled-back label describes a hairstyle, not pulling."
+    },
+    {
+      "tag": "white hair",
+      "status": "automatic",
+      "labels": [
+        "white_hair"
+      ]
+    },
+    {
+      "tag": "drooling",
+      "status": "automatic",
+      "labels": [
+        "drooling"
+      ]
+    },
+    {
+      "tag": "fisting",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "chubby",
+      "status": "automatic",
+      "labels": [
+        "plump"
+      ]
+    },
+    {
+      "tag": "cum on ass",
+      "status": "automatic",
+      "labels": [
+        "cum_on_ass"
+      ]
+    },
+    {
+      "tag": "titjob",
+      "status": "automatic",
+      "labels": [
+        "paizuri",
+        "paizuri_under_clothes"
+      ]
+    },
+    {
+      "tag": "butt plug",
+      "status": "automatic",
+      "labels": [
+        "butt_plug"
+      ]
+    },
+    {
+      "tag": "thighjob",
+      "status": "automatic",
+      "labels": [
+        "thigh_sex"
+      ]
+    },
+    {
+      "tag": "pink hair",
+      "status": "automatic",
+      "labels": [
+        "pink_hair"
+      ]
+    },
+    {
+      "tag": "side fuck",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "swimming pool",
+      "status": "automatic",
+      "labels": [
+        "pool"
+      ]
+    },
+    {
+      "tag": "thigh gap",
+      "status": "automatic",
+      "labels": [
+        "thigh_gap"
+      ]
+    },
+    {
+      "tag": "ai-tagged-bare",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "femdom",
+      "status": "automatic",
+      "labels": [
+        "femdom"
+      ]
+    },
+    {
+      "tag": "thong",
+      "status": "automatic",
+      "labels": [
+        "thong"
+      ]
+    },
+    {
+      "tag": "twerking",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires motion or timing evidence; no suitable model label."
+    },
+    {
+      "tag": "restrained",
+      "status": "automatic",
+      "labels": [
+        "restrained"
+      ]
+    },
+    {
+      "tag": "hands behind back",
+      "status": "automatic",
+      "labels": [
+        "arms_behind_back"
+      ]
+    },
+    {
+      "tag": "from below",
+      "status": "automatic",
+      "labels": [
+        "from_below"
+      ]
+    },
+    {
+      "tag": "cat ears",
+      "status": "automatic",
+      "labels": [
+        "cat_ears"
+      ]
+    },
+    {
+      "tag": "spanking",
+      "status": "automatic",
+      "labels": [
+        "spanked"
+      ]
+    },
+    {
+      "tag": "knee high socks",
+      "status": "automatic",
+      "labels": [
+        "kneehighs"
+      ]
+    },
+    {
+      "tag": "on all fours",
+      "status": "automatic",
+      "labels": [
+        "all_fours"
+      ]
+    },
+    {
+      "tag": "cum on pussy",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "beach",
+      "status": "automatic",
+      "labels": [
+        "beach"
+      ]
+    },
+    {
+      "tag": "bdsm",
+      "status": "automatic",
+      "labels": [
+        "bdsm"
+      ]
+    },
+    {
+      "tag": "latina",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "choking",
+      "status": "automatic",
+      "labels": [
+        "strangling"
+      ]
+    },
+    {
+      "tag": "green eyes",
+      "status": "automatic",
+      "labels": [
+        "green_eyes"
+      ]
+    },
+    {
+      "tag": "pissing",
+      "status": "automatic",
+      "labels": [
+        "peeing"
+      ]
+    },
+    {
+      "tag": "dirty talk",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "spitroast",
+      "status": "automatic",
+      "labels": [
+        "spitroast"
+      ]
+    },
+    {
+      "tag": "bent over",
+      "status": "automatic",
+      "labels": [
+        "bent_over"
+      ]
+    },
+    {
+      "tag": "gangbang",
+      "status": "automatic",
+      "labels": [
+        "gangbang"
+      ]
+    },
+    {
+      "tag": "ebony",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "2guys",
+      "status": "automatic",
+      "labels": [
+        "2boys"
+      ]
+    },
+    {
+      "tag": "double penetration",
+      "status": "automatic",
+      "labels": [
+        "double_penetration"
+      ]
+    },
+    {
+      "tag": "3d",
+      "status": "automatic",
+      "labels": [
+        "3d"
+      ]
+    },
+    {
+      "tag": "cum on clothes",
+      "status": "automatic",
+      "labels": [
+        "cum_on_clothes"
+      ]
+    },
+    {
+      "tag": "leggings",
+      "status": "automatic",
+      "labels": [
+        "leggings"
+      ]
+    },
+    {
+      "tag": "underboob",
+      "status": "automatic",
+      "labels": [
+        "underboob"
+      ]
+    },
+    {
+      "tag": "fuck machine",
+      "status": "manual",
+      "labels": [],
+      "reason": "Generic machinery does not establish this device."
+    },
+    {
+      "tag": "edging",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "footjob",
+      "status": "automatic",
+      "labels": [
+        "footjob"
+      ]
+    },
+    {
+      "tag": "chastity cage",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "on chair",
+      "status": "automatic",
+      "labels": [
+        "on_chair"
+      ]
+    },
+    {
+      "tag": "bunny ears",
+      "status": "automatic",
+      "labels": [
+        "rabbit_ears"
+      ]
+    },
+    {
+      "tag": "gagging",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "collar",
+      "status": "automatic",
+      "labels": [
+        "collar"
+      ]
+    },
+    {
+      "tag": "censored",
+      "status": "automatic",
+      "labels": [
+        "censored"
+      ]
+    },
+    {
+      "tag": "mating press",
+      "status": "automatic",
+      "labels": [
+        "mating_press"
+      ]
+    },
+    {
+      "tag": "ponytail",
+      "status": "automatic",
+      "labels": [
+        "ponytail"
+      ]
+    },
+    {
+      "tag": "overwatch",
+      "status": "automatic",
+      "labels": [
+        "overwatch"
+      ]
+    },
+    {
+      "tag": "high heels",
+      "status": "automatic",
+      "labels": [
+        "high_heels"
+      ]
+    },
+    {
+      "tag": "school",
+      "status": "automatic",
+      "labels": [
+        "school"
+      ]
+    },
+    {
+      "tag": "blackmail",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Narrative or consent context; excluded by policy."
+    },
+    {
+      "tag": "armpit",
+      "status": "automatic",
+      "labels": [
+        "armpits"
+      ]
+    },
+    {
+      "tag": "pillow humping",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "maid outfit",
+      "status": "automatic",
+      "labels": [
+        "maid"
+      ]
+    },
+    {
+      "tag": "sissy",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "furry",
+      "status": "automatic",
+      "labels": [
+        "furry"
+      ]
+    },
+    {
+      "tag": "solo male",
+      "status": "manual",
+      "labels": [],
+      "reason": "Needs a joint subject-count and subject-category rule; individual labels are insufficient."
+    },
+    {
+      "tag": "handcuffs",
+      "status": "automatic",
+      "labels": [
+        "handcuffs"
+      ]
+    },
+    {
+      "tag": "crying",
+      "status": "automatic",
+      "labels": [
+        "crying"
+      ]
+    },
+    {
+      "tag": "braids",
+      "status": "automatic",
+      "labels": [
+        "braid",
+        "twin_braids"
+      ]
+    },
+    {
+      "tag": "sitting on face",
+      "status": "automatic",
+      "labels": [
+        "sitting_on_face"
+      ]
+    },
+    {
+      "tag": "cum on self",
+      "status": "manual",
+      "labels": [],
+      "reason": "Generic body-location labels do not identify who the recipient is."
+    },
+    {
+      "tag": "welcome",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "booty shorts",
+      "status": "automatic",
+      "labels": [
+        "short_shorts"
+      ]
+    },
+    {
+      "tag": "dyed hair",
+      "status": "manual",
+      "labels": [],
+      "reason": "Hair color or multiple colors do not establish dye rather than a wig."
+    },
+    {
+      "tag": "cum on feet",
+      "status": "manual",
+      "labels": [],
+      "reason": "Generic body-location labels do not establish this location."
+    },
+    {
+      "tag": "gym",
+      "status": "manual",
+      "labels": [],
+      "reason": "Gym clothing does not establish the setting."
+    },
+    {
+      "tag": "rimming",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "pajamas",
+      "status": "automatic",
+      "labels": [
+        "pajamas"
+      ]
+    },
+    {
+      "tag": "pantyhose",
+      "status": "automatic",
+      "labels": [
+        "pantyhose"
+      ]
+    },
+    {
+      "tag": "green hair",
+      "status": "automatic",
+      "labels": [
+        "green_hair"
+      ]
+    },
+    {
+      "tag": "gloryhole",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "ball sucking",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "cum on thighs",
+      "status": "manual",
+      "labels": [],
+      "reason": "Generic body-location labels do not establish this location."
+    },
+    {
+      "tag": "bath",
+      "status": "automatic",
+      "labels": [
+        "bath"
+      ]
+    },
+    {
+      "tag": "held down",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "crossdressing",
+      "status": "automatic",
+      "labels": [
+        "crossdressing"
+      ]
+    },
+    {
+      "tag": "mask",
+      "status": "automatic",
+      "labels": [
+        "mask"
+      ]
+    },
+    {
+      "tag": "blindfold",
+      "status": "automatic",
+      "labels": [
+        "blindfold"
+      ]
+    },
+    {
+      "tag": "strap on",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "german",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "leash",
+      "status": "automatic",
+      "labels": [
+        "leash"
+      ]
+    },
+    {
+      "tag": "muscular",
+      "status": "automatic",
+      "labels": [
+        "muscular"
+      ]
+    },
+    {
+      "tag": "red eyes",
+      "status": "automatic",
+      "labels": [
+        "red_eyes"
+      ]
+    },
+    {
+      "tag": "bukkake",
+      "status": "automatic",
+      "labels": [
+        "bukkake"
+      ]
+    },
+    {
+      "tag": "futanari",
+      "status": "automatic",
+      "labels": [
+        "futanari"
+      ]
+    },
+    {
+      "tag": "torn pants",
+      "status": "automatic",
+      "labels": [
+        "torn_pants"
+      ]
+    },
+    {
+      "tag": "69",
+      "status": "automatic",
+      "labels": [
+        "69"
+      ]
+    },
+    {
+      "tag": "clown",
+      "status": "manual",
+      "labels": [],
+      "reason": "Character-name labels are not a generic clown category."
+    },
+    {
+      "tag": "pet play",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "cheerleader",
+      "status": "automatic",
+      "labels": [
+        "cheerleader"
+      ]
+    },
+    {
+      "tag": "slime",
+      "status": "automatic",
+      "labels": [
+        "slime_(substance)"
+      ]
+    },
+    {
+      "tag": "ropes",
+      "status": "automatic",
+      "labels": [
+        "rope"
+      ]
+    },
+    {
+      "tag": "ball fondling",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "hatsune miku",
+      "status": "automatic",
+      "labels": [
+        "hatsune_miku"
+      ]
+    },
+    {
+      "tag": "pegging",
+      "status": "manual",
+      "labels": [],
+      "reason": "No suitable label in the pinned model vocabulary."
+    },
+    {
+      "tag": "hijab",
+      "status": "manual",
+      "labels": [],
+      "reason": "Generic kerchief labels do not establish this garment."
+    },
+    {
+      "tag": "ai-needs-review",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Website metadata; not inferred from sampled images."
+    },
+    {
+      "tag": "purple hair",
+      "status": "automatic",
+      "labels": [
+        "purple_hair"
+      ]
+    },
+    {
+      "tag": "bodywriting",
+      "status": "automatic",
+      "labels": [
+        "body_writing"
+      ]
+    },
+    {
+      "tag": "scissoring",
+      "status": "manual",
+      "labels": [],
+      "reason": "The available tribadism label is broader than this specific action."
+    },
+    {
+      "tag": "changing room",
+      "status": "automatic",
+      "labels": [
+        "locker_room"
+      ],
+      "scope": "Locker rooms only; other changing rooms are not covered."
+    },
+    {
+      "tag": "slow motion",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires motion or timing evidence; no suitable model label."
+    },
+    {
+      "tag": "bondage",
+      "status": "automatic",
+      "labels": [
+        "bondage"
+      ]
+    },
+    {
+      "tag": "League of Legends",
+      "status": "automatic",
+      "labels": [
+        "league_of_legends"
+      ]
+    },
+    {
+      "tag": "yellow eyes",
+      "status": "automatic",
+      "labels": [
+        "yellow_eyes"
+      ]
+    },
+    {
+      "tag": "anal beads",
+      "status": "automatic",
+      "labels": [
+        "anal_beads"
+      ]
+    },
+    {
+      "tag": "used",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Narrative or consent context; excluded by policy."
+    },
+    {
+      "tag": "big ass",
+      "status": "automatic",
+      "labels": [
+        "huge_ass"
+      ]
+    },
+    {
+      "tag": "tomboy",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "maledom",
+      "status": "manual",
+      "labels": [],
+      "reason": "Requires context or a category distinction absent from the model vocabulary."
+    },
+    {
+      "tag": "gilf",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "hoodie",
+      "status": "automatic",
+      "labels": [
+        "hoodie"
+      ]
+    },
+    {
+      "tag": "sweaty",
+      "status": "automatic",
+      "labels": [
+        "sweat",
+        "sweating_profusely"
+      ]
+    },
+    {
+      "tag": "orange hair",
+      "status": "automatic",
+      "labels": [
+        "orange_hair"
+      ]
+    },
+    {
+      "tag": "genshin impact",
+      "status": "automatic",
+      "labels": [
+        "genshin_impact"
+      ]
+    },
+    {
+      "tag": "supine",
+      "status": "automatic",
+      "labels": [
+        "on_back"
+      ]
+    },
+    {
+      "tag": "group",
+      "status": "automatic",
+      "labels": [
+        "group_sex"
+      ]
+    },
+    {
+      "tag": "tan",
+      "status": "automatic",
+      "labels": [
+        "tan"
+      ]
+    },
+    {
+      "tag": "degrading",
+      "status": "default-excluded",
+      "labels": [],
+      "reason": "Narrative or consent context; excluded by policy."
+    }
   ]
 }

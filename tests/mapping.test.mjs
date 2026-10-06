@@ -24,3 +24,24 @@ test('all mappings address valid labels and coverage matches the active policy',
   assert.equal(coverage.supportedCount, coverage.supported.length);
   assert.equal(coverage.totalCount, tags.length);
 });
+
+test('mapping audit covers every tag with exact sources or an explicit reason', () => {
+  const mapping = JSON.parse(read('model/mapping.json'));
+  const labels = read('model/top_tags.txt').trimEnd().split(/\r?\n/);
+  const coverage = JSON.parse(read('model/coverage.json'));
+  assert.deepEqual(coverage.entries.map(e => e.tag), readTags(read('model/tags.txt')));
+  for (const entry of coverage.entries) {
+    assert.deepEqual(entry.labels, (mapping[entry.tag] ?? []).map(i => labels[i]));
+    if (entry.status !== 'automatic') assert(entry.reason?.length > 0, entry.tag);
+  }
+  for (const tag of ['shaved', 'no face', 'oiled', 'stockings', 'clown', 'hair pull', 'caption', 'solo male']) assert.equal(mapping[tag], undefined, tag);
+  const sources = tag => mapping[tag].map(i => labels[i]);
+  assert.deepEqual(sources('stripping'), ['undressing']);
+  assert.deepEqual(sources('chubby'), ['plump']);
+  assert.deepEqual(sources('slime'), ['slime_(substance)']);
+  assert(sources('sex toy').includes('dildo'));
+  assert(sources('underwear').includes('bra'));
+  assert(sources('tattoos').includes('stomach_tattoo'));
+  assert(coverage.entries.find(e => e.tag === 'public').scope);
+  assert(coverage.entries.find(e => e.tag === 'changing room').scope);
+});
