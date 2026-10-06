@@ -275,7 +275,16 @@ $('#rule-save').onclick=()=>{
 };
 $('#rule-reset').onclick=()=>{delete variants[$('#rule-variant').value].tagRules[evidenceTag];changed();summary();renderTags();};
 $('#rule-variant').onchange=()=>openEvidence(evidenceTag,false);
-$('#evidence-close').onclick=()=>{const tag=evidenceTag;evidenceTag=undefined;$('#evidence').hidden=true;[...document.querySelectorAll('#tags .tag-name')].find(button=>button.textContent===tag)?.focus();};
+function closeEvidence(restoreFocus=true){
+ const tag=evidenceTag;evidenceTag=undefined;$('#evidence').hidden=true;
+ if(restoreFocus)[...document.querySelectorAll('#tags .tag-name')].find(button=>button.textContent===tag)?.focus();
+}
+$('#evidence-close').onclick=()=>closeEvidence();
+// Pointer-down precedes the click that opens a drawer, avoiding immediate dismissal.
+// Outside clicks keep focus on their own target and still perform their action.
+document.addEventListener('pointerdown',event=>{
+ if(!$('#evidence').hidden&&!event.composedPath().includes($('#evidence')))closeEvidence(false);
+});
 for(const name of ['review','compare','problems']){
  const tab=$('#tab-'+name);tab.onclick=()=>view(name);
  tab.onkeydown=event=>{

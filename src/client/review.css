@@ -136,3 +136,19 @@ footer{margin-top:10px;font-size:11px;line-height:1.4}
 .verdict input[value=yes]:checked+span{background:#18392c;border-color:#3e8665;color:#b9f1d7}
 .verdict input[value=no]:checked+span{background:#40232c;border-color:#965168;color:#ffc1d1}
 .verdict input[value=unknown]:checked+span{background:#3b3420;border-color:#877846;color:#f4dfa1}
+
+/* Keep global actions and view filters aligned without taking space from review. */
+header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center;border-bottom:1px solid #303036;padding-bottom:14px}
+header>.toolbar{justify-content:flex-end;padding:0;border:0;border-radius:0;background:transparent;gap:8px}
+header .brand{gap:10px}
+header .brand span{font-size:13px}
+header button,header .file-button,header .session-options>summary{padding:9px 12px;font-size:13px}
+header .session-menu{left:auto;right:0}
+.status-line{gap:8px}
+.view-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 24px;padding:6px 0 12px;margin-bottom:14px;border-bottom:1px solid #303036;flex-shrink:0}
+.view-bar>.view-tabs{flex:1;border:0;padding:0;gap:6px}
+.view-bar>.tag-tools{margin:0;gap:14px}
+.view-bar select{padding:7px 9px;font-size:13px}
+.view-bar #progress{margin-left:16px;white-space:nowrap}
+@media(max-width:1200px){header{grid-template-columns:1fr auto}header>.toolbar{grid-column:1/-1;grid-row:2;justify-content:flex-start}.view-bar>.tag-tools{flex-wrap:wrap}}
+@media(max-width:600px){.view-bar>.view-tabs{flex-wrap:wrap}.view-bar #progress{margin:4px 0;width:100%}header{gap:12px}.view-bar>.tag-tools{gap:10px}.brand span{display:none}}
