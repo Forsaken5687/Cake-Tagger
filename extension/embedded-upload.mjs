@@ -1,7 +1,7 @@
 // Keep the analysis document on the extension origin, separate from the site.
 import { translate, errorMessage }  from '../src/shared/messages.mjs';
 import { readSiteTheme } from '../src/shared/site-theme.mjs';
-import { createUploadUI } from './upload-ui.mjs';
+import { validUploadView, createUploadUI } from './upload-ui.mjs';
 export function mountUploadPanel(doc, runtime) {
   const selections = new WeakMap();
   let panel, frame, mount, ui, ready = false, channel, lastSelection = '', timer;
@@ -27,10 +27,18 @@ export function mountUploadPanel(doc, runtime) {
   const label = key => translate(key, english ? 'en' : 'de');
   function applyLanguage(settings) {
     preferences = settings;
+    doc.documentElement.classList.toggle('cake-tagger-hide-site-ai', settings.hideSiteAI === true);
     english = settings.language === 'en' || (settings.language === 'auto' && readSiteTheme(doc).language !== 'de');
     if (frame) frame.title = label('embed.title');
   }
-  runtime.sendMessage({ type: 'cake-tagger:settings-get' }).then(response => { if (response?.settings) { applyLanguage(response.settings); refresh(); } }).catch(() => {});
+  async function loadPreferences() {
+    const response=await runtime.sendMessage({type:'cake-tagger:settings-get'});
+    if(response?.settings){applyLanguage(response.settings);refresh();}
+    return response;
+  }
+  void loadPreferences().catch(()=>{});
+  // Returning to the tab also picks up preferences saved from another browser.
+  doc.defaultView.addEventListener('focus',()=>{void loadPreferences().catch(()=>{});});
   runtime.onMessage?.addListener((message, sender) => {
     if (sender.id === runtime.id && message?.type === 'cake-tagger:settings-updated') { applyLanguage(message.settings); refresh(); }
   });
@@ -96,7 +104,7 @@ export function mountUploadPanel(doc, runtime) {
        return ensureConnection().then(()=>runtime.sendMessage({type:'cake-tagger:ui-command',channel,command})).then(response=>{
         if(!response?.accepted)ui.error(label(response?.error || 'error.uploadConnection'));
        }).catch(error=>ui.error(translate(errorMessage(error),english?'en':'de')));
-      }, {save:async settings=>{const response=await runtime.sendMessage({type:'cake-tagger:settings-save',settings});if(response?.settings){applyLanguage(response.settings);refresh();}return response;},capabilities:()=>runtime.sendMessage({type:'cake-tagger:capabilities'})});
+      }, {load:loadPreferences,save:async settings=>{const response=await runtime.sendMessage({type:'cake-tagger:settings-save',settings});if(response?.settings){applyLanguage(response.settings);refresh();}return response;},capabilities:()=>runtime.sendMessage({type:'cake-tagger:capabilities'})});
       void open();
     }
     mount.classList.toggle('cake-tagger-hide-site-ai', preferences.hideSiteAI === true);
@@ -124,7 +132,7 @@ export function mountUploadPanel(doc, runtime) {
       return;
     }
     if (event.data.type === 'cake-tagger:connection-error') ui?.error(label('error.nativeServer'));
-    if (event.data.type === 'cake-tagger:view') ui?.update(event.data.view);
+    if (event.data.type === 'cake-tagger:view' && validUploadView(event.data.view)) { applyLanguage(event.data.view.settings); ui?.update(event.data.view); refresh(); }
     if (event.data.type === 'cake-tagger:ready') { ready = true; lastSelection = ''; syncTheme(true); syncFiles(); }
   });
   const observer = new MutationObserver(() => { clearTimeout(timer); timer = setTimeout(refresh, 100); });

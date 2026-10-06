@@ -19,7 +19,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(path.join(root, 'data'));
   const old = path.join(root, 'data/corrections.json');
   fs.writeFileSync(old, 'legacy data deliberately not parsed');
-  const child = spawn(process.execPath, ['src/server/server.mjs', '--no-browser'], { cwd: root, env: { ...process.env, CAKE_TAGGER_PORT: '0' }, stdio: 'ignore' });
+  let child = spawn(process.execPath, ['src/server/server.mjs', '--no-browser'], { cwd: root, env: { ...process.env, CAKE_TAGGER_PORT: '0' }, stdio: 'ignore' });
   try {
     const sessionPath = path.join(root, 'data/session.json');
     for (let i = 0; i < 100 && !fs.existsSync(sessionPath); i++) await delay(30);
@@ -60,7 +60,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     const caps = await (await fetch(url.origin + '/api/capabilities', { headers })).json();
     assert.equal(caps.testMaximum, caps.logicalProcessors);
     assert.equal((await fetch(url.origin + '/api/settings')).status, 401);
-    const settings = { language:'en', parallelism:String(Math.min(16,caps.testMaximum)), excludedTags:['tattoos'] };
+    const settings = { language:'en', parallelism:String(Math.min(16,caps.testMaximum)), excludedTags:['tattoos'], hideSiteAI:true };
     const saved = await fetch(url.origin + '/api/settings', { method:'POST', headers, body:JSON.stringify({settings}) });
     assert.equal(saved.status, 200);
     assert.equal((await (await fetch(url.origin + '/api/settings', { headers })).json()).settings.parallelism, settings.parallelism);
@@ -117,6 +117,14 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.equal((await exiting)[0],0);
     assert.equal(fs.readFileSync(old,'utf8'),'legacy data deliberately not parsed');
     assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).parallelism,settings.parallelism);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).hideSiteAI,true);
+    fs.unlinkSync(sessionPath);
+    child=spawn(process.execPath,['src/server/server.mjs','--no-browser'],{cwd:root,env:{...process.env,CAKE_TAGGER_PORT:'0'},stdio:'ignore'});
+    for(let i=0;i<100&&!fs.existsSync(sessionPath);i++)await delay(30);
+    assert(fs.existsSync(sessionPath),'server restarted');
+    const restarted=new URL(JSON.parse(fs.readFileSync(sessionPath,'utf8')).url);
+    const restored=await fetch(restarted.origin+'/api/settings',{headers:{Authorization:'Bearer '+restarted.hash.slice(1)}}).then(r=>r.json());
+    assert.equal(restored.settings.hideSiteAI,true);assert.equal(restored.settings.parallelism,settings.parallelism);
   } finally {
     if (child.exitCode === null) { const ended = once(child, 'exit'); child.kill(); await ended; }
     assert(fs.realpathSync(root).startsWith(parent + path.sep));

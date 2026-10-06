@@ -28,4 +28,4 @@
 @media(max-width:780px){.cake-tagger-settings-dialog .settings-field{grid-template-columns:1fr}.cake-tagger-settings-dialog .settings-check{grid-template-columns:1fr auto}}
 
 /* Hide only the site's AI suggestions; retain upload fields and extension results. */
-.stok-up-mount.cake-tagger-hide-site-ai .stok-ai-suggestions{display:none!important}
+.cake-tagger-hide-site-ai .stok-ai-suggestions{display:none!important}

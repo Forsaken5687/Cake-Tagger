@@ -1,6 +1,7 @@
 import { isTrustedEvent } from '../src/shared/trusted-event.mjs';
 import { translate } from '../src/shared/messages.mjs';
 import { settingsForm } from '../src/shared/settings-ui.mjs';
+import { createSettingsStore } from '../src/shared/preferences.mjs';
 import { inspectUploads } from './upload-adapter.mjs';
 
 // These controls render only public tag metadata. The isolated local document
@@ -25,10 +26,18 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
  let settingsDialog;
  async function openSettings(){
   if(!view || !settingsAPI)return;
+  // A bridge snapshot can lag behind a successful save or another browser.
+  // Read the backend on every opening rather than reusing the displayed snapshot.
+  const store=createSettingsStore({request:async(method,next)=>{
+   const response=await(method==='get'?settingsAPI.load():settingsAPI.save(next));
+   if(response?.error || !response?.settings)throw Error(response?.error || 'error.settingsSave');
+   return response;
+  }});
+  try { await store.load(); } catch(error) { note.textContent=translate(error.message,view.language);note.hidden=false;return; }
+  store.subscribe(next=>{view={...view,settings:next};paint(true);});
+  view={...view,settings:store.get()};
   settingsDialog?.remove();settingsDialog=el('dialog','','cake-tagger-settings-dialog');
   const heading=el('div','','cake-tagger-result-heading');heading.append(el('strong',t('settings.title')),button('action.close',()=>settingsDialog.close()));settingsDialog.append(heading);
-  let saved=view.settings;
-  const store={get:()=>saved,save:async next=>{const response=await settingsAPI.save(next);if(response.error)throw Error(response.error);saved=response.settings;}};
   const dialog=settingsDialog;
   settingsDialog.append(settingsForm(store,view.allTags,()=>{if(dialog.isConnected)dialog.close();},{document:doc,language:view.language,requireTrusted:true,capabilities:settingsAPI.capabilities}));
   settingsDialog.addEventListener('click',event=>{if(trusted(event)&&event.target===settingsDialog)settingsDialog.close();});
@@ -36,6 +45,11 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
  }
  function detachLayout(){for(const n of sections.values())n.remove();sections.clear();}
  function content(section,entry){
+  const previousArea=section.querySelector('.cake-tagger-tag-area');
+  const position={top:previousArea?.scrollTop??0,left:previousArea?.scrollLeft??0};
+  const active=doc.activeElement;
+  const focusedTag=section.contains(active)?active?.dataset?.tag:undefined;
+  const focusedApply=section.contains(active)&&active?.classList.contains('cake-tagger-primary');
   section.replaceChildren();
   const head=el('div','','cake-tagger-result-heading');head.append(el('strong',t('embed.suggestions')),el('small',entry.state));section.append(head);
   if(entry.error)section.append(el('p',entry.error,'cake-tagger-message'));
@@ -44,7 +58,7 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   const chips=el('div','','cake-tagger-tags');
   for(const row of entry.tags){
    if(row.uncertain && !row.selected && !view.settings.showUncertain)continue;
-   const label=el('label','','cake-tagger-chip'),box=el('input');box.type='checkbox';box.checked=row.selected;
+   const label=el('label','','cake-tagger-chip'),box=el('input');box.type='checkbox';box.checked=row.selected;box.dataset.tag=row.tag;
    label.classList.toggle('is-selected',row.selected);label.classList.toggle('is-uncertain',row.uncertain);
    label.title=t(row.source==='manual'?'tags.manualOrigin':'tags.modelOrigin');
    box.onchange=event=>{if(trusted(event))command('tag',entry,{tag:row.tag,selected:box.checked});};label.append(box,el('span',row.tag));
@@ -54,6 +68,10 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   area.append(chips);
   const actions=el('div','','cake-tagger-result-actions');actions.append(el('small',t('tags.selectedCount',{count:entry.tags.filter(row=>row.selected).length})),button('transfer.apply',()=>command('apply',entry),'cake-tagger-primary'));
   section.append(actions);
+  // Replacing chips must not jump back to the first row or drop keyboard focus.
+  area.scrollTop=position.top;area.scrollLeft=position.left;
+  if(focusedTag!==undefined)[...chips.querySelectorAll('input')].find(box=>box.dataset.tag===focusedTag)?.focus({preventScroll:true});
+  else if(focusedApply)actions.querySelector('button')?.focus({preventScroll:true});
  }
  function paint(force=false){
   if(!view)return;
