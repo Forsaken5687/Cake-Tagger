@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {reviewPartition} from '../src/shared/evaluation.mjs';
 import {aggregate} from '../src/shared/tagging.mjs';
 import {excluded,readTags} from '../src/shared/tag-policy.mjs';
 import {validateAnalysisPolicy} from '../src/shared/analysis-settings.mjs';
@@ -30,25 +31,29 @@ export function analyzeReviews(input,mapping,allowedTags){
   const originals=item.result?.tags??item.originalSuggestions;
   if(!Array.isArray(originals)||originals.some(row=>!allowed.has(row.tag)))throw Error('Original suggestions are required');
   validateAnalysisPolicy(result.analysisPolicy);
-  const policy=result.analysisPolicy?.match(/^coverage-v[2345]:(majority|brief)(?::(.+))?$/);
+  const policy=result.analysisPolicy?.match(/^coverage-v[23456]:(majority|brief)(?::(.+))?$/);
   if(!policy||!Number.isFinite(result.threshold))throw Error('Original policy is required');
   const blocked=new Set(policy[2]?JSON.parse(policy[2]):['hairy','watermark']);
   const eligible=new Set(Object.keys(mapping).filter(tag=>!blocked.has(tag)&&(!excluded.has(tag)||['hairy','watermark'].includes(tag))));
-  const row={sha256:item.sha256,expected:new Set(item.tags),baseline:new Set(originals.map(x=>x.tag)),eligible};
-  row.reproduced=new Set(aggregate(video.modelScores,mapping,result.threshold,policy[1],{excludedTags:[...blocked]}).tags.map(x=>x.tag));
+  if(!Array.isArray(video.ignoredTags??[]))throw Error('Invalid review metadata');
+  const ignored=new Set(video.ignoredTags??[]);
+  if([...ignored].some(tag=>!allowed.has(tag))||!['auto','development','holdout'].includes(video.partition??'auto'))throw Error('Invalid review metadata');
+  const row={sha256:item.sha256,partition:video.partition??'auto',ignored,expected:new Set(item.tags.filter(tag=>!ignored.has(tag))),baseline:new Set(originals.map(x=>x.tag).filter(tag=>!ignored.has(tag))),eligible};
+  row.reproduced=new Set(aggregate(video.modelScores,mapping,result.threshold,policy[1],{excludedTags:[...blocked]}).tags.map(x=>x.tag).filter(tag=>!ignored.has(tag)));
   const previous=unique.get(item.sha256);
   if(previous){
-   if(previous.expected.size!==row.expected.size||[...row.expected].some(tag=>!previous.expected.has(tag)))throw Error('Conflicting reviews for identical content');
+   if(previous.partition!==row.partition||previous.ignored.size!==row.ignored.size||[...row.ignored].some(tag=>!previous.ignored.has(tag))||previous.expected.size!==row.expected.size||[...row.expected].some(tag=>!previous.expected.has(tag)))throw Error('Conflicting reviews for identical content');
    duplicates++;continue;
   }
   unique.set(item.sha256,row);
  }
  const rows=[...unique.values()].sort((a,b)=>a.sha256.localeCompare(b.sha256));
- const holdout=rows.filter((_,i)=>i%4===3),development=rows.filter((_,i)=>i%4!==3);
+ const partition=row=>reviewPartition({result:{sha256:row.sha256},partition:row.partition});
+ const holdout=rows.filter(row=>partition(row)==='holdout'),development=rows.filter(row=>partition(row)==='development');
  const allTags=new Set(rows.flatMap(row=>[...row.expected,...row.baseline]));
  const perTag=[...allTags].map(tag=>{
   const positive=rows.filter(row=>row.expected.has(tag)),tp=positive.filter(row=>row.baseline.has(tag)).length;
-  return {tag,positives:positive.length,truePositive:tp,falsePositive:rows.filter(row=>!row.expected.has(tag)&&row.baseline.has(tag)).length,falseNegative:positive.length-tp,mapped:!!mapping[tag],manualOnly:excluded.has(tag),eligiblePositives:positive.filter(row=>row.eligible.has(tag)).length};
+  return {tag,positives:positive.length,truePositive:tp,falsePositive:rows.filter(row=>!row.ignored.has(tag)&&!row.expected.has(tag)&&row.baseline.has(tag)).length,falseNegative:positive.length-tp,mapped:!!mapping[tag],manualOnly:excluded.has(tag),eligiblePositives:positive.filter(row=>row.eligible.has(tag)).length};
  }).sort((a,b)=>b.falseNegative-a.falseNegative||a.tag.localeCompare(b.tag));
  return {version:1,reviewed:rows.length,unreviewed,duplicates,baselineMismatches:rows.filter(row=>row.baseline.size!==row.reproduced.size||[...row.baseline].some(tag=>!row.reproduced.has(tag))).length,
   all:metrics(rows),automaticallyEligible:metrics(rows,true),development:{count:development.length,metrics:metrics(development)},holdout:{count:holdout.length,metrics:metrics(holdout)},perTag};

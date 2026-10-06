@@ -35,7 +35,7 @@ const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/ja
 // Serve only the reviewed browser module set; backend and private paths stay inaccessible.
 const aliases = {'/analysis.html':'src/client/analysis.html','/diagnostics.html':'src/client/diagnostics.html', ...(reviewEnabled ? {'/review.html':'src/client/review.html'} : {})};
 const publicFiles = new Set([
-  ...(reviewEnabled ? ['src/client/review.html', 'src/client/review.mjs', 'src/client/review.css', 'src/shared/evaluation.mjs'] : []),
+  ...(reviewEnabled ? ['src/client/review.html', 'src/client/review.mjs', 'src/client/review.css', 'src/client/review-session.mjs', 'src/shared/evaluation.mjs'] : []),
   'src/client/analysis.html',
   'src/client/diagnostics.html',
   'src/client/app.js',

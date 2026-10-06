@@ -75,7 +75,7 @@ The processing frame automatically reconnects when the server session changes, p
 
 ## Privacy and security
 
-Video decoding takes place in the browser. Only 448 × 448 RGBA samples are sent to the Node server on this computer for inference; full videos, filenames and preview images are not sent for analysis or saved by the server. Results and corrections remain in page memory. The server binds only to `127.0.0.1`, authenticates inference requests and rejects unrelated website origins. Downloads are short-lived in-memory snapshots.
+Video decoding takes place in the browser. Only 448 × 448 RGBA samples are sent to the Node server on this computer for inference; full videos, filenames and preview images are not sent for analysis or saved by the server. Upload results and corrections remain in page memory; the development review lab also stores a local browser backup. The server binds only to `127.0.0.1`, authenticates inference requests and rejects unrelated website origins. Downloads are short-lived in-memory snapshots.
 
 Settings are persisted; exports contain filenames and tags. Selecting files on cake.ski and applying tags can trigger that website's normal upload and search requests. See [security boundaries](docs/SECURITY.md) and [third-party components](THIRD_PARTY.md).
 
@@ -102,3 +102,7 @@ Further reading: [architecture](docs/TECHNICAL.md), [integration contract](docs/
 - `data/`, `work/`, `outputs/`: ignored preferences, temporary work and current release artifacts.
 
 Complete releases contain only runtime files, notices, documentation and the packaged extensions.
+
+## Development review lab
+
+Run `Review.cmd` from a source checkout for annotation recovery, per-tag frame evidence, A/B rule experiments, problem-tag reports and a separate holdout group. Sessions are saved locally in the browser; JSON can be exported and imported. Videos are never persisted. See [review lab](docs/REVIEW.md). The lab is excluded from release packages and extensions.

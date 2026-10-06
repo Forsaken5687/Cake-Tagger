@@ -17,3 +17,10 @@ test('eligible recall separates manual-only labels and validates score associati
  data.evaluation.videos[0].sha256='b'.repeat(64);
  assert.throws(()=>analyzeReviews(data,{glasses:[0]},['glasses','watermark']));
 });
+
+test('offline reports accept v6, ignore ambiguous judgments and respect explicit holdout',()=>{
+ const item=make('a',true,['glasses']);item.result.analysisPolicy='coverage-v6:majority:[]';
+ const data=input([item]);data.evaluation.videos[0].ignoredTags=['glasses'];data.evaluation.videos[0].partition='holdout';
+ const report=analyzeReviews(data,{glasses:[0]},['glasses']);
+ assert.equal(report.all.precision,null);assert.equal(report.all.recall,null);assert.equal(report.holdout.count,1);assert.equal(report.development.count,0);assert.equal(report.baselineMismatches,0);
+});

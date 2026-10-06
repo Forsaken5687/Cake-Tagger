@@ -1,23 +1,35 @@
-# Local tag review
+# Review lab
 
-This developer tool is available in the source checkout only. It is excluded from runtime releases and both extensions.
+The review lab is a development-only tool. Start `Review.cmd` from a source checkout. It uses the production sampling implementation and central native inference queue, but its experimental rules never change upload suggestions.
 
-Run `Review.cmd` to start or reuse the local backend and open `http://127.0.0.1:8765/review.html`. No browser extension or cake.ski account is required. The normal upload workflow remains separate.
+## Workflow
 
-1. Choose local videos and a sampling count, then select **Suggest tags**.
-2. Choose a video from the queue and watch it in the player. Correct the checked tags; search the full taxonomy to add missing tags. **Show all tags** exposes manual-only categories too.
-3. Check **Review complete** only after checking the whole video. Editing a tag clears this mark. Unreviewed videos never contribute to comparison metrics.
-4. Adjust the candidate threshold and frame coverage to compare experimental rules using the same model scores. This does not rerun inference, modify production rules or change your reviewed selections.
-5. Select **Download JSON** before closing. Reviews and inference scores remain in page memory. The download is generated directly in the page and does not depend on the backend session. If the browser declines the initial download, click **Download prepared JSON**. The local link remains valid until a review changes or the page closes. If Blob downloads are unavailable, select **Prepare alternative download**, then click the prepared link. This optional alternative uses a backend attachment that expires after five minutes and is subject to a 64 MB request limit; it does not replace or discard the local snapshot. Reloading loses them; videos and sampled images are not included in the download.
+1. Choose local videos and analyze them. Select a video in the queue.
+2. Correct its tags. **Show all tags** exposes the entire catalog, including manual-only tags. Mark ambiguous tags **Not assessable** rather than guessing; their judgments are excluded from precision, recall, problem reports and A/B improvements.
+3. Mark **Review complete** after checking the whole clip. Changing annotations clears this mark. Rules and resampling preserve annotations; metrics only use completed reviews.
+4. Click a tag name to inspect its sampled frames, individual scores and timestamps. Click a frame to seek the original video. Highlighted frames meet the selected experimental variant's threshold, not necessarily production's per-tag support rules.
+5. Compare **Variant A** and **Variant B**. Each has global threshold and required-frame coverage. The evidence panel can override both values for one mapped tag; **Use global rule** removes that override. Every rule requires at least two matching frames. All experiments reuse existing scores and do not rerun inference.
+6. Open **Problem tags** for frequent incorrect suggestions and missing tags. Select production, A or B and open an example directly. A/B changes identify improvements and regressions only on reviewed, assessable judgments.
+7. Tune using the **Development** group. Approximately one quarter of clips are assigned to **Holdout** by a stable content-hash partition. Adding videos does not move existing clips. You can assign a group explicitly; identical hashes always move together. Holdout suggestions and metrics stay hidden until **Reveal holdout results**. Reveal them for a final check, not repeated tuning. Related footage and the same performer can still leak across groups; this partition does not establish independent accuracy.
 
-The experiment uses a global threshold and requires at least two matching frames. Its score is the mean across all frames; production uses existing per-category support rules and the two strongest frames for its confidence score. The experiment is not a claim of better accuracy.
+## Saving and restoration
 
-Precision is the fraction of predicted tags in your reviewed selection. Recall is the fraction of reviewed tags predicted. Empty denominators show a dash. Both are pooled across reviewed videos and only measure agreement with your annotations. Manual-only tags can reduce recall even when the model performs as designed. Use separate held-out videos before claiming improvements from tuned rules.
+The lab automatically saves annotations, raw scores, both variants, grouping and sampled JPEG previews to IndexedDB in the current browser after changes and after each successful analysis. **Save now** flushes pending changes. Wait for **Saved locally** before closing. If storage is blocked or full, the page reports the failure and retains the working session; download JSON instead. Browser storage is tied to the browser profile and exact origin/port, can be cleared by the browser and is not a substitute for a separate backup.
 
-The version-2 download retains ordinary correction-export fields. Additional `evaluation` metadata includes the mapping snapshot, candidate rules, preprocessing version, timestamps, raw model scores and candidate suggestions, enabling offline recalculation. It contains no video bytes, image previews, server credentials or automatic disk records. Raw scores can make the JSON substantially larger than a normal upload export. Local review downloads have no HTTP request-size limit.
+On reopening, **Restore session** restores the saved draft. It never silently overwrites an existing session. Original videos are not stored: select them again to play or resample. Restored files are matched by SHA-256, not guessed by filename. Scores and annotations can be inspected without a video. **New session** removes this lab's backup after confirmation; it does not touch upload corrections, exports or backend preferences.
 
-Videos are sampled by the same `src/client/sampling.mjs` implementation as the upload bridge, and inference uses the same native API and central backend queue. A changed frame-count setting reanalyzes videos while preserving reviewed labels; completed results with the same sampling setting are reused during this page session. The evaluator is not packaged in either extension.
+**Download JSON** preserves completed reviews, raw scores, timestamps, both variants, per-tag overrides, not-assessable tags and group assignments. It deliberately omits videos and preview images. **Import JSON** accepts current lab downloads, older version-2 review exports and draft snapshots. Known renamed tags are canonicalized on a copied record; imported files are not rewritten. Malformed data is rejected before replacing the current session. Imports are limited to 256 MB and 1,000 videos. A draft may also contain queued videos; standard review exports contain only completed analyses.
+
+The visible **Download prepared JSON** link remains available if an automatic Blob download is declined. **Prepare alternative download** uses the backend attachment fallback, includes the same lab metadata and expires after five minutes. That fallback is subject to the server's 64 MB request limit and accepts the backend's current taxonomy. Historic retired annotations should use the local download path instead.
+
+## Interpreting results
+
+Precision is the fraction of suggested tags that agree with your reviewed labels. Recall is the fraction of reviewed positive tags detected. Empty denominators show a dash; manual-only labels can lower complete recall. Counts are over reviewed video records. Exact duplicate imports stay in the same group but may contribute multiple records, so use one review per clip when comparing results. The confidence score is a model signal, not a calibrated probability.
+
+Production keeps its own thresholds, temporal rules and top-two confidence score. Experimental A/B confidence uses the mean across sampled frames. A custom threshold alone does not make an unavailable model label recognizable.
 
 ## Offline analysis
 
-From a source checkout, run `runtime/node.exe scripts/Analyze-Reviews.mjs <review.json> work/review-analysis/report.md`. Both regular review downloads and recovered export request bodies are accepted. The script saves Markdown and JSON reports under ignored `work/` only. It excludes unreviewed records, groups identical content, rejects conflicting duplicate annotations, respects recorded exclusions and reports both complete and automatically eligible recall. A deterministic content-hash partition reserves approximately one quarter of reviewed clips for checking candidate rules. This partition does not guarantee independence between related footage. Reports never modify production rules or annotations.
+Run `runtime/node.exe scripts/Analyze-Reviews.mjs <review.json> work/review-analysis/report.md`. The script accepts review downloads and recovered request bodies, excludes unreviewed/ambiguous judgments, groups identical content, rejects conflicting duplicates and respects recorded exclusions. It uses the same stable content-hash split and explicit group assignments. Markdown and JSON reports are written only under ignored `work/`.
+
+The review UI, session module, evaluator, development launcher and tests are excluded from production packages and extensions. No additional dependency or model download is required.
