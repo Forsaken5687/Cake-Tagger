@@ -12,7 +12,7 @@ export function validateAnalysisPolicy(value) {
   if (match[2]) {
     let exclusions;
     try { exclusions = JSON.parse(match[2]); } catch { throw messageError('error.invalidAnalysisPolicy'); }
-    if (!Array.isArray(exclusions) || exclusions.length > 258 || exclusions.some(tag => typeof tag !== 'string' || !tag.trim() || tag.length > 80)) throw messageError('error.invalidAnalysisPolicy');
+    if (!Array.isArray(exclusions) || exclusions.length > 302 || exclusions.some(tag => typeof tag !== 'string' || !tag.trim() || tag.length > 80)) throw messageError('error.invalidAnalysisPolicy');
   }
   return value;
 }

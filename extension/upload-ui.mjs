@@ -81,6 +81,6 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
 }
 export function validUploadView(value){
  return !!value && ['en','de'].includes(value.language) && value.settings && typeof value.settings.showUncertain==='boolean'
-  && typeof value.status==='string' && typeof value.message==='string' && Array.isArray(value.allTags) && value.allTags.length<=258 && value.allTags.every(tag=>typeof tag==='string' && tag.length<=80)
-  && Array.isArray(value.entries) && value.entries.length<=1000 && value.entries.every(entry=>typeof entry.filename==='string' && entry.filename.length<=1024 && typeof entry.state==='string' && Array.isArray(entry.tags) && entry.tags.length<=258 && entry.tags.every(row=>typeof row.tag==='string' && row.tag.length<=80 && typeof row.selected==='boolean'));
+  && typeof value.status==='string' && typeof value.message==='string' && Array.isArray(value.allTags) && value.allTags.length<=302 && value.allTags.every(tag=>typeof tag==='string' && tag.length<=80)
+  && Array.isArray(value.entries) && value.entries.length<=1000 && value.entries.every(entry=>typeof entry.filename==='string' && entry.filename.length<=1024 && typeof entry.state==='string' && Array.isArray(entry.tags) && entry.tags.length<=302 && entry.tags.every(row=>typeof row.tag==='string' && row.tag.length<=80 && typeof row.selected==='boolean'));
 }

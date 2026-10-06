@@ -63,3 +63,17 @@ test('production model download and provenance identify the same official FP32 a
   assert.equal(provenance.runtime, 'onnxruntime-node@1.30.0');
   assert.equal(provenance.runtimeArchiveSha256, assets.assets.find(asset => asset.path === 'runtime/native/archives/onnxruntime-node.tgz').sha256);
 });
+
+test('current website names replace retired names and new tags use explicit labels', () => {
+  const tags = readTags(read('model/tags.txt'));
+  const mapping = JSON.parse(read('model/mapping.json'));
+  const labels = read('model/top_tags.txt').trimEnd().split(/\r?\n/);
+  const sources = tag => mapping[tag].map(i => labels[i]);
+  for (const tag of ['supine', 'side fuck', 'couch', 'League of Legends', 'ai-tagged-bare', 'ai-needs-review']) assert(!tags.includes(tag), tag);
+  assert.deepEqual(sources('lying on back'), ['on_back']);
+  assert.deepEqual(sources('lying on side'), ['on_side']);
+  assert.deepEqual(sources('league of legends'), ['league_of_legends']);
+  assert.deepEqual(sources('multicolored hair'), ['multicolored_hair']);
+  assert.deepEqual(sources('covering breasts'), ['covering_breasts']);
+  for (const tag of ['4:3', 'ai tagged', 'ai tagged bare', 'ai needs review', 'ksjhgf', 'tightjob']) assert(excluded.has(tag), tag);
+});

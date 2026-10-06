@@ -67,7 +67,7 @@ browser.runtime.onMessage.addListener((message, sender) => {
     return browser.tabs.query({ url: 'https://cake.ski/*' }).then(tabs => tabs.map(({ id, title }) => ({ id, title })));
   }
   if (message?.type !== 'cake-tagger:transfer') return;
-  if (!Number.isInteger(message.tabId) || message.tabId <= 0 || typeof message.filename !== 'string' || !message.filename || !Array.isArray(message.tags) || message.tags.length > 258 || message.tags.some(tag => typeof tag !== 'string')) {
+  if (!Number.isInteger(message.tabId) || message.tabId <= 0 || typeof message.filename !== 'string' || !message.filename || !Array.isArray(message.tags) || message.tags.length > 302 || message.tags.some(tag => typeof tag !== 'string')) {
     return Promise.resolve({ error: 'error.invalidTagTransfer' });
   }
   const embedded = new URL(sender.url).searchParams.get('embedded') === '1';

@@ -118,7 +118,7 @@ const server = http.createServer(async (req, res) => {
     let excludedTags = (savedSettings || normalizeSettings()).excludedTags;
     try {
       if (req.headers['x-cake-tagger-exclusions']) excludedTags = JSON.parse(req.headers['x-cake-tagger-exclusions']);
-      if (!Array.isArray(excludedTags) || excludedTags.length > 258 || excludedTags.some(tag => typeof tag !== 'string' || !tagList.includes(tag))) throw Error();
+      if (!Array.isArray(excludedTags) || excludedTags.length > tagList.length || excludedTags.some(tag => typeof tag !== 'string' || !tagList.includes(tag))) throw Error();
     } catch { return json(res, 400, { error: 'error.invalidAnalysisPolicy' }); }
     try { resolveThreads(parallelism, capabilities); } catch (error) { return json(res, 400, { error: error.message, capabilities }); }
     if (req.headers['content-type'] !== 'application/octet-stream') return json(res, 415, { error: 'error.invalidModelInputImage' });

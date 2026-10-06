@@ -8,7 +8,7 @@ export function normalizeSettings(value = {}) {
     language: ['auto', 'de', 'en'].includes(value.language) ? value.language : 'auto',
     frames: ['auto', '4', '6', '8', '12', '16', '24', '32', '48'].includes(frames) ? frames : 'auto',
     parallelism: /^[1-9]\d*$/.test(String(value.parallelism)) && Number.isSafeInteger(Number(value.parallelism)) ? String(value.parallelism) : 'auto',
-    excludedTags: Array.isArray(value.excludedTags) ? [...new Set(value.excludedTags.filter(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.trim().length <= 80).map(tag => tag.trim().toLowerCase()))].slice(0, 258) : [...DEFAULT_SETTINGS.excludedTags],
+    excludedTags: Array.isArray(value.excludedTags) ? [...new Set(value.excludedTags.filter(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.trim().length <= 80).map(tag => tag.trim().toLowerCase()))].slice(0, 302) : [...DEFAULT_SETTINGS.excludedTags],
     showScores: typeof value.showScores === 'boolean' ? value.showScores : true,
     showUncertain: typeof value.showUncertain === 'boolean' ? value.showUncertain : true,
     autoAnalyzeEmbed: typeof value.autoAnalyzeEmbed === 'boolean' ? value.autoAnalyzeEmbed : true,

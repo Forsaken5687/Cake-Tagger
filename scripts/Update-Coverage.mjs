@@ -14,7 +14,7 @@ for (const [tag, rule] of Object.entries(mapping)) {
 // Explicit unresolved cases make taxonomy additions require a fresh mapping audit.
 const reasons = new Map();
 function group(names, reason) { for (const tag of names.split('|')) reasons.set(tag, reason); }
-group('vertical|horizontal|hd|sd|no sound|long video|featured|welcome|ai-tagged-bare|ai-needs-review', 'Website metadata; not inferred from sampled images.');
+group('vertical|horizontal|hd|sd|no sound|long video|featured|welcome|ai tagged|ai tagged bare|ai needs review|4:3', 'Website metadata; not inferred from sampled images.');
 group('teen|milf|gilf|asian|latina|ebony|interracial|russian|german|trans|gay|lesbian|femboy|sissy|tomboy', 'Age, identity or relationship category; excluded by policy.');
 group('incest|forced|blackmail|freeuse|taboo|cuck|used|degrading', 'Narrative or consent context; excluded by policy.');
 group('hairy', 'Mapped, but excluded by default following recognition mismatches.');
@@ -38,6 +38,8 @@ group('gym', 'Gym clothing does not establish the setting.');
 group('clown', 'Character-name labels are not a generic clown category.');
 group('hijab', 'Generic kerchief labels do not establish this garment.');
 group('scissoring', 'The available tribadism label is broader than this specific action.');
+group('ksjhgf|tightjob', 'Undefined website tag; no reliable interpretation or model mapping.');
+group('cum swap', 'No suitable label establishing transfer between participants.');
 group('animated', 'Anime content; the anime_coloring label describes shading style rather than a general anime-content category.');
 const scopes = {
   sloppy: 'Oral sex and saliva/drooling in the same sampled image; amount is approximated by model evidence.',

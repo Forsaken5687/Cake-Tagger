@@ -1,6 +1,6 @@
 # Tag coverage
 
-Under default settings, 175 of 258 tags have an automatic model mapping. Every taxonomy entry is audited below. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce automatic coverage.
+Under default settings, 219 of 302 tags have an automatic model mapping. Every taxonomy entry is audited below. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce automatic coverage.
 
 Mappings combine explicit aliases and concrete subtypes. For compound rules, every label group must match in the same image; each group accepts alternative labels. The combined score is the weakest group score, not a calibrated joint probability. They do not infer a tag from the absence of another detection. Temporal support thresholds remain unchanged. Snapshot labels for motion still require review.
 
@@ -8,269 +8,313 @@ Mappings combine explicit aliases and concrete subtypes. For compound rules, eve
 
 | Website tag | Pinned model labels | Scope limitation |
 | --- | --- | --- |
-| solo | `solo` |  |
-| long hair | `long_hair` |  |
-| nude | `nude` |  |
-| big tits | `large_breasts` OR `huge_breasts` OR `gigantic_breasts` |  |
-| couple | `couple` |  |
-| bedroom | `bedroom` |  |
-| brunette | `brown_hair` |  |
-| vaginal penetration | `vaginal` |  |
-| blonde | `blonde_hair` |  |
-| petite | `petite` |  |
-| small tits | `small_breasts` |  |
-| blowjob | `fellatio` |  |
-| thighs | `thighs` |  |
-| masturbating | `masturbation` OR `female_masturbation` OR `male_masturbation` |  |
-| music | `music` |  |
-| skinny | `skinny` |  |
-| tattoos | `tattoo` OR `shoulder_tattoo` OR `arm_tattoo` OR `pubic_tattoo` OR `facial_tattoo` OR `chest_tattoo` OR `leg_tattoo` OR `number_tattoo` OR `stomach_tattoo` OR `heart_tattoo` OR `breast_tattoo` |  |
-| underwear | `underwear` OR `bra` OR `panties` OR `boxers` |  |
-| black hair | `black_hair` |  |
-| piercings | `piercing` OR `nipple_piercing` OR `navel_piercing` OR `nose_piercing` OR `lip_piercing` OR `tongue_piercing` |  |
-| doggy | `doggystyle` |  |
-| cumshot | `ejaculation` OR `projectile_cum` |  |
-| dildo | `dildo` |  |
-| handjob | `handjob` |  |
-| dance | `dancing` | Visual dancing label; sampled images do not track motion. |
-| partially clothed | `partially_undressed` |  |
-| tit shake | `bouncing_breasts` | Visual bouncing-breast label; sampled images do not track motion. |
-| deepthroat | `deepthroat` |  |
-| sex toy | `sex_toy` OR `dildo` OR `vibrator` OR `egg_vibrator` OR `remote_control_vibrator` OR `vibrator_under_clothes` OR `butt_plug` OR `anal_beads` |  |
-| anal penetration | `anal` |  |
-| cosplay | `cosplay` |  |
-| short hair | `short_hair` |  |
-| missionary | `missionary` |  |
-| curvy | `curvy` |  |
-| cum in mouth | `cum_in_mouth` |  |
-| facial | `facial` |  |
-| closeup | `close-up` |  |
-| fingering | `fingering` |  |
-| on floor | `on_floor` |  |
-| public | `public_nudity` | Public nudity only; other public scenes are not covered. |
-| red hair | `red_hair` |  |
-| squirting | `female_ejaculation` |  |
-| swimsuit | `swimsuit` |  |
-| creampie | `cum_in_pussy` OR `cum_in_ass` OR `internal_cumshot` |  |
 | 2girls | `2girls` |  |
-| feet | `feet` |  |
-| cowgirl | `cowgirl_position` |  |
-| stripping | `undressing` |  |
-| curly hair | `curly_hair` |  |
-| glasses | `glasses` |  |
-| couch | `couch` |  |
-| lingerie | `lingerie` |  |
-| tanlines | `tanlines` |  |
-| pussy spread | `spread_pussy` |  |
-| pov | `pov` |  |
-| blue hair | `blue_hair` |  |
-| bathroom | `bathroom` |  |
-| ahegao | `ahegao` |  |
-| outside | `outdoors` |  |
-| eye shadow | `eyeshadow` |  |
-| threesome | `threesome` |  |
-| skirt | `skirt` |  |
-| car | `car` |  |
-| fishnet | `fishnets` |  |
-| on knees | `kneeling` |  |
-| thigh highs | `thighhighs` |  |
-| reverse cowgirl | `reverse_cowgirl_position` |  |
-| makeup | `makeup` OR `eyeshadow` OR `lipstick` OR `eyeliner` OR `mascara` |  |
-| groping | `groping` |  |
-| kitchen | `kitchen` |  |
-| pussy juice | `pussy_juice` |  |
-| cleavage | `cleavage` |  |
-| cunnilingus | `cunnilingus` |  |
-| choker | `choker` OR `black_choker` OR `ribbon_choker` OR `red_choker` OR `blue_choker` OR `white_choker` OR `pink_choker` OR `frilled_choker` OR `heart_choker` OR `orange_choker` OR `green_choker` OR `purple_choker` OR `yellow_choker` OR `star_choker` |  |
-| blue eyes | `blue_eyes` |  |
-| freckles | `freckles` |  |
-| earrings | `earrings` |  |
-| dress | `dress` |  |
-| female orgasm | `female_orgasm` |  |
-| kissing | `kiss` OR `french_kiss` |  |
-| legs up | `legs_up` |  |
-| sloppy | `fellatio` OR `deepthroat` AND `saliva` OR `saliva_trail` OR `drooling` OR `mouth_drool` | Oral sex and saliva/drooling in the same sampled image; amount is approximated by model evidence. |
-| shower | `showering` |  |
-| vibrator | `vibrator` OR `egg_vibrator` OR `remote_control_vibrator` OR `vibrator_under_clothes` |  |
-| cum on tits | `cum_on_breasts` |  |
-| spit | `spitting` |  |
-| bikini | `bikini` |  |
-| mirror | `mirror` |  |
-| standing fuck | `standing_sex` |  |
-| pigtails | `twintails` |  |
-| school uniform | `school_uniform` |  |
-| white hair | `white_hair` |  |
-| drooling | `drooling` |  |
-| chubby | `plump` |  |
-| cum on ass | `cum_on_ass` |  |
-| titjob | `paizuri` OR `paizuri_under_clothes` |  |
-| butt plug | `butt_plug` |  |
-| thighjob | `thigh_sex` |  |
-| pink hair | `pink_hair` |  |
-| swimming pool | `pool` |  |
-| thigh gap | `thigh_gap` |  |
-| femdom | `femdom` |  |
-| thong | `thong` |  |
-| restrained | `restrained` |  |
-| hands behind back | `arms_behind_back` |  |
-| from below | `from_below` |  |
-| cat ears | `cat_ears` |  |
-| spanking | `spanked` |  |
-| knee high socks | `kneehighs` |  |
-| on all fours | `all_fours` |  |
-| beach | `beach` |  |
-| bdsm | `bdsm` |  |
-| choking | `strangling` |  |
-| green eyes | `green_eyes` |  |
-| pissing | `peeing` |  |
-| spitroast | `spitroast` |  |
-| bent over | `bent_over` |  |
-| gangbang | `gangbang` |  |
 | 2guys | `2boys` |  |
-| double penetration | `double_penetration` |  |
 | 3d | `3d` |  |
-| cum on clothes | `cum_on_clothes` |  |
-| leggings | `leggings` |  |
-| underboob | `underboob` |  |
-| footjob | `footjob` |  |
-| on chair | `on_chair` |  |
-| bunny ears | `rabbit_ears` |  |
-| collar | `collar` |  |
-| censored | `censored` |  |
-| mating press | `mating_press` |  |
-| ponytail | `ponytail` |  |
-| overwatch | `overwatch` |  |
-| high heels | `high_heels` |  |
-| school | `school` |  |
-| armpit | `armpits` |  |
-| maid outfit | `maid` |  |
-| furry | `furry` |  |
-| handcuffs | `handcuffs` |  |
-| crying | `crying` |  |
-| braids | `braid` OR `twin_braids` |  |
-| sitting on face | `sitting_on_face` |  |
-| booty shorts | `short_shorts` |  |
-| pajamas | `pajamas` |  |
-| pantyhose | `pantyhose` |  |
-| green hair | `green_hair` |  |
-| bath | `bath` |  |
-| crossdressing | `crossdressing` |  |
-| mask | `mask` |  |
-| blindfold | `blindfold` |  |
-| leash | `leash` |  |
-| muscular | `muscular` |  |
-| red eyes | `red_eyes` |  |
-| bukkake | `bukkake` |  |
-| futanari | `futanari` |  |
-| torn pants | `torn_pants` |  |
 | 69 | `69` |  |
-| cheerleader | `cheerleader` |  |
-| slime | `slime_(substance)` |  |
-| ropes | `rope` |  |
-| hatsune miku | `hatsune_miku` |  |
-| purple hair | `purple_hair` |  |
-| bodywriting | `body_writing` |  |
-| changing room | `locker_room` | Locker rooms only; other changing rooms are not covered. |
-| bondage | `bondage` |  |
-| League of Legends | `league_of_legends` |  |
-| yellow eyes | `yellow_eyes` |  |
+| ahegao | `ahegao` |  |
 | anal beads | `anal_beads` |  |
+| anal penetration | `anal` |  |
+| armpit | `armpits` |  |
+| ass grab | `ass_grab` |  |
+| balcony | `balcony` |  |
+| bath | `bath` |  |
+| bathroom | `bathroom` |  |
+| bdsm | `bdsm` |  |
+| beach | `beach` |  |
+| bedroom | `bedroom` |  |
+| bent over | `bent_over` |  |
 | big ass | `huge_ass` |  |
-| hoodie | `hoodie` |  |
-| sweaty | `sweat` OR `sweating_profusely` |  |
-| orange hair | `orange_hair` |  |
+| big tits | `large_breasts` OR `huge_breasts` OR `gigantic_breasts` |  |
+| bikini | `bikini` |  |
+| black and white | `monochrome` |  |
+| black hair | `black_hair` |  |
+| blindfold | `blindfold` |  |
+| blonde | `blonde_hair` |  |
+| blowjob | `fellatio` |  |
+| blue eyes | `blue_eyes` |  |
+| blue hair | `blue_hair` |  |
+| bodysuit | `bodysuit` |  |
+| bodywriting | `body_writing` |  |
+| bondage | `bondage` |  |
+| booty shorts | `short_shorts` |  |
+| bracelet | `bracelet` |  |
+| braids | `braid` OR `twin_braids` |  |
+| breast squeeze | `breast_squeeze` |  |
+| brunette | `brown_hair` |  |
+| bukkake | `bukkake` |  |
+| bunny ears | `rabbit_ears` |  |
+| butt plug | `butt_plug` |  |
+| car | `car` |  |
+| cat ears | `cat_ears` |  |
+| censored | `censored` |  |
+| changing room | `locker_room` | Locker rooms only; other changing rooms are not covered. |
+| cheerleader | `cheerleader` |  |
+| choker | `choker` OR `black_choker` OR `ribbon_choker` OR `red_choker` OR `blue_choker` OR `white_choker` OR `pink_choker` OR `frilled_choker` OR `heart_choker` OR `orange_choker` OR `green_choker` OR `purple_choker` OR `yellow_choker` OR `star_choker` |  |
+| choking | `strangling` |  |
+| chubby | `plump` |  |
+| cleavage | `cleavage` |  |
+| closeup | `close-up` |  |
+| collar | `collar` |  |
+| corset | `corset` |  |
+| cosplay | `cosplay` |  |
+| couple | `couple` |  |
+| covering breasts | `covering_breasts` |  |
+| covering crotch | `covering_crotch` |  |
+| cowgirl | `cowgirl_position` |  |
+| creampie | `cum_in_pussy` OR `cum_in_ass` OR `internal_cumshot` |  |
+| crop top | `crop_top` |  |
+| crossdressing | `crossdressing` |  |
+| crotchless panties | `crotchless_panties` |  |
+| crying | `crying` |  |
+| cum in mouth | `cum_in_mouth` |  |
+| cum on ass | `cum_on_ass` |  |
+| cum on clothes | `cum_on_clothes` |  |
+| cum on tits | `cum_on_breasts` |  |
+| cumshot | `ejaculation` OR `projectile_cum` |  |
+| cunnilingus | `cunnilingus` |  |
+| curly hair | `curly_hair` |  |
+| curvy | `curvy` |  |
+| dance | `dancing` | Visual dancing label; sampled images do not track motion. |
+| deepthroat | `deepthroat` |  |
+| dildo | `dildo` |  |
+| doggy | `doggystyle` |  |
+| double penetration | `double_penetration` |  |
+| dress | `dress` |  |
+| drooling | `drooling` |  |
+| earrings | `earrings` |  |
+| eye shadow | `eyeshadow` |  |
+| facial | `facial` |  |
+| feet | `feet` |  |
+| female orgasm | `female_orgasm` |  |
+| femdom | `femdom` |  |
+| finger licking | `licking_finger` |  |
+| fingering | `fingering` |  |
+| fishnet | `fishnets` |  |
+| footjob | `footjob` |  |
+| forest | `forest` |  |
+| freckles | `freckles` |  |
+| from above | `from_above` |  |
+| from below | `from_below` |  |
+| furry | `furry` |  |
+| futanari | `futanari` |  |
+| gangbang | `gangbang` |  |
+| garter belt | `garter_belt` |  |
 | genshin impact | `genshin_impact` |  |
-| supine | `on_back` |  |
-| group | `group_sex` |  |
+| glasses | `glasses` |  |
+| green eyes | `green_eyes` |  |
+| green hair | `green_hair` |  |
+| groping | `groping` |  |
+| handcuffs | `handcuffs` |  |
+| handjob | `handjob` |  |
+| hands behind back | `arms_behind_back` |  |
+| hatsune miku | `hatsune_miku` |  |
+| high heels | `high_heels` |  |
+| hoodie | `hoodie` |  |
+| jeans | `jeans` |  |
+| kimono | `kimono` |  |
+| kissing | `kiss` OR `french_kiss` |  |
+| kitchen | `kitchen` |  |
+| knee high socks | `kneehighs` |  |
+| lace | `lace` |  |
+| league of legends | `league_of_legends` |  |
+| leash | `leash` |  |
+| leggings | `leggings` |  |
+| legs up | `legs_up` |  |
+| leotard | `leotard` |  |
+| lingerie | `lingerie` |  |
+| long hair | `long_hair` |  |
+| lying on back | `on_back` |  |
+| lying on side | `on_side` |  |
+| maid outfit | `maid` |  |
+| makeup | `makeup` OR `eyeshadow` OR `lipstick` OR `eyeliner` OR `mascara` |  |
+| mask | `mask` |  |
+| masturbating | `masturbation` OR `female_masturbation` OR `male_masturbation` |  |
+| mating press | `mating_press` |  |
+| micro bikini | `micro_bikini` |  |
+| midriff | `midriff` |  |
+| miniskirt | `miniskirt` |  |
+| mirror | `mirror` |  |
+| missionary | `missionary` |  |
+| multicolored hair | `multicolored_hair` |  |
+| muscular | `muscular` |  |
+| music | `music` |  |
+| naked apron | `naked_apron` |  |
+| necklace | `necklace` |  |
+| nude | `nude` |  |
+| on all fours | `all_fours` |  |
+| on bed | `on_bed` |  |
+| on chair | `on_chair` |  |
+| on couch | `couch` |  |
+| on desk | `on_desk` |  |
+| on floor | `on_floor` |  |
+| on knees | `kneeling` |  |
+| orange hair | `orange_hair` |  |
+| outside | `outdoors` |  |
+| overwatch | `overwatch` |  |
+| pajamas | `pajamas` |  |
+| panties aside | `panties_aside` |  |
+| pantyhose | `pantyhose` |  |
+| partially clothed | `partially_undressed` |  |
+| petite | `petite` |  |
+| piercings | `piercing` OR `nipple_piercing` OR `navel_piercing` OR `nose_piercing` OR `lip_piercing` OR `tongue_piercing` |  |
+| pigtails | `twintails` |  |
+| pink hair | `pink_hair` |  |
+| pissing | `peeing` |  |
+| ponytail | `ponytail` |  |
+| pov | `pov` |  |
+| public | `public_nudity` | Public nudity only; other public scenes are not covered. |
+| purple hair | `purple_hair` |  |
+| pussy juice | `pussy_juice` |  |
+| pussy spread | `spread_pussy` |  |
+| red eyes | `red_eyes` |  |
+| red hair | `red_hair` |  |
+| restrained | `restrained` |  |
+| reverse cowgirl | `reverse_cowgirl_position` |  |
+| ring | `ring` |  |
+| ropes | `rope` |  |
+| scars | `scar` |  |
+| school | `school` |  |
+| school uniform | `school_uniform` |  |
+| see through | `see-through` |  |
+| sex toy | `sex_toy` OR `dildo` OR `vibrator` OR `egg_vibrator` OR `remote_control_vibrator` OR `vibrator_under_clothes` OR `butt_plug` OR `anal_beads` |  |
+| shirt lift | `shirt_lift` |  |
+| short hair | `short_hair` |  |
+| shower | `showering` |  |
+| sideboob | `sideboob` |  |
+| sitting | `sitting` |  |
+| sitting on face | `sitting_on_face` |  |
+| sitting on lap | `sitting_on_lap` |  |
+| skinny | `skinny` |  |
+| skirt | `skirt` |  |
+| skirt lift | `skirt_lift` |  |
+| slime | `slime_(substance)` |  |
+| sloppy | `fellatio` OR `deepthroat` AND `saliva` OR `saliva_trail` OR `drooling` OR `mouth_drool` | Oral sex and saliva/drooling in the same sampled image; amount is approximated by model evidence. |
+| small tits | `small_breasts` |  |
+| solo | `solo` |  |
+| spanking | `spanked` |  |
+| spit | `spitting` |  |
+| spitroast | `spitroast` |  |
+| sports bra | `sports_bra` |  |
+| spread legs | `spread_legs` |  |
+| squirting | `female_ejaculation` |  |
+| stairs | `stairs` |  |
+| standing fuck | `standing_sex` |  |
+| street | `street` |  |
+| stripping | `undressing` |  |
+| sunglasses | `sunglasses` |  |
+| sweaty | `sweat` OR `sweating_profusely` |  |
+| swimming pool | `pool` |  |
+| swimsuit | `swimsuit` |  |
 | tan | `tan` |  |
+| tanlines | `tanlines` |  |
+| tattoos | `tattoo` OR `shoulder_tattoo` OR `arm_tattoo` OR `pubic_tattoo` OR `facial_tattoo` OR `chest_tattoo` OR `leg_tattoo` OR `number_tattoo` OR `stomach_tattoo` OR `heart_tattoo` OR `breast_tattoo` |  |
+| thigh gap | `thigh_gap` |  |
+| thigh highs | `thighhighs` |  |
+| thighjob | `thigh_sex` |  |
+| thighs | `thighs` |  |
+| thong | `thong` |  |
+| threesome | `threesome` |  |
+| tit shake | `bouncing_breasts` | Visual bouncing-breast label; sampled images do not track motion. |
+| titjob | `paizuri` OR `paizuri_under_clothes` |  |
+| torn pants | `torn_pants` |  |
+| underboob | `underboob` |  |
+| underwater | `underwater` |  |
+| underwear | `underwear` OR `bra` OR `panties` OR `boxers` |  |
+| upskirt | `upskirt` |  |
+| vaginal penetration | `vaginal` |  |
+| vibrator | `vibrator` OR `egg_vibrator` OR `remote_control_vibrator` OR `vibrator_under_clothes` |  |
+| wedding dress | `wedding_dress` |  |
+| white hair | `white_hair` |  |
+| yellow eyes | `yellow_eyes` |  |
 
 ## Manual or excluded under default settings
 
 | Website tag | Status | Reason |
 | --- | --- | --- |
-| vertical | default-excluded | Website metadata; not inferred from sampled images. |
-| hd | default-excluded | Website metadata; not inferred from sampled images. |
-| teen | default-excluded | Age, identity or relationship category; excluded by policy. |
-| sd | default-excluded | Website metadata; not inferred from sampled images. |
-| tease | manual | Requires context or a category distinction absent from the model vocabulary. |
-| clothed | manual | Cannot be inferred from the absence of nudity, hair or face detections. |
-| featured | default-excluded | Website metadata; not inferred from sampled images. |
-| amateur | manual | Requires context or a category distinction absent from the model vocabulary. |
-| horizontal | default-excluded | Website metadata; not inferred from sampled images. |
-| no sound | default-excluded | Website metadata; not inferred from sampled images. |
-| sfw | manual | Cannot be inferred from the absence of nudity, hair or face detections. |
-| shaved | manual | Cannot be inferred from the absence of nudity, hair or face detections. |
-| caption | manual | Text or speech-bubble detection does not establish a caption. |
-| ass shake | manual | Requires motion or timing evidence; no suitable model label. |
-| incest | default-excluded | Narrative or consent context; excluded by policy. |
-| thick | manual | Body category is broader than the available thick-thigh label. |
-| rough | manual | Requires context or a category distinction absent from the model vocabulary. |
-| taboo | default-excluded | Narrative or consent context; excluded by policy. |
-| long video | default-excluded | Website metadata; not inferred from sampled images. |
-| stockings | manual | Available legwear labels do not distinguish stockings from other garments. |
-| asian | default-excluded | Age, identity or relationship category; excluded by policy. |
+| 4:3 | default-excluded | Website metadata; not inferred from sampled images. |
+| ai needs review | default-excluded | Website metadata; not inferred from sampled images. |
+| ai tagged | default-excluded | Website metadata; not inferred from sampled images. |
+| ai tagged bare | default-excluded | Website metadata; not inferred from sampled images. |
 | alternative | manual | Requires context or a category distinction absent from the model vocabulary. |
-| interracial | default-excluded | Age, identity or relationship category; excluded by policy. |
-| watermark | default-excluded | Excluded by default; no suitable model label. |
-| no face | manual | Cannot be inferred from the absence of nudity, hair or face detections. |
-| trans | default-excluded | Age, identity or relationship category; excluded by policy. |
-| russian | default-excluded | Age, identity or relationship category; excluded by policy. |
-| lesbian | default-excluded | Age, identity or relationship category; excluded by policy. |
-| compilation | manual | Editing or media-type category; no reliable equivalent model label. |
-| oiled | manual | Wet appearance does not establish applied oil. |
-| cuck | default-excluded | Narrative or consent context; excluded by policy. |
-| milf | default-excluded | Age, identity or relationship category; excluded by policy. |
-| pmv | manual | Editing or media-type category; no reliable equivalent model label. |
+| amateur | manual | Requires context or a category distinction absent from the model vocabulary. |
 | animated | manual | Anime content; the anime_coloring label describes shading style rather than a general anime-content category. |
-| tit drop | manual | Requires motion or timing evidence; no suitable model label. |
-| freeuse | default-excluded | Narrative or consent context; excluded by policy. |
-| femboy | default-excluded | Age, identity or relationship category; excluded by policy. |
-| egirl | manual | Requires context or a category distinction absent from the model vocabulary. |
-| gay | default-excluded | Age, identity or relationship category; excluded by policy. |
-| hairy | default-excluded | Mapped, but excluded by default following recognition mismatches. |
-| forced | default-excluded | Narrative or consent context; excluded by policy. |
-| hair pull | manual | The hair-pulled-back label describes a hairstyle, not pulling. |
-| fisting | manual | No suitable label in the pinned model vocabulary. |
-| side fuck | manual | No suitable label in the pinned model vocabulary. |
-| ai-tagged-bare | default-excluded | Website metadata; not inferred from sampled images. |
-| twerking | manual | Requires motion or timing evidence; no suitable model label. |
+| asian | default-excluded | Age, identity or relationship category; excluded by policy. |
+| ass shake | manual | Requires motion or timing evidence; no suitable model label. |
+| ball fondling | manual | No suitable label in the pinned model vocabulary. |
+| ball sucking | manual | No suitable label in the pinned model vocabulary. |
+| caption | manual | Text or speech-bubble detection does not establish a caption. |
+| chastity cage | manual | No suitable label in the pinned model vocabulary. |
+| clothed | manual | Cannot be inferred from the absence of nudity, hair or face detections. |
+| clown | manual | Character-name labels are not a generic clown category. |
+| compilation | manual | Editing or media-type category; no reliable equivalent model label. |
+| cuck | default-excluded | Narrative or consent context; excluded by policy. |
+| cum on feet | manual | Generic body-location labels do not establish this location. |
 | cum on pussy | manual | No suitable label in the pinned model vocabulary. |
-| latina | default-excluded | Age, identity or relationship category; excluded by policy. |
+| cum on self | manual | Generic body-location labels do not identify who the recipient is. |
+| cum on thighs | manual | Generic body-location labels do not establish this location. |
+| cum swap | manual | No suitable label establishing transfer between participants. |
 | dirty talk | manual | Requires context or a category distinction absent from the model vocabulary. |
 | ebony | default-excluded | Age, identity or relationship category; excluded by policy. |
-| fuck machine | manual | Generic machinery does not establish this device. |
 | edging | manual | Requires context or a category distinction absent from the model vocabulary. |
-| chastity cage | manual | No suitable label in the pinned model vocabulary. |
+| egirl | manual | Requires context or a category distinction absent from the model vocabulary. |
+| featured | default-excluded | Website metadata; not inferred from sampled images. |
+| femboy | default-excluded | Age, identity or relationship category; excluded by policy. |
+| fisting | manual | No suitable label in the pinned model vocabulary. |
+| forced | default-excluded | Narrative or consent context; excluded by policy. |
+| freeuse | default-excluded | Narrative or consent context; excluded by policy. |
+| fuck machine | manual | Generic machinery does not establish this device. |
 | gagging | manual | No suitable label in the pinned model vocabulary. |
-| blackmail | default-excluded | Narrative or consent context; excluded by policy. |
-| pillow humping | manual | No suitable label in the pinned model vocabulary. |
-| sissy | default-excluded | Age, identity or relationship category; excluded by policy. |
-| solo male | manual | Needs a joint subject-count and subject-category rule; individual labels are insufficient. |
-| cum on self | manual | Generic body-location labels do not identify who the recipient is. |
-| welcome | default-excluded | Website metadata; not inferred from sampled images. |
-| dyed hair | manual | Hair color or multiple colors do not establish dye rather than a wig. |
-| cum on feet | manual | Generic body-location labels do not establish this location. |
-| gym | manual | Gym clothing does not establish the setting. |
-| rimming | manual | No suitable label in the pinned model vocabulary. |
-| gloryhole | manual | No suitable label in the pinned model vocabulary. |
-| ball sucking | manual | No suitable label in the pinned model vocabulary. |
-| cum on thighs | manual | Generic body-location labels do not establish this location. |
-| held down | manual | No suitable label in the pinned model vocabulary. |
-| strap on | manual | No suitable label in the pinned model vocabulary. |
+| gay | default-excluded | Age, identity or relationship category; excluded by policy. |
 | german | default-excluded | Age, identity or relationship category; excluded by policy. |
-| clown | manual | Character-name labels are not a generic clown category. |
-| pet play | manual | Requires context or a category distinction absent from the model vocabulary. |
-| ball fondling | manual | No suitable label in the pinned model vocabulary. |
-| pegging | manual | No suitable label in the pinned model vocabulary. |
-| hijab | manual | Generic kerchief labels do not establish this garment. |
-| ai-needs-review | default-excluded | Website metadata; not inferred from sampled images. |
-| scissoring | manual | The available tribadism label is broader than this specific action. |
-| slow motion | manual | Requires motion or timing evidence; no suitable model label. |
-| used | default-excluded | Narrative or consent context; excluded by policy. |
-| tomboy | default-excluded | Age, identity or relationship category; excluded by policy. |
-| maledom | manual | Requires context or a category distinction absent from the model vocabulary. |
 | gilf | default-excluded | Age, identity or relationship category; excluded by policy. |
-| degrading | default-excluded | Narrative or consent context; excluded by policy. |
+| gloryhole | manual | No suitable label in the pinned model vocabulary. |
+| gym | manual | Gym clothing does not establish the setting. |
+| hair pull | manual | The hair-pulled-back label describes a hairstyle, not pulling. |
+| hairy | default-excluded | Mapped, but excluded by default following recognition mismatches. |
+| hd | default-excluded | Website metadata; not inferred from sampled images. |
+| held down | manual | No suitable label in the pinned model vocabulary. |
+| hijab | manual | Generic kerchief labels do not establish this garment. |
+| horizontal | default-excluded | Website metadata; not inferred from sampled images. |
+| incest | default-excluded | Narrative or consent context; excluded by policy. |
+| interracial | default-excluded | Age, identity or relationship category; excluded by policy. |
+| ksjhgf | default-excluded | Undefined website tag; no reliable interpretation or model mapping. |
+| latina | default-excluded | Age, identity or relationship category; excluded by policy. |
+| lesbian | default-excluded | Age, identity or relationship category; excluded by policy. |
+| long video | default-excluded | Website metadata; not inferred from sampled images. |
+| maledom | manual | Requires context or a category distinction absent from the model vocabulary. |
+| milf | default-excluded | Age, identity or relationship category; excluded by policy. |
+| no face | manual | Cannot be inferred from the absence of nudity, hair or face detections. |
+| no sound | default-excluded | Website metadata; not inferred from sampled images. |
+| oiled | manual | Wet appearance does not establish applied oil. |
+| pegging | manual | No suitable label in the pinned model vocabulary. |
+| pet play | manual | Requires context or a category distinction absent from the model vocabulary. |
+| pillow humping | manual | No suitable label in the pinned model vocabulary. |
+| pmv | manual | Editing or media-type category; no reliable equivalent model label. |
+| rimming | manual | No suitable label in the pinned model vocabulary. |
+| rough | manual | Requires context or a category distinction absent from the model vocabulary. |
+| russian | default-excluded | Age, identity or relationship category; excluded by policy. |
+| scissoring | manual | The available tribadism label is broader than this specific action. |
+| sd | default-excluded | Website metadata; not inferred from sampled images. |
+| sfw | manual | Cannot be inferred from the absence of nudity, hair or face detections. |
+| shaved | manual | Cannot be inferred from the absence of nudity, hair or face detections. |
+| sissy | default-excluded | Age, identity or relationship category; excluded by policy. |
+| slow motion | manual | Requires motion or timing evidence; no suitable model label. |
+| solo male | manual | Needs a joint subject-count and subject-category rule; individual labels are insufficient. |
+| stockings | manual | Available legwear labels do not distinguish stockings from other garments. |
+| strap on | manual | No suitable label in the pinned model vocabulary. |
+| taboo | default-excluded | Narrative or consent context; excluded by policy. |
+| tease | manual | Requires context or a category distinction absent from the model vocabulary. |
+| teen | default-excluded | Age, identity or relationship category; excluded by policy. |
+| thick | manual | Body category is broader than the available thick-thigh label. |
+| tightjob | default-excluded | Undefined website tag; no reliable interpretation or model mapping. |
+| tit drop | manual | Requires motion or timing evidence; no suitable model label. |
+| tomboy | default-excluded | Age, identity or relationship category; excluded by policy. |
+| trans | default-excluded | Age, identity or relationship category; excluded by policy. |
+| twerking | manual | Requires motion or timing evidence; no suitable model label. |
+| vertical | default-excluded | Website metadata; not inferred from sampled images. |
+| watermark | default-excluded | Excluded by default; no suitable model label. |
+| welcome | default-excluded | Website metadata; not inferred from sampled images. |
 
 Removing the default exclusion for `hairy` enables its existing mapping. Removing `watermark` does not create a model signal. Manual website entry remains available for all tags.
 
