@@ -55,7 +55,7 @@ export function analyzeReviews(input,mapping,allowedTags){
 }
 
 function markdown(report){
- const pct=value=>value==null?'—':(value*100).toFixed(1)+'%';
+ const pct=value=>value==null?'â€”':(value*100).toFixed(1)+'%';
  const lines=['# Review analysis','',`Reviewed unique videos: ${report.reviewed}. Unreviewed omitted: ${report.unreviewed}. Duplicate reviews omitted: ${report.duplicates}.`,'',
   '| Scope | Precision | Recall | F1 |','| --- | ---: | ---: | ---: |'];
  for(const [name,m]of [['All annotations',report.all],['Automatically eligible annotations',report.automaticallyEligible],['Development partition',report.development.metrics],['Holdout partition',report.holdout.metrics]])lines.push(`| ${name} | ${pct(m.precision)} | ${pct(m.recall)} | ${pct(m.f1)} |`);
