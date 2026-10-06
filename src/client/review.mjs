@@ -133,7 +133,9 @@ function showPlayer(){
 function renderTags(){
  $('#tags').replaceChildren();$('#evidence').hidden=true;if(!active)return;
  const concealed=hiddenHoldout(active);
- $('#reviewed').checked=!!active.reviewed;$('#reviewed').disabled=!active.result||concealed;
+ label($('#review-state'),concealed?'review.holdoutHidden':!active.result?'analysis.waiting':active.reviewed?'review.done':'review.pending');
+ $('#review-state').classList.toggle('done',!!active.reviewed&&!concealed);
+ $('#reopen').hidden=!active.result||!active.reviewed||concealed;
  $('#resolved-partition').textContent=active.result?t(reviewPartition(active)==='holdout'?'review.holdout':'review.development'):t('review.noPartition');
  if(concealed){label($('#counts'),'review.holdoutHidden');return;}
  if(!active.result){label($('#counts'),'review.waiting');return;}if(!validRules())return;
@@ -255,7 +257,11 @@ $('#analyze').onclick=async()=>{
  finally{running=false;controller=undefined;renderQueue();renderTags();await saveNow();}
 };
 $('#cancel').onclick=()=>{controller?.abort();client.stop();};
-$('#reviewed').onchange=()=>{if(!active?.result)return;active.reviewed=$('#reviewed').checked;active.updatedAt=new Date().toISOString();changed();renderQueue();};
+$('#reopen').onclick=()=>{
+ if(!active?.result||hiddenHoldout(active))return;
+ active.reviewed=false;active.updatedAt=new Date().toISOString();changed();renderQueue();renderTags();
+ $('#complete-next').focus();
+};
 $('#partition').onchange=()=>{
  if(!active)return;const value=$('#partition').value;
  for(const entry of entries)if(entry===active||active.result&&entry.result?.sha256===active.result.sha256)entry.partition=value;
