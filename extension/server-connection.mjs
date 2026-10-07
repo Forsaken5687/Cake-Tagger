@@ -26,8 +26,8 @@ export async function getSettings(browser) {
   }
   return result;
 }
-export async function notifySettings(browser) {
-  const result = await getSettings(browser);
+export async function notifySettings(browser, saved) {
+  const result = saved ?? await getSettings(browser);
   const message = { type: 'cake-tagger:settings-updated', settings: result.settings };
   await browser.runtime.sendMessage(message).catch(() => {});
   const tabs = await browser.tabs.query({ url: 'https://cake.ski/*' });
@@ -43,5 +43,6 @@ export async function stop() {
 export async function getCapabilities() { return request('/api/capabilities'); }
 export async function saveSettings(browser, settings) {
   const result = await request('/api/settings', { method: 'POST', body: JSON.stringify({ settings: normalizeSettings(settings) }) });
-  await notifySettings(browser); return result;
+  // Persistence has already succeeded; a sleeping/closed tab cannot undo it.
+  await notifySettings(browser,result).catch(() => {}); return result;
 }

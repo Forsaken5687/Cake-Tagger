@@ -4,7 +4,7 @@ Cake Tagger is a local application and browser extension under development. Code
 
 ## Data flow
 
-Video decoding and frame extraction run in the browser. Binary 448 × 448 RGBA samples are sent only to the local Node server for native CPU inference. The server does not accept file paths or save samples. Full videos and filenames are not sent for inference. Upload results stay in page memory. The development review lab stores annotations, scores and sampled previews in browser-local IndexedDB; original videos are not stored. There is no project telemetry. Exported JSON contains filenames and content tags and can therefore contain private information.
+Video decoding and frame extraction run in the browser. Binary 448 × 448 RGBA samples are sent only to the local Node server for native CPU inference. The server does not accept file paths or save samples. Full videos and filenames are not sent for inference. Upload results stay in page memory. The development review lab stores annotations, scores and sampled previews in browser-local IndexedDB; selected original videos are cached separately in the same browser for session restoration and removed when starting a new session. Videos are not included in JSON exports. There is no project telemetry. Exported JSON contains filenames and content tags and can therefore contain private information.
 
 Settings persist in ignored `data/preferences.json` on the local server. Original legacy browser preferences remain untouched after migration. The standalone server also writes an ignored `data/session.json` containing its random session token and process ID. Treat this file as private. Legacy corrections are not loaded or overwritten.
 

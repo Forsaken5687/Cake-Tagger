@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createUploadAutoAnalysis } from '../src/client/auto-analysis.mjs';
+import { createUploadAutoAnalysis, reconcileHashedFile } from '../src/client/auto-analysis.mjs';
 import { normalizeSettings, createSettingsStore } from '../src/shared/preferences.mjs';
 const file = name => ({ name, size: 20, lastModified: 1 });
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
@@ -79,4 +79,14 @@ test('cancel during analysis drops queued batches without retrying cancelled fil
   await queue.receive([a,b]); queue.cancel(); finish.resolve(); await run; await queue.drain();
   assert.deepEqual(calls, [['a.mp4']]);
   assert.deepEqual(selections, [['a.mp4'], ['a.mp4','b.mp4']]);
+});
+
+test('same file metadata never reuses results belonging to different video bytes',()=>{
+ const original={file:file('same.mp4'),index:0,sha256:'a'.repeat(64),result:{sha256:'a'.repeat(64)},frames:['old'],selected:new Map([['tattoos',false]])};
+ const next={...original,file:{...original.file},sha256:'b'.repeat(64),index:1};
+ const replaced=reconcileHashedFile(next,[original]);
+ assert.equal(replaced.sha256,next.sha256);assert.equal(replaced.result,undefined);assert.equal(replaced.frames,undefined);assert.equal(replaced.selected.size,0);
+ assert.equal(original.selected.get('tattoos'),false);assert(original.result);
+ const retained=reconcileHashedFile({...next,sha256:original.sha256},[original]);
+ assert.equal(retained.result,original.result);assert.equal(retained.selected.get('tattoos'),false);assert.equal(retained.index,1);
 });

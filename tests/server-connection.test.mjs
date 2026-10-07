@@ -20,3 +20,17 @@ test('extension connection refreshes after restart and migrates settings without
   assert.equal(legacy.language,'de');
  }finally{globalThis.fetch=original;}
 });
+
+test('successful settings persistence survives failed tab notifications without rereading stale settings',async()=>{
+ const original=globalThis.fetch;let reads=0,writes=0;
+ globalThis.fetch=async(url,options)=>{
+  if(url.endsWith('/api/connect'))return new Response(JSON.stringify({token:'a'.repeat(48)}));
+  if(options.method!=='POST'){reads++;throw Error('Unexpected reread');}
+  writes++;return new Response(JSON.stringify({initialized:true,settings:JSON.parse(options.body).settings}));
+ };
+ const browser={runtime:{sendMessage:async()=>{throw Error('No receiver');}},tabs:{query:async()=>{throw Error('Tab unavailable');}}};
+ try{const service=await import('../extension/server-connection.mjs?notification-failure');
+  const result=await service.saveSettings(browser,{hideSiteAI:true,language:'de'});
+  assert.equal(result.settings.hideSiteAI,true);assert.equal(writes,1);assert.equal(reads,0);
+ }finally{globalThis.fetch=original;}
+});

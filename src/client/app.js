@@ -4,7 +4,7 @@ import { makeRecord, applyRecord, tagSource } from '../shared/corrections.mjs';
 import { samplingPlan, hashFile, sampleVideo as sample } from './sampling.mjs';
 import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from '../shared/analysis-settings.mjs';
 import { createSettingsStore, suggestionPolicy } from '../shared/preferences.mjs';
-import { createUploadAutoAnalysis } from './auto-analysis.mjs';
+import { createUploadAutoAnalysis, reconcileHashedFile } from './auto-analysis.mjs';
 import { createNativeClient } from './native-client.mjs';
 import { createLocalSession } from './local-session.mjs';
 import { memorySnapshot } from './runtime-metrics.mjs';
@@ -116,9 +116,8 @@ async function setFiles(files) {
       const entry = next[i];
       try {
         entry.sha256 = await hashFile(entry.file);
-        const existing = previous.find(old => old.sha256 === entry.sha256);
-        if (existing) { next[i] = { ...existing, file: entry.file, index: entry.index }; continue; }
-        const record = sessionRecords.get(entry.sha256); if (record) await restore(entry, record);
+        const reconciled=next[i]=reconcileHashedFile(entry,previous);
+        const record = sessionRecords.get(reconciled.sha256); if (record && !reconciled.result) await restore(reconciled, record);
       }
       catch (e) { entry.error = errorMessage(e); }
     }
@@ -203,13 +202,13 @@ $('#quit').onclick = async () => {
 await status();
 installIntegration(receiveFiles, theme => {
   setSiteLanguage(theme.language); translatePage();
-  if (!running && mapping) localizedText($('#status'), 'analysis.ready');
+  if (!stopping && !running && mapping) localizedText($('#status'), 'analysis.ready');
   render();
 });
 settingsStore.subscribe(next => {
   if (isExtension) browser.runtime.sendMessage({ type: 'cake-tagger:settings-notify' }).catch(() => {});
   settings = next; setLanguage(settings); translatePage();
-  if (!running && mapping) localizedText($('#status'), 'analysis.ready');
+  if (!stopping && !running && mapping) localizedText($('#status'), 'analysis.ready');
   render();
 });
 window.addEventListener('focus', () => { void settingsStore.load().catch(() => {}); });

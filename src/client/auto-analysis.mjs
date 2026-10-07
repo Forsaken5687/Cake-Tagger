@@ -32,3 +32,12 @@ export function createUploadAutoAnalysis({ busy, enabled, prepare, analyze }) {
     drain
   };
 }
+
+// Metadata can match even after a file's bytes change. Only a content hash may
+// carry previous predictions and corrections into the current selection.
+export function reconcileHashedFile(entry, previous) {
+ const existing=previous.find(old=>(old.sha256??old.result?.sha256)===entry.sha256);
+ if(existing)return {...existing,file:entry.file,index:entry.index};
+ if(entry.result&&entry.result.sha256!==entry.sha256)return {file:entry.file,index:entry.index,sha256:entry.sha256,hasFile:true,state:'analysis.waiting',selected:new Map()};
+ return entry;
+}

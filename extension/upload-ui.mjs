@@ -41,7 +41,7 @@ export function createUploadUI(doc, mount, toolbar, send, settingsAPI) {
   const dialog=settingsDialog;
   settingsDialog.append(settingsForm(store,view.allTags,()=>{if(dialog.isConnected)dialog.close();},{document:doc,language:view.language,requireTrusted:true,capabilities:settingsAPI.capabilities}));
   settingsDialog.addEventListener('click',event=>{if(trusted(event)&&event.target===settingsDialog)settingsDialog.close();});
-  settingsDialog.addEventListener('close',()=>{settingsDialog.remove();settingsDialog=undefined;});doc.body.append(settingsDialog);settingsDialog.showModal();
+  settingsDialog.addEventListener('close',()=>{dialog.remove();if(settingsDialog===dialog)settingsDialog=undefined;});doc.body.append(settingsDialog);settingsDialog.showModal();
  }
  function detachLayout(){for(const n of sections.values())n.remove();sections.clear();}
  function content(section,entry){
