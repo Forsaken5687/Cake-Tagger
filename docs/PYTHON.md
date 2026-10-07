@@ -4,7 +4,7 @@ The complete backend uses Python. The reusable package is `cake_tagger`, under `
 
 ## Use from another Python application
 
-Extract `outputs/Cake-Tagger-Python-Core.zip`, create a dedicated Python 3.13+ environment and install the package with `python -m pip install .`. Model weights are distributed separately; obtain the pinned artifact from `scripts/assets.json` and retain its license. The Windows release lock is `scripts/python-requirements.txt`; other platforms require their own verified dependency lock.
+From a source checkout, create a dedicated Python 3.13+ environment and install the package with `python -m pip install .`. Model weights are distributed separately; obtain the pinned artifact from `scripts/assets.json` and retain its license. The Windows release lock is `scripts/python-requirements.txt`; other platforms require their own verified dependency lock.
 
 ```python
 from cake_tagger import create_engine
@@ -38,4 +38,4 @@ CPU ONNX Runtime is the supported provider. The package can run on compatible pl
 .\scripts\Package.ps1
 ```
 
-The package command also creates the reusable core source ZIP. [Testing](TESTING.md) describes parity checks, inference smoke tests and browser validation.
+[Testing](TESTING.md) describes parity checks, inference smoke tests and browser validation.

@@ -1,4 +1,4 @@
-"""Package the runtime release and the reusable Python source distribution."""
+"""Package the runtime release with both browser extensions."""
 
 import hashlib
 import json
@@ -113,43 +113,6 @@ def package(root=ROOT):
                     chrome.read(entry),
                 )
     temporary.replace(output)
-    # External integrations receive the package and catalog, never private data or a runtime.
-    core = root / "outputs/Cake-Tagger-Python-Core.zip"
-    core_files = [
-        "pyproject.toml",
-        "docs/PYTHON.md",
-        "THIRD_PARTY.md",
-        "scripts/python-requirements.txt",
-        "scripts/assets.json",
-        "vendor/LICENSE-ONNX.txt",
-        "vendor/ThirdPartyNotices.txt",
-        "model/LICENSE.txt",
-        "model/provenance.json",
-        "model/mapping.json",
-        "model/policy.json",
-        "model/tags.txt",
-        "model/top_tags.txt",
-    ]
-    core_files += [
-        p.relative_to(root).as_posix()
-        for p in (root / "src/server/cake_tagger").glob("*.py")
-    ]
-    with zipfile.ZipFile(core, "w", zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr(
-            "README.md",
-            "# Cake Tagger Python core\n\nSee [Python integration](docs/PYTHON.md) for installation, model requirements and usage. Model weights and the portable Windows runtime are distributed separately.\n",
-        )
-        for name in core_files:
-            if name in (
-                "THIRD_PARTY.md",
-                "docs/PYTHON.md",
-                "docs/BROWSERS.md",
-                "docs/INTEGRATION.md",
-                "scripts/assets.json",
-            ):
-                archive.writestr(name, distribution_text(root, name))
-            else:
-                archive.write(root / name, name)
     print("Packages created in outputs/.")
 
 
