@@ -9,7 +9,7 @@ Start `Review.cmd` from a source checkout. The lab uses the local inference serv
 3. Click a tag name to inspect sampled frames and scores. Click a frame to seek the video. Close the evidence drawer with its close button, Escape or a click outside.
 4. Choose **Complete & next** after reviewing the whole clip. **Previous** and **Next** navigate without completing a review. **Reopen review** returns a completed video to pending.
 
-The review list includes all qualifying suggestions and uncertain candidates from stored model scores, beyond the upload display limits. Recorded upload suggestions remain unchanged for baseline metrics.
+**Candidate minimum score (%)** controls which additional model matches appear for review (default: 20%). Lower it to inspect weaker signals. This display filter uses stored scores and does not require another analysis. Existing judgments and current/A/B suggestions stay visible. Recorded upload suggestions and comparison rules remain unchanged.
 
 Changing a judgment marks the review as pending. Changing experimental rules or resampling preserves annotations. Only completed reviews contribute to accuracy metrics.
 
@@ -54,4 +54,4 @@ Open PowerShell in the project folder and run:
 .\runtime\node.exe .\scripts\Analyze-Reviews.mjs "$env:USERPROFILE\Downloads\cake-tag-review.json" .\work\review-analysis\report.md
 ```
 
-Change the input filename to match your downloaded export. The reports are written to `work/review-analysis/report.md` and `report.json`. Reports use completed, assessable judgments and the recorded group assignments and exclusions. Known website renames are resolved without changing the export. Other historical labels absent from the current catalog are preserved and listed; rule replay uses the available mapping.
+Change the input filename to match your downloaded export. The reports are written to `work/review-analysis/report.md` and `report.json`. These reports cannot be imported as review sessions; keep the JSON downloaded from the lab to restore your work. Reports use completed, assessable judgments and the recorded group assignments and exclusions. Known website renames are resolved without changing the export. Other historical labels absent from the current catalog are preserved and listed; rule replay uses the available mapping.

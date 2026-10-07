@@ -86,3 +86,10 @@ test('restoration preserves positives outside candidate metadata and rejects con
  assert.equal(restoreDraft(draft,tags,mapping).entries[0].selected.get('tattoos'),true);
  draft.entries[0].knownHash='b'.repeat(64);assert.throws(()=>restoreDraft(draft,tags,mapping));
 });
+
+test('candidate display threshold persists and offline reports cannot replace a session',()=>{
+ const draft=createDraft([entry()],variants,'4','en',25);
+ assert.equal(restoreDraft(draft,tags,mapping).candidateMinimum,25);
+ delete draft.candidateMinimum;assert.equal(restoreDraft(draft,tags,mapping).candidateMinimum,20);
+ assert.throws(()=>importReview({version:1,reviewed:34,unreviewed:15},tags,mapping),/reportNotSession/);
+});

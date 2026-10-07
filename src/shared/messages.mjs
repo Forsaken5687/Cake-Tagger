@@ -58,6 +58,8 @@ export const messages = {
   "review.confirmClear": {"en":"Start a new session and remove its local backup? Download your current work first.","de":"Neue Sitzung starten und die lokale Sicherung entfernen? Lade deine bisherige Arbeit zuerst herunter."},
   "review.confirmReplace": {"en":"Replace the current session? Save or download your current work first.","de":"Aktuelle Sitzung ersetzen? Sichere oder lade deine bisherige Arbeit zuerst herunter."},
   "review.conflictingSplit": {"en":"Identical videos have conflicting partition assignments.","de":"Identische Videos haben widersprüchliche Gruppenzuordnungen."},
+  "review.candidateMinimum": {en:"Candidate minimum score (%)",de:"Mindestscore für Kandidaten (%)"},
+  "review.reportNotSession": {en:"This is an analysis report. Import the JSON downloaded from the review lab instead.",de:"Das ist ein Auswertungsbericht. Importiere stattdessen die JSON aus „JSON herunterladen“ auf der Bewertungsseite."},
   "review.invalidSession": {"en":"This file is not a valid review session.","de":"Diese Datei ist keine gültige Bewertungssitzung."},
   "review.storageFailed": {"en":"Local save failed. Download JSON to keep your work.","de":"Lokale Sicherung fehlgeschlagen. Lade die JSON herunter, um deine Arbeit zu behalten."},
   "review.unsaved": {"en":"Unsaved changes","de":"Ungesicherte Änderungen"},

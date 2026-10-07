@@ -116,3 +116,12 @@ test('review candidates can exceed upload limits without changing default sugges
  assert.deepEqual(expanded.uncertainScores.slice(0,15),normal.uncertainScores);
  assert.deepEqual(aggregate(frames,mapping,.4),normal);
 });
+
+test('review display can surface weak matches without changing production predictions',()=>{
+ const frames=Array.from({length:4},()=>[.3,.8]);const mapping={weak:[0],strong:[1]};
+ const baseline=aggregate(frames,mapping,.4,'majority');
+ const expanded=aggregate(frames,mapping,.2,'majority',{limitResults:false});
+ assert(![...baseline.tags.map(row=>row.tag),...baseline.uncertain].includes('weak'));
+ assert(expanded.tags.some(row=>row.tag==='weak'));
+ assert.deepEqual(aggregate(frames,mapping,.4,'majority'),baseline);
+});

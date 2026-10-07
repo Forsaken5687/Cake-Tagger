@@ -38,7 +38,7 @@ function clearDownload(){
 function saveNow(){
  clearTimeout(saveTimer);
  if(pendingDraft||!mapping)return Promise.resolve();
- const revision=changeVersion,draft=createDraft(entries,variants,$('#frames').value,$('#language').value);
+ const revision=changeVersion,draft=createDraft(entries,variants,$('#frames').value,$('#language').value,Number($('#candidate-minimum').value));
  label($('#save-status'),'review.saving');
  saveChain=saveChain.catch(()=>{}).then(()=>store.save(draft)).then(()=>{
   if(revision===changeVersion){dirty=false;label($('#save-status'),'review.saved',{time:new Date(draft.savedAt).toLocaleTimeString()});}
@@ -139,11 +139,11 @@ function renderTags(){
  $('#reopen').hidden=!active.result||!active.reviewed||concealed;
  $('#resolved-partition').textContent=active.result?t(reviewPartition(active)==='holdout'?'review.holdout':'review.development'):t('review.noPartition');
  if(concealed){label($('#counts'),'review.holdoutHidden');return;}
- if(!active.result){label($('#counts'),'review.waiting');return;}if(!validRules())return;
+ if(!active.result){label($('#counts'),'review.waiting');return;}if(!validRules()||!$('#candidate-minimum').checkValidity())return;
  const baseline=new Map(active.result.tags.map(row=>[row.tag,row])),a=new Set(candidate(active,'A').map(row=>row.tag)),b=new Set(candidate(active,'B').map(row=>row.tag));
  // Expand the review list from raw scores, keeping the recorded upload baseline
  // and user annotations intact so accuracy comparisons still mean the same thing.
- const expanded=active.scores?aggregate(active.scores,mapping,DEFAULT_THRESHOLD,DEFAULT_COVERAGE,{excludedTags:settings.excludedTags,limitResults:false}):{tags:[],uncertain:[]};
+ const expanded=active.scores?aggregate(active.scores,mapping,Number($('#candidate-minimum').value)/100,DEFAULT_COVERAGE,{excludedTags:settings.excludedTags,limitResults:false}):{tags:[],uncertain:[]};
  const possible=new Set([...active.selected.keys(),...active.ignoredTags,...baseline.keys(),...expanded.tags.map(row=>row.tag),...expanded.uncertain,...a,...b]),query=$('#search').value.trim().toLowerCase();
  const tags=($('#all').checked||query?allowedTags():allowedTags().filter(tag=>possible.has(tag))).filter(tag=>tag.toLowerCase().includes(query));
  // Stable order prevents rows moving while the user evaluates them.
@@ -200,7 +200,7 @@ function openEvidence(tag,scroll=true){
 }
 function adopt(restored){
  entries=restored.entries;variants=restored.variants;active=entries[0];evidenceTag=undefined;
- $('#frames').value=restored.frames;
+ $('#frames').value=restored.frames;$('#candidate-minimum').value=restored.candidateMinimum;
  if(restored.language){$('#language').value=setLanguage({language:restored.language});translatePage();}
  controlsFromVariants();showPlayer();renderQueue();renderTags();label($('#status'),'review.imported');
 }
@@ -228,7 +228,7 @@ $('#import').onchange=async event=>{
   if(file.size>256*1024*1024)throw Error('review.invalidSession');
   const restored=importReview(JSON.parse(await file.text()),allTags,mapping);
   adopt(restored);changed();await saveNow();
- }catch{label($('#status'),'review.invalidSession');}finally{attaching=false;summary();}
+ }catch(error){label($('#status'),error.message==='review.reportNotSession'?'review.reportNotSession':'review.invalidSession');}finally{attaching=false;summary();}
 };
 $('#analyze').onclick=async()=>{
  if(running||!mapping)return;controller=new AbortController();running=true;renderQueue();
@@ -315,6 +315,7 @@ $('#complete-next').onclick=()=>{
 window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('#evidence').hidden){$('#evidence-close').click();}});
 $('#scope').onchange=summary;$('#problem-source').onchange=summary;
 $('#reveal').onchange=()=>{renderQueue();renderTags();};
+$('#candidate-minimum').onchange=()=>{if($('#candidate-minimum').checkValidity()){renderTags();changed();}};
 $('#search').oninput=renderTags;
 $('#clear-search').onclick=()=>{$('#search').value='';renderTags();$('#search').focus({preventScroll:true});};$('#all').onchange=renderTags;
 $('#frames').onchange=changed;

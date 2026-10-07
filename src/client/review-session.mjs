@@ -6,8 +6,8 @@ import { canonicalTagName as canonical } from '../shared/tag-policy.mjs';
 const tagName = tag => typeof tag === 'string' && tag.length > 0 && tag.length <= 80 && !['__proto__', 'prototype', 'constructor'].includes(tag);
 
 // Persist annotations and typed score arrays, never video bytes or credentials.
-export function createDraft(entries, variants, frames, language) {
-  return { version: 1, savedAt: new Date().toISOString(), variants, frames, language,
+export function createDraft(entries, variants, frames, language, candidateMinimum = 20) {
+  return { version: 1, savedAt: new Date().toISOString(), variants, frames, language, candidateMinimum,
     entries: entries.map(entry => ({
       file: { name: entry.file.name, size: entry.file.size ?? 0, lastModified: entry.file.lastModified ?? 0 }, knownHash: entry.knownHash,
       ...(entry.result ? { record: makeRecord(entry), scores: entry.scores, timestamps: entry.timestamps, previews: entry.previews ?? [], frameSetting: entry.frameSetting } : {}),
@@ -69,10 +69,13 @@ export function restoreDraft(input, currentTags, mapping) {
     partitions.set(entry.result.sha256, reviewPartition(entry));
   }
   return { entries, variants: validateVariants(input.variants, allowed), frames: ['auto','4','6','8','12','16','24','32','48'].includes(String(input.frames)) ? String(input.frames) : 'auto',
+    candidateMinimum: Number.isFinite(input.candidateMinimum) && input.candidateMinimum >= 0 && input.candidateMinimum <= 100 ? input.candidateMinimum : 20,
     language: ['de','en'].includes(input.language) ? input.language : undefined, savedAt: input.savedAt };
 }
 
 export function importReview(input, currentTags, mapping) {
+  // Offline reports summarize a session but cannot restore its raw evidence.
+  if (input && !input.items && !input.entries && Number.isInteger(input.reviewed) && Number.isInteger(input.unreviewed)) throw Error('review.reportNotSession');
   if (input?.version === 1 && Array.isArray(input.entries)) return restoreDraft(input, currentTags, mapping);
   if (input?.source !== 'cake-tagger-review' || !Array.isArray(input.items) || input.items.length > 1000) throw Error('review.invalidSession');
   const entries = input.items.map(item => {
