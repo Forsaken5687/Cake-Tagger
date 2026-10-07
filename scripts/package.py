@@ -37,7 +37,13 @@ def distribution_text(root, name):
             if not part.startswith("The browser-module test suite uses")
         )
     elif name == "docs/PYTHON.md":
-        text = text.split("## Tools")[0]
+        sections = text.split("## Tools", 1)
+        text = sections[0]
+        if len(sections) == 2 and "## Logging and lifecycle" in sections[1]:
+            text += (
+                "## Logging and lifecycle"
+                + sections[1].split("## Logging and lifecycle", 1)[1]
+            )
         text += "Development commands and test instructions are provided in the full source checkout.\n"
     return text
 

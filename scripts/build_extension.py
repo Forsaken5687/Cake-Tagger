@@ -66,7 +66,7 @@ def build_extension(target, root=ROOT):
         elif name == "THIRD_PARTY.md":
             content = "\n\n".join(
                 part
-                for part in content.decode("utf-8").split("\n\n")
+                for part in (root / name).read_text(encoding="utf-8").split("\n\n")
                 if not part.startswith("The browser-module test suite uses")
             ).encode("utf-8")
         entries[

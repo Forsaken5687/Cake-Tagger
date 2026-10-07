@@ -64,7 +64,8 @@ def normalize_settings(value=None):
     import re
 
     if (
-        not re.fullmatch("[1-9][0-9]*", parallelism)
+        len(parallelism) > 16
+        or not re.fullmatch("[1-9][0-9]*", parallelism)
         or int(parallelism) > 9007199254740991
     ):
         parallelism = "auto"

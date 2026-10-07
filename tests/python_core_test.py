@@ -32,7 +32,7 @@ class CoreTests(unittest.TestCase):
             recommendedThreads=8, testMaximum=24, queueCapacity=8, logicalProcessors=24
         )
         self.assertEqual(resolve_threads("16", capabilities), 16)
-        for value in ["0", "25", "1.5", False, "01"]:
+        for value in ["0", "25", "1.5", False, "01", "9" * 5000]:
             with self.assertRaises(ValueError):
                 resolve_threads(value, capabilities)
         with tempfile.TemporaryDirectory() as folder:
@@ -85,6 +85,66 @@ class CoreTests(unittest.TestCase):
                     1,
                 )
                 self.assertEqual(len(sessions), 2)
+
+    def test_typed_buffers_and_stop_from_completion_callback(self):
+        entered, release, completed = (
+            threading.Event(),
+            threading.Event(),
+            threading.Event(),
+        )
+
+        class Session:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def get_inputs(self):
+                return [type("Input", (), {"name": "input"})()]
+
+            def run(self, *args):
+                entered.set()
+                release.wait(5)
+                return [np.zeros((1, 5813), dtype=np.float32)]
+
+        with (
+            tempfile.TemporaryDirectory() as folder,
+            patch("server.core.ort.InferenceSession", Session),
+        ):
+            model = Path(folder) / "fixture"
+            model.write_bytes(b"fixture")
+            engine = Engine(
+                model,
+                hashlib.sha256(b"fixture").hexdigest(),
+                {},
+                dict(
+                    recommendedThreads=1,
+                    testMaximum=1,
+                    queueCapacity=1,
+                    logicalProcessors=1,
+                ),
+            )
+            try:
+                with self.assertRaisesRegex(ValueError, "invalidModelInputImage"):
+                    engine.submit(
+                        "oversized", memoryview(bytes(FRAME_BYTES * 49)).cast("I")
+                    )
+                future = engine.submit(
+                    "valid", memoryview(bytes(FRAME_BYTES)).cast("I")
+                )
+                self.assertTrue(entered.wait(5))
+
+                def finish(result):
+                    engine.stop()
+                    completed.set()
+
+                future.add_done_callback(finish)
+                release.set()
+                self.assertEqual(len(future.result(5)["scores"]), 1)
+                self.assertTrue(completed.wait(5))
+                engine.worker.join(5)
+                self.assertFalse(engine.worker.is_alive())
+            finally:
+                release.set()
+                engine.stop()
 
     def test_queue_cancel_active_cancel_stop_and_thread_override(self):
         entered, release = threading.Event(), threading.Event()

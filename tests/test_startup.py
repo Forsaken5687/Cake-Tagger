@@ -60,6 +60,9 @@ class StartupTests(unittest.TestCase):
             with patch("start.urllib.request.urlopen") as request:
                 self.assertFalse(running(root))
                 request.assert_not_called()
+            for invalid in (None, [], 1, {"url": None}, {"url": 42}):
+                state.write_text(json.dumps(invalid))
+                self.assertFalse(running(root))
             state.write_text(json.dumps(dict(url="http://127.0.0.1:8765/#" + "a" * 48)))
             response = io.BytesIO(
                 json.dumps(
@@ -105,3 +108,31 @@ class StartupTests(unittest.TestCase):
             self.assertTrue(engine.stopped)
             self.assertTrue(service.stopping.is_set())
             self.assertFalse((Path(folder) / "session.json").exists())
+
+    def test_partial_interpreter_bootstrap_recovers_offline(self):
+        import os
+        import shutil
+
+        with tempfile.TemporaryDirectory(dir=ROOT / "work") as folder:
+            root = Path(folder)
+            (root / "scripts").mkdir()
+            (root / "runtime/cpython").mkdir(parents=True)
+            (root / "runtime/archives").mkdir()
+            shutil.copyfile(ROOT / "scripts/launch.cmd", root / "scripts/launch.cmd")
+            shutil.copyfile(
+                ROOT / "runtime/cpython/python.exe", root / "runtime/cpython/python.exe"
+            )
+            (root / "scripts/setup.py").write_text('print("bootstrap-ok")')
+            runtime = json.loads((ROOT / "scripts/assets.json").read_text())["python"][
+                "runtime"
+            ]
+            os.link(ROOT / runtime["path"], root / runtime["path"])
+            result = subprocess.run(
+                ["cmd.exe", "/d", "/c", "scripts\\launch.cmd setup"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("bootstrap-ok", result.stdout)

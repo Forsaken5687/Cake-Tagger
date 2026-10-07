@@ -84,6 +84,26 @@ class ServiceTests(unittest.TestCase):
             403,
         )
 
+    def test_duplicate_origins_and_huge_body_lengths_are_rejected(self):
+        host = f"Host: 127.0.0.1:{self.port}\r\n"
+        auth = f"Authorization: Bearer {self.service.token}\r\n"
+        duplicate = (
+            "GET /api/status HTTP/1.1\r\n"
+            + host
+            + auth
+            + f"Origin: http://127.0.0.1:{self.port}\r\nOrigin: https://example.invalid\r\n\r\n"
+        ).encode()
+        self.assertIn(b"403", self.raw(duplicate).split(b"\r\n")[0])
+        oversized = (
+            "POST /api/settings HTTP/1.1\r\n"
+            + host
+            + auth
+            + "Content-Type: application/json\r\nContent-Length: "
+            + "9" * 5000
+            + "\r\n\r\n"
+        ).encode()
+        self.assertIn(b"413", self.raw(oversized).split(b"\r\n")[0])
+
     def test_private_files_and_embedding(self):
         for path in (
             "/data/session.json",
@@ -162,6 +182,11 @@ class ServiceTests(unittest.TestCase):
 
 
 class ValidationTests(unittest.TestCase):
+    def test_oversized_thread_setting_is_normalized(self):
+        self.assertEqual(
+            normalize_settings({"parallelism": "9" * 5000})["parallelism"], "auto"
+        )
+
     def setUp(self):
         self.tags, self.policy, _ = load_catalog(ROOT / "model")
         self.record = dict(

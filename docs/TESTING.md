@@ -37,7 +37,7 @@ Keep personal media and test reports outside Git and release packages.
 
 ## Review lab checks
 
-From a source checkout, start `Review.cmd` and use synthetic videos. Check annotation and status changes, frame seeking, per-tag overrides, holdout visibility and A/B example navigation. Verify autosave restoration and JSON import/export without losing judgments. Check desktop and narrow layouts, evidence dismissal and startup failure reporting. See [review lab](REVIEW.md).
+From a source checkout, start the local service, open `http://127.0.0.1:8765/review.html` and use synthetic videos. Check annotation and status changes, frame seeking, per-tag overrides, holdout visibility and A/B example navigation. Verify autosave restoration and JSON import/export without losing judgments. Check desktop and narrow layouts, evidence dismissal and startup failure reporting. See [review lab](REVIEW.md).
 
 ## Release checks
 

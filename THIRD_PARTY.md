@@ -14,7 +14,7 @@ Bundled components retain their own licenses. This document does not grant an ad
 
 Windows wheel URLs and SHA-256 values are pinned in `scripts/assets.json`; `scripts/python-requirements.txt` provides the matching hash lock. Setup installs them into the application-local interpreter and preserves package metadata and legal notices. Runtime releases contain the verified interpreter/wheel archives and model weight, not private project state.
 
-The browser-module test suite uses Node.js 24.19.0 solely as an ignored development tool; it is absent from application and core releases. Its checksum is listed separately under `development` in the asset manifest, and its legal text is retained at `runtime/LICENSE-Node.txt` in the development checkout.
+The browser-module test suite uses Node.js 24.19.0 solely as an ignored development tool; it is absent from application and core releases. Its checksum is listed separately under `development` in the asset manifest, and its legal text is retained at `work/tools/LICENSE-JavaScript.txt` beside the development test binary.
 
 Sources: [CPython Windows distribution](https://docs.python.org/3.13/using/windows.html#the-embeddable-package), [JoyTag](https://github.com/fpgaminer/joytag), [official model weights](https://huggingface.co/fancyfeast/joytag), [ONNX Runtime](https://github.com/microsoft/onnxruntime), [NumPy](https://numpy.org/), [PyPI](https://pypi.org/).
 

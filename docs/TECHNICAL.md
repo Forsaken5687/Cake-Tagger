@@ -55,6 +55,6 @@ Browser messages, inactivity recovery, tag transfer and download-manager behavio
 
 ## Local startup
 
-`Start.cmd` launches the local service in the current terminal. `scripts/launch.cmd` bootstraps the pinned portable interpreter using Windows curl, certutil and tar when it is absent; the interpreter archive is verified before execution. `scripts/setup.py` restores hash-verified wheels and model weights. Python handles readiness, duplicate-service detection and errors; no shell process performs inference. `Review.cmd` uses the same launcher and opens the development review page.
+`Start.cmd` launches the local service in the current terminal. `scripts/launch.cmd` bootstraps the pinned portable interpreter using Windows curl, certutil and tar when it is absent; the interpreter archive is verified before execution. `scripts/setup.py` restores hash-verified wheels and model weights. Python handles readiness, duplicate-service detection and errors; no shell process performs inference. The development review page is opened directly at `http://127.0.0.1:8765/review.html`.
 
 Terminal logs report startup, queued/completed analyses and shutdown without request URLs, tokens, filenames, tags or frame contents. Ctrl+C follows the same engine cleanup contract as browser Quit: finish the active native call, discard unfinished analysis and retain saved preferences. Closing a terminal window can forcibly terminate the process, so Ctrl+C or Quit is preferred. Importing the package does not configure application logging.

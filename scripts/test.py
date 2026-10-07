@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     manifest = json.loads((ROOT / "scripts/assets.json").read_text())
+    restore(manifest["development"]["javascriptLicense"])
     javascript = restore(manifest["development"]["javascriptRuntime"])
     for folder in ("src/server", "scripts", "tests"):
         for file in (ROOT / folder).rglob("*.py"):

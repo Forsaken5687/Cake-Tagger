@@ -1,11 +1,11 @@
 # Review lab
 
-Start `Review.cmd` from a source checkout. The lab uses the local inference service to evaluate tag suggestions. Its experimental rules do not change the upload extension's suggestions. It is excluded from release packages.
+Start the service with `Start.cmd` from a source checkout and open `http://127.0.0.1:8765/review.html`. The lab uses the local inference service to evaluate tag suggestions. Its experimental rules do not change the upload extension's suggestions. It is excluded from release packages.
 
 ## Review videos
 
 1. Choose videos and run **Suggest tags**. Select a video from the queue.
-2. Choose **Correct**, **Incorrect** or **Unclear** for each tag. Unclear judgments are excluded from evaluation. Search or enable **Show all tags** to add missing labels. Use Ã— in the search field to clear the filter.
+2. Choose **Correct**, **Incorrect** or **Unclear** for each tag. Unclear judgments are excluded from evaluation. Search or enable **Show all tags** to add missing labels. Use Ãƒâ€” in the search field to clear the filter.
 3. Click a tag name to inspect sampled frames and scores. Click a frame to seek the video. Close the evidence drawer with its close button, Escape or a click outside.
 4. Choose **Complete & next** after reviewing the whole clip. **Previous** and **Next** navigate without completing a review. **Reopen review** returns a completed video to pending.
 

@@ -57,7 +57,7 @@ The development review tool additionally saves a browser-local session backup. S
 - The [reusable Python package](docs/PYTHON.md) can also be integrated into another backend.
 - Build extensions with `runtime/cpython/python.exe scripts/build_extension.py firefox` or `runtime/cpython/python.exe scripts/build_extension.py chrome`.
 - Run `runtime/cpython/python.exe scripts/package.py` to create `outputs/Cake-Tagger.zip`, containing the Firefox ZIP and unpacked Chrome extension. Share this package, not the working directory.
-- Start `Review.cmd` for the [review lab](docs/REVIEW.md): video annotations, frame evidence and A/B rule comparisons. This tool and tests are excluded from releases.
+- Open `http://127.0.0.1:8765/review.html` after starting the service for the [review lab](docs/REVIEW.md): video annotations, frame evidence and A/B rule comparisons. This tool and tests are excluded from releases.
 - For performance troubleshooting, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the service is running.
 
 Application code lives in `src/client/`, `src/server/` and `src/shared/`; browser integration lives in `extension/`. Documentation, tooling and tests are in `docs/`, `scripts/` and `tests/`. Private state, experiments and generated packages belong in ignored `data/`, `work/` and `outputs/`.

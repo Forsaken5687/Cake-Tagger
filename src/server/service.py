@@ -210,7 +210,10 @@ class Handler(BaseHTTPRequestHandler):
             raise RequestError(400, "error.invalidAnalysisData")
         if not re.fullmatch("[0-9]+", self.headers["Content-Length"]):
             raise RequestError(400, "error.invalidAnalysisData")
-        length = int(self.headers["Content-Length"])
+        length_text = self.headers["Content-Length"].lstrip("0") or "0"
+        if len(length_text) > len(str(maximum)):
+            raise RequestError(413, "error.invalidAnalysisData")
+        length = int(length_text)
         if not 0 < length <= maximum:
             raise RequestError(
                 413,
@@ -366,7 +369,8 @@ class Handler(BaseHTTPRequestHandler):
         origin = self.headers.get("Origin")
         extension = bool(EXTENSION_ORIGIN.fullmatch(origin or ""))
         if (
-            len(self.headers.get_all("Host", [])) != 1
+            len(self.headers.get_all("Origin", [])) > 1
+            or len(self.headers.get_all("Host", [])) != 1
             or self.headers["Host"] != host
             or origin
             and origin != "http://" + host

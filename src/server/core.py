@@ -91,8 +91,12 @@ def resolve_threads(value, capabilities):
         return capabilities["recommendedThreads"]
     if isinstance(value, bool) or not re.fullmatch(r"[1-9][0-9]*", str(value)):
         raise ValueError("error.invalidAnalysisRuntime")
-    count = int(value)
-    if count > capabilities["testMaximum"]:
+    text = str(value)
+    maximum = capabilities["testMaximum"]
+    if len(text) > len(str(maximum)):
+        raise ValueError("error.threadLimit")
+    count = int(text)
+    if count > maximum:
         raise ValueError("error.threadLimit")
     return count
 
@@ -181,12 +185,10 @@ class Engine:
         self.stop()
 
     def submit(self, job_id, payload, parallelism="auto", progress=lambda *_: None):
-        if (
-            not isinstance(payload, (bytes, bytearray, memoryview))
-            or not payload
-            or len(payload) % FRAME_BYTES
-            or len(payload) > 48 * FRAME_BYTES
-        ):
+        if not isinstance(payload, (bytes, bytearray, memoryview)):
+            raise ValueError("error.invalidModelInputImage")
+        size = payload.nbytes if isinstance(payload, memoryview) else len(payload)
+        if not size or size % FRAME_BYTES or size > 48 * FRAME_BYTES:
             raise ValueError("error.invalidModelInputImage")
         payload = bytes(payload)  # Callers cannot mutate queued input after submission.
         threads = resolve_threads(parallelism, self.capabilities)
@@ -239,7 +241,9 @@ class Engine:
             self.stopping.set()
             for job in self.pending.values():
                 job[5].set()
-        self.worker.join()
+        # Completion callbacks execute on this worker and cannot join themselves.
+        if threading.current_thread() is not self.worker:
+            self.worker.join()
 
     def _run(self):
         mean = np.array([0.48145466, 0.4578275, 0.40821073], dtype=np.float64)

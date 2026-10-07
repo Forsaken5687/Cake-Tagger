@@ -1,18 +1,23 @@
 @echo off
 setlocal
 cd /d "%~dp0.." || exit /b 1
-if exist "runtime\cpython\python.exe" goto run
+if exist "runtime\cpython\python.exe" if exist "runtime\cpython\python313.dll" if exist "runtime\cpython\python313.zip" if exist "runtime\cpython\python313._pth" goto run
 if not exist "runtime\archives" mkdir "runtime\archives"
-if not exist "runtime\archives\python-3.13.16-embed-amd64.zip" (
-  echo Downloading the portable Python runtime...
-  curl.exe --fail --location --proto =https --proto-redir =https "https://www.python.org/ftp/python/3.13.16/python-3.13.16-embed-amd64.zip" --output "runtime\archives\python-3.13.16-embed-amd64.zip"
-  if errorlevel 1 goto failed
+if exist "runtime\archives\python-3.13.16-embed-amd64.zip" (
+  certutil.exe -hashfile "runtime\archives\python-3.13.16-embed-amd64.zip" SHA256 | findstr.exe /i /c:"97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297" >nul
+  if not errorlevel 1 goto extract
 )
-certutil.exe -hashfile "runtime\archives\python-3.13.16-embed-amd64.zip" SHA256 | findstr.exe /i /c:"97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297" >nul
+echo Downloading the portable Python runtime...
+curl.exe --fail --location --proto =https --proto-redir =https "https://www.python.org/ftp/python/3.13.16/python-3.13.16-embed-amd64.zip" --output "runtime\archives\python-3.13.16-embed-amd64.zip.download"
+if errorlevel 1 goto failed
+certutil.exe -hashfile "runtime\archives\python-3.13.16-embed-amd64.zip.download" SHA256 | findstr.exe /i /c:"97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297" >nul
 if errorlevel 1 (
-  echo Python runtime checksum verification failed. Remove the damaged archive and run Setup.cmd again.
+  echo Python runtime checksum verification failed.
   goto failed
 )
+move /y "runtime\archives\python-3.13.16-embed-amd64.zip.download" "runtime\archives\python-3.13.16-embed-amd64.zip" >nul
+if errorlevel 1 goto failed
+:extract
 if not exist "runtime\cpython" mkdir "runtime\cpython"
 tar.exe -xf "runtime\archives\python-3.13.16-embed-amd64.zip" -C "runtime\cpython"
 if errorlevel 1 goto failed

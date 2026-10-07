@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def running(root=ROOT, port=8765):
     try:
         state = json.loads((Path(root) / "data/session.json").read_text())
+        if not isinstance(state, dict) or not isinstance(state.get("url"), str):
+            return False
         match = re.fullmatch(
             r"http://127\.0\.0\.1:" + str(port) + r"/#([a-f0-9]{48})", state["url"]
         )
@@ -27,6 +29,8 @@ def running(root=ROOT, port=8765):
             headers={"Authorization": "Bearer " + match[1]},
         )
         status = json.load(urllib.request.urlopen(request, timeout=2))
+        if not isinstance(status, dict):
+            return False
         if status.get("app") != "cake-tagger-browser-v1":
             return False
         if status.get("backendImplementation") != "python":

@@ -11,7 +11,7 @@ from server import create_engine
 from server.core import aggregate
 
 # catalog/ contains tags.txt, mapping.json, policy.json and provenance.json.
-# rgba contains 1Ã¢â‚¬â€œ48 packed 448 x 448 RGBA frames in chronological order.
+# rgba contains 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“48 packed 448 x 448 RGBA frames in chronological order.
 with create_engine("catalog", model_file="joytag.onnx") as engine:
     future = engine.submit("unique-job-id", rgba, parallelism="auto")
     result = future.result()
@@ -19,7 +19,7 @@ with create_engine("catalog", model_file="joytag.onnx") as engine:
                             excluded_tags=["hairy", "watermark"])
 ```
 
-Use unique job IDs within each engine. `cancel(job_id)` cancels queued or active work between native calls. `stop()` cancels unfinished work and joins the inference worker. Always stop the owned engine or use a context manager. One application should share one engine rather than create a model session per request. Progress callbacks run on the inference thread and should return promptly.
+Use unique job IDs within each engine. `cancel(job_id)` cancels queued or active work between native calls. `stop()` cancels unfinished work and joins the inference worker. Always stop the owned engine or use a context manager. One application should share one engine rather than create a model session per request. Progress and completion callbacks run on the inference thread and should return promptly. Calling `stop()` from that worker signals shutdown; another thread must join it if synchronous completion is required.
 
 The core has no HTTP, browser, settings-file or site dependency. It validates input dimensions/counts, model checksum and CPU overrides. The caller owns decoding, preprocessing compatibility, request authentication and admission limits outside the engine. Never accept arbitrary model paths or deserialize untrusted model artifacts from remote clients.
 
