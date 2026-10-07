@@ -17,8 +17,6 @@
     "model/provenance.json",
     "model/tags.txt",
     "model/top_tags.txt",
-    "scripts/Setup.ps1",
-    "scripts/Start.ps1",
     "scripts/assets.json",
     "src/client/analysis.html",
     "src/client/app.js",
@@ -53,6 +51,9 @@
     "src/server/service.py",
     "src/server/validation.py",
     "src/server/__init__.py",
-    "src/server/__main__.py"
+    "src/server/__main__.py",
+    "scripts/launch.cmd",
+    "scripts/setup.py",
+    "scripts/start.py"
   ]
 }

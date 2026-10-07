@@ -15,7 +15,7 @@ External Python applications import the core API and provide their own transport
 
 ## Processing
 
-The browser computes incremental SHA-256 hashes with 1 MiB reads and samples videos through Video/Canvas APIs. The upload interface reuses the website's video players. Each inference request contains 1–48 packed 448 × 448 RGBA images, white-padded to a square. Full videos, paths and filenames are not inference inputs.
+The browser computes incremental SHA-256 hashes with 1 MiB reads and samples videos through Video/Canvas APIs. The upload interface reuses the website's video players. Each inference request contains 1Ã¢â‚¬â€œ48 packed 448 Ãƒâ€” 448 RGBA images, white-padded to a square. Full videos, paths and filenames are not inference inputs.
 
 The Python engine verifies the pinned JoyTag FP32 model's SHA-256, normalizes RGB using CLIP mean/std and converts 5,813 logits through sigmoid. Normalization computes in double precision before storing float32 input. Browser resizing differs from Pillow bicubic resizing; integrations must preserve preprocessing when comparing scores.
 
@@ -52,3 +52,9 @@ Timing fields distinguish sampling, loading, preprocessing, inference, queue wai
 `Setup.cmd` restores the checksum-pinned application-local CPython runtime, wheels and model. It does not change global Python or install packages into a user's environment. `scripts/package.py` packages only the explicit release allowlist and verified archives. Firefox is a ZIP; Chrome is an unpacked folder. External Python integrations use the source checkout and provide their own model and dependency setup.
 
 Browser messages, inactivity recovery, tag transfer and download-manager behavior are described in [integration](INTEGRATION.md). Browser-specific checks are still required after website or extension changes.
+
+## Local startup
+
+`Start.cmd` launches the local service in the current terminal. `scripts/launch.cmd` bootstraps the pinned portable interpreter using Windows curl, certutil and tar when it is absent; the interpreter archive is verified before execution. `scripts/setup.py` restores hash-verified wheels and model weights. Python handles readiness, duplicate-service detection and errors; no shell process performs inference. `Review.cmd` uses the same launcher and opens the development review page.
+
+Terminal logs report startup, queued/completed analyses and shutdown without request URLs, tokens, filenames, tags or frame contents. Ctrl+C follows the same engine cleanup contract as browser Quit: finish the active native call, discard unfinished analysis and retain saved preferences. Closing a terminal window can forcibly terminate the process, so Ctrl+C or Quit is preferred. Importing the package does not configure application logging.

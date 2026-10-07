@@ -7,6 +7,7 @@ import the core package and supply their own authentication and transport.
 import argparse
 import hmac
 import json
+import logging
 import mimetypes
 import os
 import queue
@@ -16,6 +17,7 @@ import select
 import socket
 import threading
 import time
+import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
@@ -24,6 +26,8 @@ from .config import capabilities, load_catalog, normalize_settings
 from .core import FRAME_BYTES, Engine, aggregate, resolve_threads
 from .metrics import memory_snapshot, process_priority
 from .validation import export_item, now, validate_record
+
+logger = logging.getLogger(__name__)
 
 EXTENSION_ORIGIN = re.compile(
     r"(?:moz-extension://[a-f0-9-]{36}|chrome-extension://[a-p]{32})\Z"
@@ -264,7 +268,7 @@ class Handler(BaseHTTPRequestHandler):
         s = self.server
         parallelism = params.get("parallelism", ["auto"])[0] or "auto"
         try:
-            resolve_threads(parallelism, s.capabilities)
+            threads = resolve_threads(parallelism, s.capabilities)
         except ValueError as error:
             raise RequestError(400, str(error)) from None
         exclusions = (s.settings or normalize_settings())["excludedTags"]
@@ -292,6 +296,11 @@ class Handler(BaseHTTPRequestHandler):
             lambda current, total: progress.put(
                 dict(type="progress", current=current, total=total)
             ),
+        )
+        logger.info(
+            "Analysis queued: %d images, %s threads",
+            len(payload) // FRAME_BYTES,
+            threads,
         )
         self.send_response(200)
         for key, value in {
@@ -330,6 +339,11 @@ class Handler(BaseHTTPRequestHandler):
             )
             if params.get("raw") != ["1"]:
                 result.pop("scores")
+            logger.info(
+                "Analysis complete: %d images in %.2f s",
+                len(payload) // FRAME_BYTES,
+                result["timings"]["workerWallSeconds"],
+            )
             self.stream(dict(type="done", **result))
         except (BrokenPipeError, ConnectionError, OSError):
             engine.cancel(job_id)
@@ -340,6 +354,7 @@ class Handler(BaseHTTPRequestHandler):
                 if str(error).startswith("error.") or str(error) == "analysis.cancelled"
                 else "error.nativeInference"
             )
+            logger.info("Analysis ended: %s", key)
             self.stream(dict(type="error", error=key))
         finally:
             if not future.done():
@@ -504,6 +519,7 @@ class Handler(BaseHTTPRequestHandler):
                         else "error.invalidAnalysisData",
                     ) from None
             if requested == "/api/stop" and self.command == "POST":
+                logger.info("Shutdown requested from the browser")
                 s.stopping.set()
                 try:
                     with s.engine_lock:
@@ -600,7 +616,7 @@ class Handler(BaseHTTPRequestHandler):
     )
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Start the authenticated Cake Tagger loopback service."
     )
@@ -611,7 +627,17 @@ def main():
         "--port", type=int, default=int(os.environ.get("CAKE_TAGGER_PORT", "8765"))
     )
     parser.add_argument("--data-dir", type=Path)
-    args = parser.parse_args()
+    parser.add_argument(
+        "--quiet", action="store_true", help="Suppress operational console logs"
+    )
+    parser.add_argument(
+        "--open-review", action="store_true", help="Open the development review page"
+    )
+    args = parser.parse_args(argv)
+    if not args.quiet:
+        logging.basicConfig(
+            level=logging.INFO, format="%(asctime)s  %(message)s", datefmt="%H:%M:%S"
+        )
     if not 0 <= args.port <= 65535:
         parser.error("Port must be between 0 and 65535")
     server = LocalService(args.root, args.port, args.data_dir)
@@ -623,10 +649,14 @@ def main():
         ),
     )
     print("Cake Tagger is ready.", flush=True)
+    logger.info("Local backend: http://127.0.0.1:%d", server.server_port)
+    logger.info("Keep this terminal open. Press Ctrl+C or use Quit to stop.")
+    if args.open_review and server.review_enabled:
+        webbrowser.open(f"http://127.0.0.1:{server.server_port}/review.html")
     try:
         server.serve_forever(poll_interval=0.05)
     except KeyboardInterrupt:
-        pass
+        logger.info("Stopping; waiting for the current inference call to finish...")
     finally:
         server.stopping.set()
         if server.engine:
@@ -644,6 +674,7 @@ def main():
                 (server.data / "session.json").unlink()
         except (OSError, ValueError, KeyError):
             pass
+        logger.info("Cake Tagger stopped.")
 
 
 if __name__ == "__main__":

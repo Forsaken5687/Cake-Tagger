@@ -5,7 +5,7 @@ Start `Review.cmd` from a source checkout. The lab uses the local inference serv
 ## Review videos
 
 1. Choose videos and run **Suggest tags**. Select a video from the queue.
-2. Choose **Correct**, **Incorrect** or **Unclear** for each tag. Unclear judgments are excluded from evaluation. Search or enable **Show all tags** to add missing labels. Use × in the search field to clear the filter.
+2. Choose **Correct**, **Incorrect** or **Unclear** for each tag. Unclear judgments are excluded from evaluation. Search or enable **Show all tags** to add missing labels. Use Ã— in the search field to clear the filter.
 3. Click a tag name to inspect sampled frames and scores. Click a frame to seek the video. Close the evidence drawer with its close button, Escape or a click outside.
 4. Choose **Complete & next** after reviewing the whole clip. **Previous** and **Next** navigate without completing a review. **Reopen review** returns a completed video to pending.
 
@@ -50,10 +50,10 @@ Restart the local service after updating application files. Saved sessions remai
 
 ## Offline reports
 
-Open PowerShell in the project folder and run:
+Open a terminal in the project folder and run:
 
-```powershell
-.\runtime\cpython\python.exe .\scripts\analyze_reviews.py "$env:USERPROFILE\Downloads\cake-tag-review.json" .\work\review-analysis\report.md
+```console
+.\runtime\cpython\python.exe .\scripts\analyze_reviews.py "%USERPROFILE%\Downloads\cake-tag-review.json" .\work\review-analysis\report.md
 ```
 
 Change the input filename to match your downloaded export. The reports are written to `work/review-analysis/report.md` and `report.json`. These reports cannot be imported as review sessions; keep the JSON downloaded from the lab to restore your work. Reports use completed, assessable judgments and the recorded group assignments and exclusions. Known website renames are resolved without changing the export. Session imports also migrate custom tag rules; conflicting rules after a rename are rejected rather than silently overwritten. Other historical labels absent from the current catalog are preserved and listed; rule replay uses the available mapping.

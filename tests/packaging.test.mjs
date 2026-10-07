@@ -53,8 +53,8 @@ test('release allowlist includes local module dependencies and excludes develope
    assert(files.has(dependency),name+' -> '+dependency);
   }
  }
- for(const file of ['Review.cmd','scripts/analyze_reviews.py','scripts/Review.ps1','docs/REVIEW.md','src/client/review.html','src/client/review.css','src/client/review.mjs','src/shared/evaluation.mjs'])assert(!files.has(file),file);
- assert(!files.has('scripts/Test.ps1'));assert(!files.has('scripts/Package.ps1'));assert(!files.has('AGENTS.md'));
+ for(const file of ['Review.cmd','scripts/analyze_reviews.py','docs/REVIEW.md','src/client/review.html','src/client/review.css','src/client/review.mjs','src/shared/evaluation.mjs'])assert(!files.has(file),file);
+ assert(!files.has('scripts/test.py'));assert(!files.has('scripts/package.py'));assert(!files.has('AGENTS.md'));
 });
 
 

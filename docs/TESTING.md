@@ -1,6 +1,6 @@
 # Testing
 
-Run `scripts/Test.ps1` from a writable checkout with the bundled runtime available. It parses Python and PowerShell sources, runs Python unit tests, syntax-checks browser modules and runs `tests/*.test.mjs` with an isolated development JavaScript test tool. That tool is downloaded and checksum-verified under ignored `work/tools/`; it is not a backend or a release dependency. Tests use synthetic data and ignored `work/` directories.
+Run `runtime/cpython/python.exe scripts/test.py` from a writable checkout with the bundled runtime available. It parses Python sources, runs Python unit tests, syntax-checks browser modules and runs `tests/*.test.mjs` with an isolated development JavaScript test tool. That tool is downloaded and checksum-verified under ignored `work/tools/`; it is not a backend or a release dependency. Tests use synthetic data and ignored `work/` directories.
 
 ## Automated coverage
 
@@ -41,7 +41,7 @@ From a source checkout, start `Review.cmd` and use synthetic videos. Check annot
 
 ## Release checks
 
-Run the test suite, build both extensions, then run `scripts/Package.ps1`. Verify both manifest versions, required modules, dependency checksums and license notices. Confirm that the release contains the Firefox ZIP and unpacked Chrome directory, and no developer tests, build tools, duplicate extension sources, `data/`, `work/`, videos, session tokens or Git history.
+Run the test suite, build both extensions, then run `runtime/cpython/python.exe scripts/package.py`. Verify both manifest versions, required modules, dependency checksums and license notices. Confirm that the release contains the Firefox ZIP and unpacked Chrome directory, and no developer tests, build tools, duplicate extension sources, `data/`, `work/`, videos, session tokens or Git history.
 
 For exports, verify the visible preparation and download-manager status, and test a missing bridge receiver and a rejected download. Verify human clicks in Firefox content scripts as well as Chrome; synthetic page events must not trigger exports or shutdown.
 

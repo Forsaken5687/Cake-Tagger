@@ -10,13 +10,15 @@ Requires Windows x64 and Firefox 140+ or Chrome 120+.
 
 1. Extract the complete release into a writable folder.
 2. Install the [browser extension](docs/BROWSERS.md).
-3. Run `Start.cmd`.
+3. Run `Start.cmd` and leave its terminal open.
 4. Select videos in cake.ski's upload area. New videos are analyzed automatically by default.
 5. Review the suggestions and choose **Apply tags**. Add manual tags through the site's own input.
 
 The extension preserves existing tags and never publishes posts. **Selecting Bulk files can already upload drafts through cake.ski itself.**
 
 Use **Download JSON** to keep results before closing or reloading the upload page. **Quit**, available on the upload toolbar and extension menu, stops the local service and unfinished analysis.
+
+The terminal shows operational logs. Press **Ctrl+C** to stop gracefully, or use **Quit** in the extension. Closing the terminal can force termination while native work is active; use these controls to wait for cleanup. Logs omit filenames, tags, payloads and session tokens.
 
 For a source checkout, run `Setup.cmd` once to download and verify dependencies. Complete releases include them; `Start.cmd` prepares the isolated Python runtime on first use.
 
@@ -51,10 +53,10 @@ The development review tool additionally saves a browser-local session backup. S
 
 ## Development
 
-- Run `scripts/Test.ps1` after code changes.
+- Run `runtime/cpython/python.exe scripts/test.py` after code changes.
 - The [reusable Python package](docs/PYTHON.md) can also be integrated into another backend.
 - Build extensions with `runtime/cpython/python.exe scripts/build_extension.py firefox` or `runtime/cpython/python.exe scripts/build_extension.py chrome`.
-- Run `scripts/Package.ps1` to create `outputs/Cake-Tagger.zip`, containing the Firefox ZIP and unpacked Chrome extension. Share this package, not the working directory.
+- Run `runtime/cpython/python.exe scripts/package.py` to create `outputs/Cake-Tagger.zip`, containing the Firefox ZIP and unpacked Chrome extension. Share this package, not the working directory.
 - Start `Review.cmd` for the [review lab](docs/REVIEW.md): video annotations, frame evidence and A/B rule comparisons. This tool and tests are excluded from releases.
 - For performance troubleshooting, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the service is running.
 

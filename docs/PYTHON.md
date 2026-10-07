@@ -11,7 +11,7 @@ from server import create_engine
 from server.core import aggregate
 
 # catalog/ contains tags.txt, mapping.json, policy.json and provenance.json.
-# rgba contains 1–48 packed 448 x 448 RGBA frames in chronological order.
+# rgba contains 1Ã¢â‚¬â€œ48 packed 448 x 448 RGBA frames in chronological order.
 with create_engine("catalog", model_file="joytag.onnx") as engine:
     future = engine.submit("unique-job-id", rgba, parallelism="auto")
     result = future.result()
@@ -31,11 +31,15 @@ CPU ONNX Runtime is the supported provider. The package can run on compatible pl
 
 ## Tools
 
-```powershell
+```console
 .\runtime\cpython\python.exe .\scripts\build_extension.py firefox
 .\runtime\cpython\python.exe .\scripts\build_extension.py chrome
-.\runtime\cpython\python.exe .\scripts\analyze_reviews.py "$env:USERPROFILE\Downloads\cake-tag-review.json" .\work\review-analysis\report.md
-.\scripts\Package.ps1
+.\runtime\cpython\python.exe .\scripts\analyze_reviews.py "%USERPROFILE%\Downloads\cake-tag-review.json" .\work\review-analysis\report.md
+.\runtime\cpython\python.exe .\scripts\package.py
 ```
 
 [Testing](TESTING.md) describes parity checks, inference smoke tests and browser validation.
+
+## Logging and lifecycle
+
+Importing `server` or creating an engine does not configure logging, open a terminal or start the local listener. Operational messages use the standard `server.service` logger; applications choose their own handlers and levels. CLI startup configures terminal logs; `--quiet` suppresses those operational messages. `Start.cmd` is only a local launcher and is not used by external integrations.

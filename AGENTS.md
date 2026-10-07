@@ -6,6 +6,6 @@
 - Store temporary experiments and personal test reports under ignored `work/`. Keep corrections and session tokens in ignored `data/`; exports and packages in ignored `outputs/`.
 - Never commit videos, personal feedback, generated exports, session tokens or large model/runtime binaries. Maintain `.gitignore` and the asset manifest when adding dependencies.
 - Keep bundled third-party license notices and version/checksum metadata intact.
-- Run `scripts/Test.ps1` after code changes and check the relevant browser flow for UI changes. Preserve users' existing corrections.
+- Run `runtime/cpython/python.exe scripts/test.py` after code changes and check the relevant browser flow for UI changes. Preserve users' existing corrections.
 - Use focused local Git commits with clear messages. Do not publish a repository, push, or change global Git configuration without explicit user authorization.
 - Update README and technical documentation when behavior or setup changes. Prefer accurate, concise documentation over one-off test narratives.
