@@ -12,3 +12,5 @@
 *.wasm binary
 *.exe binary
 *.zip binary
+*.py text eol=lf
+*.toml text eol=lf
