@@ -6,10 +6,15 @@ import zipfile
 from pathlib import Path
 
 
-def install(root):
+def install(root, destination=None):
     root = Path(root).resolve()
     manifest = json.loads((root / "scripts/assets.json").read_text(encoding="utf-8"))
-    destination = root / "runtime/cpython/Lib/site-packages"
+    if destination is None:
+        runtime = root / "runtime"
+        if not (runtime / "python.exe").is_file():
+            runtime /= "cpython"
+        destination = runtime / "Lib/site-packages"
+    destination = Path(destination).resolve()
     destination.mkdir(parents=True, exist_ok=True)
     for wheel in manifest["python"]["wheels"]:
         source = root / "runtime/archives" / wheel["file"]

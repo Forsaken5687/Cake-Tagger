@@ -3,10 +3,12 @@
 import hashlib
 import json
 import subprocess
+import tempfile
 import zipfile
 from pathlib import Path
 
 from build_extension import build_extension
+from install_runtime import install
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -48,6 +50,30 @@ def distribution_text(root, name):
     return text
 
 
+def prepare_runtime(root, destination):
+    """Assemble a clean release interpreter from verified upstream artifacts."""
+    root, destination = Path(root).resolve(), Path(destination).resolve()
+    manifest = json.loads((root / "scripts/assets.json").read_text(encoding="utf-8"))
+    runtime = manifest["python"]["runtime"]
+    verified(root / runtime["path"], runtime["sha256"])
+    destination.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(root / runtime["path"]) as archive:
+        for entry in archive.infolist():
+            target = (destination / entry.filename).resolve()
+            if not target.is_relative_to(destination):
+                raise ValueError("Unsafe interpreter path")
+            if entry.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+            else:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(archive.read(entry))
+    install(root, destination / "Lib/site-packages")
+    (destination / "python313._pth").write_text(
+        "python313.zip\n.\nLib/site-packages\n../src\n../scripts\nimport site\n",
+        encoding="utf-8",
+    )
+
+
 def package(root=ROOT):
     root = Path(root).resolve()
     manifest = json.loads((root / "scripts/assets.json").read_text())
@@ -80,16 +106,23 @@ def package(root=ROOT):
         verified(root / asset["path"], asset["sha256"])
     runtime = manifest["python"]["runtime"]
     verified(root / runtime["path"], runtime["sha256"])
-    binaries = [asset["path"] for asset in manifest["assets"]] + [runtime["path"]]
+    binaries = [asset["path"] for asset in manifest["assets"]]
     for wheel in manifest["python"]["wheels"]:
         name = "runtime/archives/" + wheel["file"]
         verified(root / name, wheel["sha256"])
-        binaries.append(name)
     for target in ("firefox", "chrome"):
         build_extension(target, root)
     output = root / "outputs/Cake-Tagger.zip"
     temporary = output.with_suffix(".zip.tmp")
-    with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as archive:
+    with (
+        tempfile.TemporaryDirectory(prefix="release-runtime-", dir=root / "work") as staging,
+        zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as archive,
+    ):
+        runtime_directory = Path(staging) / "runtime"
+        prepare_runtime(root, runtime_directory)
+        for path in sorted(runtime_directory.rglob("*")):
+            if path.is_file():
+                archive.write(path, "Cake-Tagger/runtime/" + path.relative_to(runtime_directory).as_posix())
         for name in sorted(set(files + binaries)):
             if name == "README.md":
                 text = (root / name).read_text(encoding="utf-8")

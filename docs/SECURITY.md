@@ -26,7 +26,7 @@ Trusted user actions are required for applying tags, downloads and Quit. Connect
 
 ## Dependencies and external use
 
-CPython, CPU ONNX Runtime, model weights and wheels are pinned in `scripts/assets.json`. Setup verifies archive SHA-256 values before extraction; wheel paths are checked before installation. Third-party licenses remain inside distributed archives and installed metadata. Hashes establish artifact identity, not semantic safety.
+CPython, CPU ONNX Runtime, model weights and wheels are pinned in `scripts/assets.json`. Setup verifies archive SHA-256 values before extraction; wheel paths are checked before installation. Third-party licenses remain in the prepared runtime and installed package metadata. Hashes establish artifact identity, not semantic safety.
 
 The application-local interpreter isolates search paths from global Python and user-site packages. The current account, operating system, browser, native runtime, pinned model and site remain trusted components. The project does not sandbox other applications under the same account.
 

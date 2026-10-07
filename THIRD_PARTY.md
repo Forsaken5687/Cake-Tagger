@@ -12,7 +12,7 @@ Bundled components retain their own licenses. This document does not grant an ad
 | packaging | 26.3 | Upstream wheel license metadata |
 | protobuf | 7.36.2 | Upstream wheel license metadata |
 
-Windows wheel URLs and SHA-256 values are pinned in `scripts/assets.json`; `scripts/python-requirements.txt` provides the matching hash lock. Setup installs them into the application-local interpreter and preserves package metadata and legal notices. Runtime releases contain the verified interpreter/wheel archives and model weight, not private project state.
+Windows wheel URLs and SHA-256 values are pinned in `scripts/assets.json`; `scripts/python-requirements.txt` provides the matching hash lock. Setup installs them into the application-local interpreter and preserves package metadata and legal notices. Runtime releases contain the interpreter and installed wheels assembled from verified archives, including their license metadata, and the model weight. Installation archives and private project state are excluded.
 
 The browser-module test suite uses Node.js 24.19.0 solely as an ignored development tool; it is absent from application and core releases. Its checksum is listed separately under `development` in the asset manifest, and its legal text is retained at `work/tools/LICENSE-JavaScript.txt` beside the development test binary.
 

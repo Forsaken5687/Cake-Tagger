@@ -137,6 +137,32 @@ class StartupTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("bootstrap-ok", result.stdout)
 
+    def test_flat_release_runtime_starts_without_archive_cache(self):
+        import shutil
+        from package import prepare_runtime
+
+        with tempfile.TemporaryDirectory(dir=ROOT / "work") as folder:
+            root = Path(folder)
+            (root / "scripts").mkdir()
+            shutil.copyfile(ROOT / "scripts/launch.cmd", root / "scripts/launch.cmd")
+            prepare_runtime(ROOT, root / "runtime")
+            # Real imports exercise relocated native DLLs and preserved version metadata.
+            (root / "scripts/start.py").write_text(
+                'import numpy, onnxruntime, importlib.metadata as m; '
+                'assert m.version("onnxruntime"); print("flat-runtime-ok")',
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                ["cmd.exe", "/d", "/c", "scripts\\launch.cmd start"],
+                cwd=root, capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("flat-runtime-ok", result.stdout)
+            self.assertFalse((root / "runtime/archives").exists())
+            self.assertFalse((root / "runtime/cpython").exists())
+            self.assertTrue((root / "runtime/LICENSE.txt").is_file())
+            self.assertTrue(list((root / "runtime/Lib/site-packages").glob("*.dist-info")))
+
     def test_start_prepares_missing_dependencies_before_serving(self):
         from start import main as start_main
 
