@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {candidateTags,comparisonMetrics,problemTags,compareVariants,frameEvidence,sortReviewCandidates,reviewPartition,validateVariants,createReviewSnapshot} from '../src/shared/evaluation.mjs';
-import {createDraft,restoreDraft,importReview} from '../src/client/review-session.mjs';
+import {createDraft,restoreDraft,importReview,openReviewStore} from '../src/client/review-session.mjs';
 
 const mapping={glasses:[0],tattoos:[1]},tags=['glasses','tattoos','watermark','lying on back'];
 const variants={A:{threshold:.5,coverage:.5,tagRules:{}},B:{threshold:.8,coverage:.75,tagRules:{}}};
@@ -104,4 +104,19 @@ test('review sorting uses numerical evidence, stable ties and missing values las
  const draft=createDraft([entry()],variants,'4','en',20,{key:'frames',direction:'ascending'});
  assert.deepEqual(restoreDraft(draft,tags,mapping).tagSort,{key:'frames',direction:'ascending'});
  delete draft.tagSort;assert.deepEqual(restoreDraft(draft,tags,mapping).tagSort,{key:'score',direction:'descending'});
+});
+
+test('restoring taxonomy renames also migrates custom rules without modifying input',()=>{
+ const e=entry();e.selected.set('supine',true);
+ const draft=createDraft([e],{...variants,A:{...variants.A,tagRules:{supine:{threshold:.6,coverage:.75}}}},'4','en');
+ const restored=restoreDraft(draft,tags,mapping);
+ assert.deepEqual(restored.variants.A.tagRules,{'lying on back':{threshold:.6,coverage:.75}});
+ assert(draft.variants.A.tagRules.supine);
+ draft.variants.A.tagRules['lying on back']={threshold:.9,coverage:.75};
+ assert.throws(()=>restoreDraft(draft,tags,mapping),/invalidRules/);
+});
+test('an unavailable video database cannot delete the annotation backup during clear',async()=>{
+ const opened=[];const store=openReviewStore({open(name){opened.push(name);throw Error('storage unavailable');}});
+ await assert.rejects(store.clear(),/storage unavailable/);
+ assert.deepEqual(opened,['cake-tagger-review-v1-videos']);
 });

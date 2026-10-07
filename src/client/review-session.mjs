@@ -25,9 +25,25 @@ function importedRecord(item) {
     tagSources: item.tagSources, result, updatedAt: item.editedAt };
 }
 
+function renamedVariants(value){
+ if(value==null)return value;
+ const checked=validateVariants(value),result={};
+ for(const [name,rule] of Object.entries(checked)){
+  const tagRules={};
+  for(const [tag,override] of Object.entries(rule.tagRules)){
+   const key=canonical(tag),previous=tagRules[key];
+   // Never silently pick one of two conflicting rules after a rename.
+   if(previous&&(previous.threshold!==override.threshold||previous.coverage!==override.coverage))throw Error('review.invalidRules');
+   tagRules[key]=override;
+  }
+  result[name]={...rule,tagRules};
+ }
+ return result;
+}
 export function restoreDraft(input, currentTags, mapping) {
   if (!input || !Array.isArray(input.entries) || input.version !== 1 || input.entries.length > 1000) throw Error('review.invalidSession');
-  const allowed = [...new Set([...currentTags, ...input.entries.flatMap(entry => {
+  const variants=renamedVariants(input.variants);
+  const allowed = [...new Set([...currentTags,...Object.values(variants??{}).flatMap(rule=>Object.keys(rule.tagRules)), ...input.entries.flatMap(entry => {
     const r = entry?.record;
     return [ ...(r?.tags ?? []), ...(r?.candidateTags ?? []), ...(r?.result?.tags ?? []).map(row => row.tag), ...(r?.result?.uncertain ?? []), ...(entry?.ignoredTags ?? []) ];
   }).map(canonical)])];
@@ -68,8 +84,8 @@ export function restoreDraft(input, currentTags, mapping) {
     if (previous && previous !== reviewPartition(entry)) throw Error('review.conflictingSplit');
     partitions.set(entry.result.sha256, reviewPartition(entry));
   }
-  return { entries, variants: validateVariants(input.variants, allowed), frames: ['auto','4','6','8','12','16','24','32','48'].includes(String(input.frames)) ? String(input.frames) : 'auto',
-    tagSort: ['tag','score','frames'].includes(input.tagSort?.key) && ['ascending','descending'].includes(input.tagSort?.direction) ? {...input.tagSort} : {key:'score',direction:'descending'},
+  return { entries, variants: validateVariants(variants, allowed), frames: ['auto','4','6','8','12','16','24','32','48'].includes(String(input.frames)) ? String(input.frames) : 'auto',
+    tagSort: ['tag','score','frames'].includes(input.tagSort?.key) && ['ascending','descending'].includes(input.tagSort?.direction) ? {key:input.tagSort.key,direction:input.tagSort.direction} : {key:'score',direction:'descending'},
     candidateMinimum: Number.isFinite(input.candidateMinimum) && input.candidateMinimum >= 0 && input.candidateMinimum <= 100 ? input.candidateMinimum : 20,
     language: ['de','en'].includes(input.language) ? input.language : undefined, savedAt: input.savedAt };
 }
@@ -120,5 +136,6 @@ export function openReviewStore(factory = globalThis.indexedDB) {
     save: draft => transaction('readwrite', store => store.put(draft, 'draft')),
     loadVideo: hash => transaction('readonly', store => store.get(hash), true),
     saveVideo: (hash,file) => transaction('readwrite', store => store.put(file,hash), true),
-    clear: async () => {await transaction('readwrite', store => store.delete('draft'));await transaction('readwrite', store => store.clear(),true);} };
+    // Clear the optional cache first: failure must leave the annotation backup intact.
+    clear: async () => {await transaction('readwrite', store => store.clear(),true);await transaction('readwrite', store => store.delete('draft'));} };
 }
