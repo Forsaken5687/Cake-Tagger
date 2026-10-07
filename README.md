@@ -52,6 +52,7 @@ The development review tool additionally saves a browser-local session backup. S
 ## Development
 
 - Run `scripts/Test.ps1` after code changes.
+- The [experimental Python inference variant](docs/PYTHON.md) has a separate starter and isolated settings; the standard release continues to use Node.
 - Build extensions with `runtime/node.exe scripts/Build-Extension.mjs firefox` or `runtime/node.exe scripts/Build-Extension.mjs chrome`.
 - Run `scripts/Package.ps1` to create `outputs/Cake-Tagger.zip`, containing the Firefox ZIP and unpacked Chrome extension. Share this package, not the working directory.
 - Start `Review.cmd` for the [review lab](docs/REVIEW.md): video annotations, frame evidence and A/B rule comparisons. This tool and tests are excluded from releases.

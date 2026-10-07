@@ -69,7 +69,7 @@ parentPort.on('message', async ({ id, frames, parallelism, type }) => {
       } finally { input.dispose(); if (output) Object.values(output).forEach(tensor => tensor.dispose()); }
     }
       parentPort.postMessage({ id, result: { scores: all, timings,
-        runtime: { provider: 'native-cpu', configuredNativeThreads: threads, inferenceWorkers: 1,
+        runtime: { backendImplementation:'node', provider: 'native-cpu', configuredNativeThreads: threads, inferenceWorkers: 1,
           hardwareConcurrency: cores, ...capabilities, threadSpinning: false, runtimeVersion: ort.env.versions.node, modelSha256: expectedHash } } }, all.map(scores => scores.buffer));
   } catch (error) {
     parentPort.postMessage({ id, error: error.message?.startsWith('error.') || error.message === 'analysis.cancelled' ? error.message : 'error.nativeInference' });

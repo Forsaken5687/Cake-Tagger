@@ -72,9 +72,13 @@ try {
   processPriority = priority === os.constants.priority.PRIORITY_BELOW_NORMAL ? 'below-normal'
     : priority === os.constants.priority.PRIORITY_NORMAL ? 'normal' : 'other';
 } catch { /* Some hosts do not expose process scheduling priority. */ }
-const engine = createNativeEngine();
+const pythonVariant=process.argv.includes('--python');
+const pythonEngineURL=new URL('./python-engine.mjs',import.meta.url);
+const engine = pythonVariant ? (await import(pythonEngineURL.href)).createPythonEngine() : createNativeEngine();
 let stopping = false, closing = false;
-const settingsFile = path.join(root, 'data/preferences.json');
+const stateDirectory = process.argv.includes('--python') ? path.join(root,'data/python') : path.join(root,'data');
+fs.mkdirSync(stateDirectory,{recursive:true});
+const settingsFile = path.join(stateDirectory, 'preferences.json');
 let savedSettings;
 try { savedSettings = normalizeSettings(JSON.parse(fs.readFileSync(settingsFile))); } catch {}
 const capabilities = computeCapabilities();
@@ -135,9 +139,9 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
       const send = data => { if (!res.destroyed) res.write(JSON.stringify(data) + '\n'); };
       send({ type: 'state', state: 'analysis.loadingModel' });
-      const result = await engine.infer(frames, parallelism, controller.signal, data => send({ type: 'progress', current: data.current, total: data.total }));
+      const result = await engine.infer(frames, parallelism, controller.signal, data => send({ type: 'progress', current: data.current, total: data.total }), {excludedTags});
       const memory = process.memoryUsage();
-      send({ type: 'done', ...result, analysis: aggregate(result.scores, mapping, DEFAULT_THRESHOLD, DEFAULT_COVERAGE, { excludedTags }),
+      send({ type: 'done', ...result, analysis: result.analysis ?? aggregate(result.scores, mapping, DEFAULT_THRESHOLD, DEFAULT_COVERAGE, { excludedTags }),
         scores: new URL(req.url, 'http://' + ownHost).searchParams.get('raw') === '1' ? result.scores.map(row => Array.from(row)) : undefined, runtime: { ...result.runtime, processPriority, processPowerPolicy,
         hostMemory: { totalBytes: os.totalmem(), freeBytes: os.freemem() },
         serverMemory: { rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, heapTotalBytes: memory.heapTotal, externalBytes: memory.external, arrayBuffersBytes: memory.arrayBuffers } } });
@@ -221,7 +225,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === 'GET' && requested === '/api/status') {
     if (req.headers.authorization !== 'Bearer ' + token) { res.writeHead(401); return res.end(); }
-    res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end('{"app":"cake-tagger-browser-v1"}');
+    res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({app:'cake-tagger-browser-v1',backendImplementation:pythonVariant?'python':'node'}));
   }
   if (req.method === 'GET' && requested === '/api/runtime') {
     if (req.headers.authorization !== 'Bearer ' + token) return json(res, 401, { error: 'error.openUsingStart' });
@@ -254,7 +258,7 @@ server.on('connection', socket => { sockets.add(socket); socket.once('close', ()
 server.once('error', async e => {
   if (e.code === 'EADDRINUSE') {
     try {
-      const previous = JSON.parse(fs.readFileSync(path.join(root, 'data/session.json'), 'utf8'));
+      const previous = JSON.parse(fs.readFileSync(path.join(stateDirectory, 'session.json'), 'utf8'));
       const address = validatedSessionURL(previous.url, port);
       const response = await fetch(address.origin + '/api/status', { headers: { Authorization: 'Bearer ' + address.hash.slice(1) }, signal: AbortSignal.timeout(1500) });
       if ((await response.json()).app !== 'cake-tagger-browser-v1') throw Error();
@@ -266,7 +270,7 @@ server.once('error', async e => {
 });
 server.listen(port, '127.0.0.1', () => {
   const url = `http://127.0.0.1:${server.address().port}/#${token}`;
-  fs.writeFileSync(path.join(root, 'data/session.json'), JSON.stringify({ url, pid: process.pid }));
+  fs.writeFileSync(path.join(stateDirectory, 'session.json'), JSON.stringify({ url, pid: process.pid }));
   console.log('Cake Tagger is ready.');
   if (showBrowser) openBrowser(url);
 });

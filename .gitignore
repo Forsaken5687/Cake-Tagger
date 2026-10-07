@@ -34,3 +34,8 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 *.download
+
+# Optional Python runtime and bytecode
+/runtime/python/
+__pycache__/
+*.pyc

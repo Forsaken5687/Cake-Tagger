@@ -38,6 +38,9 @@ export function validateRuntime(value) {
     || (!native && (typeof value.crossOriginIsolated !== 'boolean' || typeof value.sharedArrayBufferAvailable !== 'boolean'
       || !['firefox', 'chromium', 'other'].includes(value.browser)))
     || (value.inferenceWorkers != null && (!Number.isInteger(value.inferenceWorkers) || value.inferenceWorkers < 1 || value.inferenceWorkers > 8))) throw messageError('error.invalidAnalysisRuntime');
+  if (native && ((value.backendImplementation != null && !['node','python'].includes(value.backendImplementation))
+    || (value.inferenceRssBytes != null && (!Number.isSafeInteger(value.inferenceRssBytes) || value.inferenceRssBytes < 0))
+    || (value.inferenceProcessPowerPolicy != null && !['high-qos','unavailable'].includes(value.inferenceProcessPowerPolicy)))) throw messageError('error.invalidAnalysisRuntime');
   if (value.parallelismLimit != null && value.parallelismLimit !== 'auto' && (!/^[1-9]\d*$/.test(value.parallelismLimit) || !Number.isSafeInteger(Number(value.parallelismLimit)))) throw messageError('error.invalidAnalysisRuntime');
   if (native && value.threadsPerSession != null && (!Array.isArray(value.threadsPerSession)
     || value.threadsPerSession.length !== value.inferenceWorkers || value.threadsPerSession.some(count => !Number.isSafeInteger(count) || count < 1)
@@ -70,6 +73,7 @@ export function validateRuntime(value) {
     ...(native ? Object.fromEntries(['logicalProcessors', 'recommendedThreads', 'testMaximum', 'queueCapacity'].filter(key => Number.isSafeInteger(value[key]) && value[key] > 0).map(key => [key, value[key]])) : {}),
     ...(native && value.threadsPerSession != null ? { threadsPerSession: [...value.threadsPerSession], imageParallelism:value.imageParallelism, residentSessions:value.residentSessions } : {}),
     ...(native && value.threadSpinning != null ? { threadSpinning: value.threadSpinning } : {}),
+    ...(native ? Object.fromEntries(['backendImplementation','inferenceRssBytes','inferenceProcessPowerPolicy'].filter(key=>Object.hasOwn(value,key)).map(key=>[key,value[key]])) : {}),
     ...(native && value.processPriority != null ? { processPriority: value.processPriority } : {}),
     ...(native && value.processPowerPolicy != null ? { processPowerPolicy: value.processPowerPolicy } : {}),
     ...(value.clientBrowser ? {clientBrowser:{family:value.clientBrowser.family,visibilityState:value.clientBrowser.visibilityState}} : {}),

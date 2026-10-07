@@ -50,6 +50,7 @@
     "src/shared/tag-policy.mjs",
     "src/shared/tagging.mjs",
     "vendor/LICENSE-ONNX.txt",
-    "vendor/ThirdPartyNotices.txt"
+    "vendor/ThirdPartyNotices.txt",
+    "docs/PYTHON.md"
   ]
 }
