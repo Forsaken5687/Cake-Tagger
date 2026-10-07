@@ -14,8 +14,6 @@
 
 # Large dependencies: restored by Setup.ps1 or included in the sharing package
 /model/*.onnx
-/runtime/node.exe
-/runtime/native/
 node_modules/
 /vendor/*.wasm
 
@@ -35,7 +33,13 @@ Desktop.ini
 .DS_Store
 *.download
 
-# Optional Python runtime and bytecode
-/runtime/python/
+# Python bytecode
 __pycache__/
 *.pyc
+
+# Portable Python archives and assembled interpreter
+/runtime/archives/
+/runtime/cpython/
+*.egg-info/
+/build/
+/dist/

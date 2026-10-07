@@ -2,7 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import {buildExtension} from '../scripts/Build-Extension.mjs';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+function buildExtension(target){
+ const result=spawnSync(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)),[fileURLToPath(new URL('../scripts/build_extension.py',import.meta.url)),target],{encoding:'utf8',windowsHide:true});
+ assert.equal(result.status,0,result.stderr);return JSON.parse(result.stdout);
+}
 
 test('both extension packages contain integration only and retain notices and provenance',()=>{
  for(const target of ['firefox','chrome']){
@@ -16,7 +21,10 @@ test('both extension packages contain integration only and retain notices and pr
   assert(fs.existsSync(new URL('src/shared/trusted-event.mjs',root)));
   assert(manifest.web_accessible_resources[0].resources.includes('extension/bridge.html'));
   for(const file of ['index.html','src/client/app.js','src/client/native-client.mjs','src/client/sampling.mjs','src/shared/tagging.mjs','src/client/integration.mjs','src/client/auto-analysis.mjs','extension/settings-background.mjs'])assert.equal(fs.existsSync(new URL(file,root)),false,file);
-  for(const file of ['model/LICENSE.txt','model/provenance.json','vendor/LICENSE-ONNX.txt','vendor/ThirdPartyNotices.txt','scripts/assets.json'])assert.deepEqual(fs.readFileSync(new URL(file,root)),fs.readFileSync(new URL('../'+file,import.meta.url)));
+  for(const file of ['model/LICENSE.txt','model/provenance.json','vendor/LICENSE-ONNX.txt','vendor/ThirdPartyNotices.txt'])assert.deepEqual(fs.readFileSync(new URL(file,root)),fs.readFileSync(new URL('../'+file,import.meta.url)));
+  const assets=JSON.parse(fs.readFileSync(new URL('../scripts/assets.json',import.meta.url)));delete assets.development;
+  assert.deepEqual(JSON.parse(fs.readFileSync(new URL('scripts/assets.json',root))),assets);
+  assert(!fs.readFileSync(new URL('THIRD_PARTY.md',root),'utf8').includes('Node.js'));
   // Resolve static module imports and literal runtime.getURL references before shipping.
   for(const entry of fs.readdirSync(new URL('extension/',root))){
    if(!/\.(mjs|js)$/.test(entry))continue;
@@ -45,7 +53,7 @@ test('release allowlist includes local module dependencies and excludes develope
    assert(files.has(dependency),name+' -> '+dependency);
   }
  }
- for(const file of ['Review.cmd','scripts/Analyze-Reviews.mjs','scripts/Review.ps1','docs/REVIEW.md','src/client/review.html','src/client/review.css','src/client/review.mjs','src/shared/evaluation.mjs'])assert(!files.has(file),file);
+ for(const file of ['Review.cmd','scripts/analyze_reviews.py','scripts/Review.ps1','docs/REVIEW.md','src/client/review.html','src/client/review.css','src/client/review.mjs','src/shared/evaluation.mjs'])assert(!files.has(file),file);
  assert(!files.has('scripts/Test.ps1'));assert(!files.has('scripts/Package.ps1'));assert(!files.has('AGENTS.md'));
 });
 

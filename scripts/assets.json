@@ -2,59 +2,62 @@
   "version": 1,
   "assets": [
     {
-      "path": "runtime/native/archives/onnxruntime-node.tgz",
-      "url": "https://registry.npmjs.org/onnxruntime-node/-/onnxruntime-node-1.30.0.tgz",
-      "sha256": "6e3390d6b783e7be946fad629292799da28d0b42f84856e50d2c1b0383291e75"
-    },
-    {
-      "path": "runtime/native/archives/onnxruntime-common.tgz",
-      "url": "https://registry.npmjs.org/onnxruntime-common/-/onnxruntime-common-1.30.0.tgz",
-      "sha256": "7906c439e0d3e0f4048caa23b64cdfadc0f455c377f579ce1ab2a4b778f07d5f"
-    },
-    {
       "path": "model/joytag.onnx",
       "url": "https://huggingface.co/fancyfeast/joytag/resolve/6b7f16331a6ccf0fdce37d5a9564715f6e772b22/model.onnx",
       "sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097"
-    },
-    {
-      "path": "runtime/node.exe",
-      "url": "https://nodejs.org/dist/v24.19.0/win-x64/node.exe",
-      "sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
     }
   ],
   "python": {
-    "platform": "Windows x64 / CPython 3.12",
+    "platform": "Windows x64 / CPython 3.13",
     "wheels": [
       {
         "name": "flatbuffers",
         "version": "25.12.19",
         "file": "flatbuffers-25.12.19-py2.py3-none-any.whl",
-        "sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4"
+        "sha256": "7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4",
+        "url": "https://files.pythonhosted.org/packages/e8/2d/d2a548598be01649e2d46231d151a6c56d10b964d94043a335ae56ea2d92/flatbuffers-25.12.19-py2.py3-none-any.whl"
       },
       {
         "name": "numpy",
         "version": "2.4.4",
-        "file": "numpy-2.4.4-cp312-cp312-win_amd64.whl",
-        "sha256": "b5f0362dc928a6ecd9db58868fca5e48485205e3855957bdedea308f8672ea4a"
+        "file": "numpy-2.4.4-cp313-cp313-win_amd64.whl",
+        "sha256": "5c70f1cc1c4efbe316a572e2d8b9b9cc44e89b95f79ca3331553fbb63716e2bf",
+        "url": "https://files.pythonhosted.org/packages/57/fb/48649b4971cde70d817cf97a2a2fdc0b4d8308569f1dd2f2611959d2e0cf/numpy-2.4.4-cp313-cp313-win_amd64.whl"
       },
       {
         "name": "onnxruntime",
         "version": "1.30.0",
-        "file": "onnxruntime-1.30.0-cp312-cp312-win_amd64.whl",
-        "sha256": "f3501472571f1b1eee50e017851e7929f5ea37312d2d8c2494a19e8fc58b4a38"
+        "file": "onnxruntime-1.30.0-cp313-cp313-win_amd64.whl",
+        "sha256": "4b63041bd623a9a9ac5e353948436c6fa7f43edd12d6b4a4ebc340bca959ba93",
+        "url": "https://files.pythonhosted.org/packages/3c/dd/c57c529dbc6dd55eca24b12cfbeab1b6a690de72083824eca689085f55b0/onnxruntime-1.30.0-cp313-cp313-win_amd64.whl"
       },
       {
         "name": "packaging",
         "version": "26.3",
         "file": "packaging-26.3-py3-none-any.whl",
-        "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+        "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+        "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl"
       },
       {
         "name": "protobuf",
         "version": "7.36.2",
         "file": "protobuf-7.36.2-cp310-abi3-win_amd64.whl",
-        "sha256": "a300819d441e078a5608c0d3c709796bb548136058fda017ae51d425b44fd353"
+        "sha256": "a300819d441e078a5608c0d3c709796bb548136058fda017ae51d425b44fd353",
+        "url": "https://files.pythonhosted.org/packages/8a/55/b77bda4e5e5f5971fb51b07663694690e9afdb9402136c16a522bd621cad/protobuf-7.36.2-cp310-abi3-win_amd64.whl"
       }
-    ]
+    ],
+    "runtime": {
+      "path": "runtime/archives/python-3.13.16-embed-amd64.zip",
+      "url": "https://www.python.org/ftp/python/3.13.16/python-3.13.16-embed-amd64.zip",
+      "sha256": "97dae5274cc54867065e8d5a3226e48c35017ed332a0fdb0e27d5b5821961297",
+      "version": "3.13.16"
+    }
+  },
+  "development": {
+    "javascriptRuntime": {
+      "path": "work/tools/javascript.exe",
+      "url": "https://nodejs.org/dist/v24.19.0/win-x64/node.exe",
+      "sha256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
+    }
   }
 }

@@ -1,10 +1,10 @@
 # Testing
 
-Run `scripts/Test.ps1` from a writable checkout with the bundled runtime available. It syntax-checks JavaScript modules and runs all `tests/*.test.mjs` through Node's test runner. Tests use synthetic data and ignored `work/` directories.
+Run `scripts/Test.ps1` from a writable checkout with the bundled runtime available. It parses Python and PowerShell sources, runs Python unit tests, syntax-checks browser modules and runs `tests/*.test.mjs` with an isolated development JavaScript test tool. That tool is downloaded and checksum-verified under ignored `work/tools/`; it is not a backend or a release dependency. Tests use synthetic data and ignored `work/` directories.
 
 ## Automated coverage
 
-Native checks cover shared-session queue limits, cancellation isolation, worker recovery, batch streaming, chronological scores, effective hardware-derived thread overrides, hardware limits, provider metadata, origin boundaries and malformed input bodies. Also run a production API smoke check with restored native dependencies; mocked workers do not establish inference compatibility or speed. Use identical decoded RGBA inputs, thread settings and exclusion policies when comparing paths. Record cold and warm runs separately; CPU time and RSS snapshots are not CPU utilization or peak model memory.
+Native checks cover shared-session queue limits, cancellation isolation, session recovery, batch streaming, chronological scores, effective hardware-derived thread overrides, hardware limits, provider metadata, origin boundaries and malformed input bodies. Also run a production API smoke check with restored native dependencies; mocked sessions do not establish inference compatibility or speed. Use identical decoded RGBA inputs, thread settings and exclusion policies when comparing paths. Record cold and warm runs separately; CPU time and RSS snapshots are not CPU utilization or peak model memory.
 
 - Frame sampling boundaries, tag aggregation and uncertain candidate scores.
 - Review-session restoration, import validation, ignored judgments, per-tag rules and A/B comparisons.
@@ -30,7 +30,7 @@ Use local fixtures when no upload is permitted. Real cake.ski Bulk selection may
 5. Reload the page: results must not return, while preferences persist.
 6. Change the site's accent color and language. Check chips, buttons, focus and Settings.
 7. Verify unique filename matching, inherited Bulk tags and per-card exclusions. Check both member and maintainer roles.
-8. Test Quit while idle and during inference. Confirm the Node process exits and saved preferences and existing data remain intact.
+8. Test Quit while idle and during inference. Confirm the Python process exits and saved preferences and existing data remain intact.
 9. Open runtime diagnostics and run its synthetic single-image check. Record cold and warm runs separately.
 
 Keep personal media and test reports outside Git and release packages.
@@ -44,3 +44,5 @@ From a source checkout, start `Review.cmd` and use synthetic videos. Check annot
 Run the test suite, build both extensions, then run `scripts/Package.ps1`. Verify both manifest versions, required modules, dependency checksums and license notices. Confirm that the release contains the Firefox ZIP and unpacked Chrome directory, and no developer tests, build tools, duplicate extension sources, `data/`, `work/`, videos, session tokens or Git history.
 
 For exports, verify the visible preparation and download-manager status, and test a missing bridge receiver and a rejected download. Verify human clicks in Firefox content scripts as well as Chrome; synthetic page events must not trigger exports or shutdown.
+
+Python HTTP tests additionally cover ambiguous body framing, connection admission limits, private routes, embedding policy and shutdown after browser disconnection. Catalog/aggregation and correction exports are checked against browser implementations. Real-model tests require the restored model and runtime; skipped checks must be reported.

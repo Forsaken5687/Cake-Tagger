@@ -7,6 +7,6 @@
   "sha256": "f85b7130e6e549b5b0822537007b7482e8c4c8e754c8d9a5bee08e27050e1097",
   "checksumVerified": true,
   "baseModel": "fancyfeast/joytag",
-  "runtime": "onnxruntime-node@1.30.0",
-  "runtimeArchiveSha256": "6e3390d6b783e7be946fad629292799da28d0b42f84856e50d2c1b0383291e75"
+  "runtime": "onnxruntime@1.30.0",
+  "runtimeWheelSha256": "4b63041bd623a9a9ac5e353948436c6fa7f43edd12d6b4a4ebc340bca959ba93"
 }

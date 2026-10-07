@@ -13,13 +13,13 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(scratch, { recursive: true });
   const parent = fs.realpathSync(scratch);
   const root = fs.mkdtempSync(path.join(parent, 'cake-tagger-download-'));
-  for (const name of ['src/client/analysis.html', 'src/server/server.mjs', 'src/server/native-policy.mjs', 'src/shared/preferences.mjs', 'src/shared/tagging.mjs', 'src/shared/tag-policy.mjs', 'model/mapping.json', 'src/server/native-engine.mjs', 'src/client/native-client.mjs', 'src/client/local-session.mjs', 'src/client/diagnostics.html', 'src/client/diagnostics.mjs', 'src/client/runtime-metrics.mjs', 'src/shared/messages.mjs', 'src/shared/session-url.mjs', 'src/shared/corrections.mjs', 'src/client/sampling.mjs', 'src/shared/analysis-settings.mjs', 'model/tags.txt']) { fs.mkdirSync(path.dirname(path.join(root,name)),{recursive:true}); fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root,name)); }
+  for (const name of ['src/client/analysis.html', 'model/provenance.json', 'model/policy.json', 'src/shared/preferences.mjs', 'src/shared/tagging.mjs', 'src/shared/tag-policy.mjs', 'model/mapping.json', 'src/client/native-client.mjs', 'src/client/local-session.mjs', 'src/client/diagnostics.html', 'src/client/diagnostics.mjs', 'src/client/runtime-metrics.mjs', 'src/shared/messages.mjs', 'src/shared/session-url.mjs', 'src/shared/corrections.mjs', 'src/client/sampling.mjs', 'src/shared/analysis-settings.mjs', 'model/tags.txt']) { fs.mkdirSync(path.dirname(path.join(root,name)),{recursive:true}); fs.copyFileSync(new URL('../' + name, import.meta.url), path.join(root,name)); }
   fs.mkdirSync(path.join(root, 'src/client'),{recursive:true});
   fs.copyFileSync(new URL('../src/client/auto-analysis.mjs', import.meta.url), path.join(root, 'src/client/auto-analysis.mjs'));
   fs.mkdirSync(path.join(root, 'data'));
   const old = path.join(root, 'data/corrections.json');
   fs.writeFileSync(old, 'legacy data deliberately not parsed');
-  let child = spawn(process.execPath, ['src/server/server.mjs', '--no-browser'], { cwd: root, env: { ...process.env, CAKE_TAGGER_PORT: '0' }, stdio: 'ignore' });
+  let child = spawn(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)), ['-m','cake_tagger','--root',root,'--port','0'], { cwd: root, env: { ...process.env, CAKE_TAGGER_PORT: '0' }, stdio: 'ignore' });
   try {
     const sessionPath = path.join(root, 'data/session.json');
     for (let i = 0; i < 100 && !fs.existsSync(sessionPath); i++) await delay(30);
@@ -93,7 +93,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     const malformed = { ...record, result: { ...record.result, analysisPolicy: 'unknown-policy' } };
     const invalid = await fetch(url.origin + '/api/export', { method: 'POST', headers, body: JSON.stringify({ items: [malformed] }) });
     assert.equal(invalid.status, 400);
-    assert.equal((await invalid.json()).error.key, 'error.invalidAnalysisPolicy');
+    assert.equal((await invalid.json()).error, 'error.invalidAnalysisPolicy');
     const forbiddenOrigin = await fetch(url.origin + '/api/export', { method: 'POST', headers: { ...headers, Origin: 'https://example.com' }, body: JSON.stringify({ items: [record] }) });
     assert.equal(forbiddenOrigin.status, 403);
     // fetch controls its own Host header; use HTTP directly to exercise rebinding checks.
@@ -118,8 +118,8 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.equal(fs.readFileSync(old,'utf8'),'legacy data deliberately not parsed');
     assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).parallelism,settings.parallelism);
     assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).hideSiteAI,true);
-    fs.unlinkSync(sessionPath);
-    child=spawn(process.execPath,['src/server/server.mjs','--no-browser'],{cwd:root,env:{...process.env,CAKE_TAGGER_PORT:'0'},stdio:'ignore'});
+    assert.equal(fs.existsSync(sessionPath),false);
+    child=spawn(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)),['-m','cake_tagger','--root',root,'--port','0'],{cwd:root,env:{...process.env,CAKE_TAGGER_PORT:'0'},stdio:'ignore'});
     for(let i=0;i<100&&!fs.existsSync(sessionPath);i++)await delay(30);
     assert(fs.existsSync(sessionPath),'server restarted');
     const restarted=new URL(JSON.parse(fs.readFileSync(sessionPath,'utf8')).url);

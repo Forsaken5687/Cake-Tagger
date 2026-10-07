@@ -8,7 +8,7 @@ export function mappedFrameScore(frame, rule) {
   if (Array.isArray(rule)) return Math.max(...rule.map(index => frame[index]));
   return Math.min(...mappingGroups(rule).map(group => Math.max(...group.map(index => frame[index]))));
 }
-export const details = new Set(['glasses', 'choker', 'collar', 'cat ears', 'bunny ears', 'maid outfit', 'skirt', 'underwear', 'lingerie', 'bikini', 'swimsuit', 'bra', 'panties', 'thigh highs', 'knee high socks', 'pantyhose', 'fishnet', 'high heels', 'hoodie', 'mask', 'earrings', 'piercings', 'hat', 'gag', 'blindfold', 'handcuffs', 'butt plug', 'dildo', 'vibrator', 'sex toy']);
+export const details = new Set(['glasses', 'choker', 'collar', 'cat ears', 'bunny ears', 'maid outfit', 'skirt', 'underwear', 'lingerie', 'bikini', 'swimsuit', 'thigh highs', 'knee high socks', 'pantyhose', 'fishnet', 'high heels', 'hoodie', 'mask', 'earrings', 'piercings', 'blindfold', 'handcuffs', 'butt plug', 'dildo', 'vibrator', 'sex toy']);
 export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'majority', options = {}) {
   if (!['majority', 'brief'].includes(coverage)) throw messageError('error.invalidTemporalCoverage');
   const required = coverage === 'majority' ? Math.max(2, Math.floor(frameScores.length / 2) + 1) : 2;

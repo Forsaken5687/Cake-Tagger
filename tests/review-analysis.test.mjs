@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {analyzeReviews} from '../scripts/Analyze-Reviews.mjs';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+function analyzeReviews(input,mapping,allowed){
+ const script="import json,sys; from analyze_reviews import analyze_reviews; from cake_tagger.config import load_catalog; from pathlib import Path; value=json.load(sys.stdin); policy=load_catalog(Path.cwd()/'model')[1]; print(json.dumps(analyze_reviews(value['input'],value['mapping'],value['allowed'],policy)))";
+ const result=spawnSync(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)),['-c',script],{input:JSON.stringify({input,mapping,allowed}),encoding:'utf8',windowsHide:true});
+ if(result.status!==0)throw Error(result.stderr);return JSON.parse(result.stdout);
+}
 const make=(id,reviewed=true,tags=['glasses'])=>({sha256:id.repeat(64),tags,reviewed,result:{threshold:.4,analysisPolicy:'coverage-v5:majority:["hairy","watermark"]',sampledFrames:2,tags:[{tag:'glasses'}]}});
 const video=item=>({sha256:item.sha256,modelScores:[Array(5813).fill(.9),Array(5813).fill(.9)]});
 const input=items=>({items,evaluation:{videos:items.map(video)}});

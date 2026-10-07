@@ -4,16 +4,18 @@ Bundled components retain their own licenses. This document does not grant an ad
 
 | Component | Version / provenance | License notices |
 | --- | --- | --- |
-| JoyTag FP32 | Official ONNX model; revision and checksum in `model/provenance.json` | `model/LICENSE.txt` |
-| ONNX Runtime Node and Common | 1.30.0, verified npm archives in `scripts/assets.json` | Upstream notices retained inside the archives and extracted runtime packages |
-| ONNX Runtime Web (retired; retained notices) | 1.30.0 | `vendor/LICENSE-ONNX.txt`, `vendor/ThirdPartyNotices.txt` |
-| Node.js | 24.19.0, Windows x64 | `runtime/LICENSE-Node.txt` |
+| JoyTag FP32 | Official ONNX model; pinned revision and SHA-256 in `model/provenance.json` | `model/LICENSE.txt` |
+| CPython | 3.13.16, Windows x64 embeddable distribution | Upstream `LICENSE.txt` inside the verified runtime ZIP |
+| ONNX Runtime CPU | 1.30.0 | License and third-party notices inside the wheel and installed package; retained `vendor/LICENSE-ONNX.txt` and `vendor/ThirdPartyNotices.txt` |
+| NumPy | 2.4.4 | Upstream wheel license metadata |
+| flatbuffers | 25.12.19 | Upstream wheel license metadata |
+| packaging | 26.3 | Upstream wheel license metadata |
+| protobuf | 7.36.2 | Upstream wheel license metadata |
 
-The optional Python variant installs ONNX Runtime 1.30.0, NumPy 2.4.4, flatbuffers 25.12.19, packaging 26.3 and protobuf 7.36.2 from PyPI. Exact Windows wheel hashes are recorded under `python` in `scripts/assets.json` and enforced by `scripts/python-requirements.txt`. Installed wheels retain upstream license and dependency notices; no Python binaries are added to the normal release.
+Windows wheel URLs and SHA-256 values are pinned in `scripts/assets.json`; `scripts/python-requirements.txt` provides the matching hash lock. Setup installs them into the application-local interpreter and preserves package metadata and legal notices. Runtime releases contain the verified interpreter/wheel archives and model weight, not private project state.
 
-Sources: [JoyTag](https://github.com/fpgaminer/joytag), [Official model weights](https://huggingface.co/fancyfeast/joytag), [ONNX Runtime](https://github.com/microsoft/onnxruntime), [Node.js](https://nodejs.org/).
+The browser-module test suite uses Node.js 24.19.0 solely as an ignored development tool; it is absent from application and core releases. Its checksum is listed separately under `development` in the asset manifest, and its legal text is retained at `runtime/LICENSE-Node.txt` in the development checkout.
 
-Large downloads are pinned and SHA-256 verified using `scripts/assets.json`. Keep license texts, third-party notices and version/checksum metadata with distributions. Do not translate or alter upstream legal notices.
+Sources: [CPython Windows distribution](https://docs.python.org/3.13/using/windows.html#the-embeddable-package), [JoyTag](https://github.com/fpgaminer/joytag), [official model weights](https://huggingface.co/fancyfeast/joytag), [ONNX Runtime](https://github.com/microsoft/onnxruntime), [NumPy](https://numpy.org/), [PyPI](https://pypi.org/).
 
-The mapping uses the bundled cake.ski tag list. Cake Tagger is an independent project and is not an official cake.ski application.
-
+Keep upstream license texts, dependency metadata and checksums with distributions. Do not translate or alter legal notices. Cake Tagger is an independent project and is not an official cake.ski application.

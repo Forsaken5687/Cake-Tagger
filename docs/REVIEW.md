@@ -53,7 +53,7 @@ Restart the local service after updating application files. Saved sessions remai
 Open PowerShell in the project folder and run:
 
 ```powershell
-.\runtime\node.exe .\scripts\Analyze-Reviews.mjs "$env:USERPROFILE\Downloads\cake-tag-review.json" .\work\review-analysis\report.md
+.\runtime\cpython\python.exe .\scripts\analyze_reviews.py "$env:USERPROFILE\Downloads\cake-tag-review.json" .\work\review-analysis\report.md
 ```
 
 Change the input filename to match your downloaded export. The reports are written to `work/review-analysis/report.md` and `report.json`. These reports cannot be imported as review sessions; keep the JSON downloaded from the lab to restore your work. Reports use completed, assessable judgments and the recorded group assignments and exclusions. Known website renames are resolved without changing the export. Session imports also migrate custom tag rules; conflicting rules after a rename are rejected rather than silently overwritten. Other historical labels absent from the current catalog are preserved and listed; rule replay uses the available mapping.

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cake-tagger-core"
+version = "1.0.0"
+description = "Reusable JoyTag CPU inference and validated tag aggregation"
+requires-python = ">=3.13"
+dependencies = ["numpy==2.4.4", "onnxruntime==1.30.0"]
+
+[tool.setuptools.packages.find]
+where = ["src/server"]
+include = ["cake_tagger*"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

@@ -64,7 +64,9 @@ export function validateRuntime(value) {
     return Object.fromEntries(keys.map(key => [key, input[key]]));
   };
   const hostMemory = memoryFields(value.hostMemory, ['totalBytes', 'freeBytes']);
-  const serverMemory = memoryFields(value.serverMemory, ['rssBytes', 'heapUsedBytes', 'heapTotalBytes', 'externalBytes', 'arrayBuffersBytes']);
+  const pythonMemory = value.serverMemory?.scope === 'process-rss';
+  const serverMemory = memoryFields(value.serverMemory, pythonMemory ? ['rssBytes'] : ['rssBytes', 'heapUsedBytes', 'heapTotalBytes', 'externalBytes', 'arrayBuffersBytes']);
+  if (serverMemory && pythonMemory) serverMemory.scope = 'process-rss';
   if (hostMemory && (hostMemory.totalBytes === 0 || hostMemory.freeBytes > hostMemory.totalBytes)) throw messageError('error.invalidAnalysisRuntime');
   return { ...Object.fromEntries((native ? ['provider', 'configuredNativeThreads', 'hardwareConcurrency', 'runtimeVersion', 'modelSha256']
     : ['provider', 'configuredWasmThreads', 'crossOriginIsolated', 'sharedArrayBufferAvailable', 'hardwareConcurrency', 'browser']).map(key => [key, value[key]])),

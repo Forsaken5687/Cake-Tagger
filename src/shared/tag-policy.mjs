@@ -1,5 +1,5 @@
 // Context-dependent tags and metadata assigned by the upload site are manual-only.
-export const excluded = new Set(('vertical|horizontal|hd|sd|no sound|long video|featured|welcome|ai tagged|ai tagged bare|ai needs review|4:3|ksjhgf|tightjob|teen|milf|gilf|asian|latina|ebony|interracial|russian|german|trans|gay|lesbian|femboy|sissy|tomboy|incest|forced|blackmail|freeuse|taboo|cuck|used|degrading').split('|'));
+export const excluded = new Set(('vertical|horizontal|hd|sd|no sound|long video|featured|welcome|ai tagged|ai tagged bare|ai needs review|4:3|ksjhgf|tightjob|teen|milf|gilf|asian|latina|ebony|interracial|russian|german|trans|gay|lesbian|femboy|sissy|tomboy|incest|forced|freeuse|taboo|cuck').split('|'));
 excluded.add('hairy');
 excluded.add('watermark');
 export function readTags(text) {

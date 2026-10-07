@@ -1,42 +1,35 @@
-# Security and privacy boundaries
+# Security boundaries
 
-Cake Tagger is a local application and browser extension under development. Code review and synthetic tests reduce known risks but do not establish that the project or its dependencies are free of vulnerabilities.
+## Local data and trust
 
-## Data flow
+The browser decodes local videos and sends sampled RGBA frames to the authenticated Python service on this computer. The service accepts no media paths and saves no inference inputs. Upload results remain in page memory. Settings are stored in ignored `data/preferences.json`; pre-existing correction files are preserved. Exports contain filenames and content tags and may contain private information.
 
-Video decoding and frame extraction run in the browser. Binary 448 × 448 RGBA samples are sent only to the local Node server for native CPU inference. The server does not accept file paths or save samples. Full videos and filenames are not sent for inference. Upload results stay in page memory. The development review lab stores annotations, scores and sampled previews in browser-local IndexedDB; selected original videos are cached separately in the same browser for session restoration and removed when starting a new session. Videos are not included in JSON exports. There is no project telemetry. Exported JSON contains filenames and content tags and can therefore contain private information.
+The development review lab stores annotations, scores, previews and selected original videos in browser-local IndexedDB for restoration. Videos are excluded from JSON exports and release packages. There is no telemetry.
 
-Settings persist in ignored `data/preferences.json` on the local server. Original legacy browser preferences remain untouched after migration. The standalone server also writes an ignored `data/session.json` containing its random session token and process ID. Treat this file as private. Legacy corrections are not loaded or overwritten.
+The extension performs tag transfer only. It does not publish posts. Selecting Bulk files on cake.ski can already upload drafts through the website; use local fixtures when testing without uploads.
 
-The extension's analysis does not upload videos, but cake.ski may stage Bulk drafts on file selection. Applying tags uses the site's normal input/search behavior. Its network requests are controlled by the website, not by the local model.
+## Loopback API
 
-## Enforced boundaries
+The service binds only to `127.0.0.1`. The exact Host and permitted Origin are required, preventing alternate-host and website-origin requests. State-changing and inference routes require a per-process bearer token, except the guarded connection handshake. Static serving uses an explicit allowlist, never arbitrary filesystem paths. Model weights, private data and backend source are inaccessible.
 
-- The local server binds only to loopback and rejects unexpected Host/Origin values.
-- Export/status/stop actions require a per-session random bearer token. Download links are random short-lived capabilities.
-- Static files are explicitly allowlisted. Project data, tokens, Git files and scratch folders are not served.
-- CSP limits scripts, connections and embedding; analysis pages use DOM text rather than untrusted HTML.
-- Saved session addresses must match the expected loopback port, path and token shape. URLs are passed to PowerShell as data, not executable command fragments.
-- Extension messages check extension identity, sender document and target website. Embedded transfer is confined to its own tab.
-- Frame messages require the expected parent, origin and session channel. The Localhost application permits embedding only through a validated extension origin with cake.ski as its outer ancestor. Other pages deny embedding. Theme messages permit only known color tokens.
-- Tag transfer requires a unique exact filename, allowed tag values and a live unchanged target. It preserves existing tags and explicit per-card exclusions.
-- Preference persistence uses a field allowlist, authentication, hardware thread validation and atomic file replacement.
-- Package builders exclude private data and verify pinned large artifacts. Third-party notices and provenance accompany dependencies.
+Local handshakes require the exact local Origin and custom client header. Extension origins receive narrowly scoped CORS permission; privileged extension requests may omit Origin. Local processes and installed extensions with loopback access are inside this trust boundary. The handshake does not verify extension identity. Tokens stay in the extension/Localhost channel and are never sent to cake.ski.
 
-## Remaining trust and limitations
+Request sizes, frame dimensions/counts, content types, corrections and hardware overrides are validated. Duplicate Content-Length and chunked request framing are rejected. HTTP connections and waiting inference jobs are bounded independently. Socket reads have an inactivity timeout. Native inference is cancelled between calls; Quit waits for active work before closing the program. A stuck native library call cannot safely be interrupted in-process.
 
-`/api/infer` requires a bearer token, validates content type, frame size and thread settings, and uses a bounded queue. Local pages acquire and renew the token with a same-origin custom-header handshake; local handshakes require the exact loopback Origin. Unrelated origins and requests missing that Origin are rejected. Authentication rejections are retried once; processing failures are never automatically replayed. Extension pages request loopback access and acquire the token through a custom-header connection request. CORS permits extension origins and rejects unrelated website/null origins. Privileged extension requests may omit Origin. Installed extensions with loopback permission and local processes are inside the trust boundary; the handshake does not establish extension identity. The bridge passes the token only in the Localhost frame's URL fragment; the application moves it to session storage and removes the fragment. The token is never sent to cake.ski. Inference responses include optional system and Node memory snapshots with separate scopes. They do not inspect other processes or measure peak model RAM.
+Downloads use random, short-lived capability URLs and fixed attachment filenames. The URLs intentionally need no additional bearer header so browser download managers can access them. Keep them private; snapshots expire after five minutes and are bounded to three in memory.
 
-The browser, local operating system, pinned Node runtime, ONNX Runtime Node, pinned JoyTag model and cake.ski page remain trusted components. Checksums establish artifact identity; they do not prove that an artifact is safe. This project does not sandbox other applications running under the same local account.
+## Browser integration
 
-Browsers decode media and Node loads native runtime binaries; keep supported browsers updated. Large batches can consume substantial CPU and memory despite per-video limits. The model's semantic accuracy and frame-coverage heuristics need an independently reviewed dataset.
+Messages validate parent window, origin, channel and file objects. Background relays validate senders and the owning Cake tab. Embedded views cannot address unrelated tabs. Tag transfers validate the catalog, unique filenames and live target pills; already added tags survive a later error.
 
-The adapter depends on a changing website DOM. Unsupported changes should stop transfer, but complete target-browser and real-site checks remain necessary. Upload cards are matched by filename; the extension does not verify the site's uploaded bytes.
+Trusted user actions are required for applying tags, downloads and Quit. Connection recovery probes the transport before commands and preserves current results. Actions with unknown outcomes are never replayed automatically. Content Security Policy restricts local scripts and embedding to validated extension bridges and cake.ski.
 
-Do not expose the standalone server to a LAN or public network. Do not share the working folder or session files; share the generated release instead. Keep licenses and asset provenance when distributing it.
+## Dependencies and external use
 
-## Maintenance
+CPython, CPU ONNX Runtime, model weights and wheels are pinned in `scripts/assets.json`. Setup verifies archive SHA-256 values before extraction; wheel paths are checked before installation. Third-party licenses remain inside distributed archives and installed metadata. Hashes establish artifact identity, not semantic safety.
 
-Review upstream release notes and advisories when changing dependencies, update version/checksum metadata together, and rerun the automated suite and browser checks. Useful sources: [Node security](https://nodejs.org/en/security/), [Node release notes](https://nodejs.org/en/blog/release/v24.19.0), [ONNX Runtime security](https://github.com/microsoft/onnxruntime/security).
+The application-local interpreter isolates search paths from global Python and user-site packages. The current account, operating system, browser, native runtime, pinned model and site remain trusted components. The project does not sandbox other applications under the same account.
 
-When reporting a problem, include the application/browser version, a minimal synthetic reproduction and expected/actual behavior. Do not include session tokens, private videos or personal export data in public reports.
+External integrations should import the core into their existing authenticated backend. The local listener has no remote-bind mode and is not a public deployment server. Define independent authentication, tenant isolation, upload limits, timeouts, allowed models and queue policy. Do not let remote callers choose filesystem/model paths.
+
+Keep browsers and dependencies updated, review upstream advisories, and update versions, checksums and notices together. Relevant sources: [Python security](https://www.python.org/dev/security/), [ONNX Runtime security](https://github.com/microsoft/onnxruntime/security). Automated tests do not certify third-party binaries or recognition accuracy.

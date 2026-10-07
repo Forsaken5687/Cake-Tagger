@@ -2,7 +2,7 @@
 
 Local AI-assisted video tagging for cake.ski. The Firefox and Chrome extensions suggest tags beside the site's upload videos. You review the suggestions before applying them or downloading JSON.
 
-Inference runs locally in Node using JoyTag FP32 on the CPU.
+Inference runs locally in Python using JoyTag FP32 on the CPU.
 
 ## Getting started
 
@@ -18,7 +18,7 @@ The extension preserves existing tags and never publishes posts. **Selecting Bul
 
 Use **Download JSON** to keep results before closing or reloading the upload page. **Quit**, available on the upload toolbar and extension menu, stops the local service and unfinished analysis.
 
-For a source checkout, run `Setup.cmd` once to download and verify dependencies. Complete releases include them; `Start.cmd` prepares the native runtime on first use.
+For a source checkout, run `Setup.cmd` once to download and verify dependencies. Complete releases include them; `Start.cmd` prepares the isolated Python runtime on first use.
 
 ## Settings
 
@@ -52,8 +52,8 @@ The development review tool additionally saves a browser-local session backup. S
 ## Development
 
 - Run `scripts/Test.ps1` after code changes.
-- The [experimental Python inference variant](docs/PYTHON.md) has a separate starter and isolated settings; the standard release continues to use Node.
-- Build extensions with `runtime/node.exe scripts/Build-Extension.mjs firefox` or `runtime/node.exe scripts/Build-Extension.mjs chrome`.
+- The [reusable Python package](docs/PYTHON.md) can also be integrated into another backend.
+- Build extensions with `runtime/cpython/python.exe scripts/build_extension.py firefox` or `runtime/cpython/python.exe scripts/build_extension.py chrome`.
 - Run `scripts/Package.ps1` to create `outputs/Cake-Tagger.zip`, containing the Firefox ZIP and unpacked Chrome extension. Share this package, not the working directory.
 - Start `Review.cmd` for the [review lab](docs/REVIEW.md): video annotations, frame evidence and A/B rule comparisons. This tool and tests are excluded from releases.
 - For performance troubleshooting, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the service is running.

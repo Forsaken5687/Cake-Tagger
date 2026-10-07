@@ -60,8 +60,8 @@ test('production model download and provenance identify the same official FP32 a
   assert.equal(provenance.name, 'JoyTag-FP32');
   assert.equal(models[0].sha256, provenance.sha256);
   assert.equal(models[0].url, `https://huggingface.co/${provenance.repository}/resolve/${provenance.revision}/${provenance.file}`);
-  assert.equal(provenance.runtime, 'onnxruntime-node@1.30.0');
-  assert.equal(provenance.runtimeArchiveSha256, assets.assets.find(asset => asset.path === 'runtime/native/archives/onnxruntime-node.tgz').sha256);
+  assert.equal(provenance.runtime, 'onnxruntime@1.30.0');
+  assert.equal(provenance.runtimeWheelSha256, assets.python.wheels.find(asset => asset.name === 'onnxruntime').sha256);
 });
 
 test('current website names replace retired names and new tags use explicit labels', () => {

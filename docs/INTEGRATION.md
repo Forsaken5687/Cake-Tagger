@@ -1,6 +1,6 @@
 # Browser integration
 
-Firefox and Chrome use the same upload adapter and local Node inference service. The embedded processing document handles browser decoding and session state. Start the service before analyzing videos.
+Firefox and Chrome use the same upload adapter and local Python inference service. The embedded processing document handles browser decoding and session state. Start the service before analyzing videos.
 
 ## Upload contract
 

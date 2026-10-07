@@ -1,8 +1,8 @@
 # Tag coverage
 
-Under default settings, 219 of 302 tags have an automatic model mapping. Every taxonomy entry is audited below. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce automatic coverage.
+Under default settings, 219 of 302 tags have an automatic model mapping. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce coverage.
 
-Mappings combine explicit aliases and concrete subtypes. For compound rules, every label group must match in the same image; each group accepts alternative labels. The combined score is the weakest group score, not a calibrated joint probability. They do not infer a tag from the absence of another detection. Temporal support thresholds remain unchanged. Snapshot labels for motion still require review.
+Compound rules require every label group in the same image. Each group accepts alternative labels; the weakest group determines the score. Snapshot labels for motion require review.
 
 ## Automatic mappings
 
@@ -320,4 +320,4 @@ Removing the default exclusion for `hairy` enables its existing mapping. Removin
 
 ## Regenerate
 
-Run `runtime/node.exe scripts/Update-Coverage.mjs` after changing the taxonomy, mapping or policy. The generator rejects invalid indices, duplicate indices and unresolved tags without an audit reason. The label vocabulary is the pinned `model/top_tags.txt`.
+Run `runtime/cpython/python.exe scripts/update_coverage.py` after editing the catalog. Mapping indices and policy tags are validated before writing reports.

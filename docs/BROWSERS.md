@@ -1,6 +1,6 @@
 # Browser extensions
 
-Cake Tagger requires Windows x64 and the local service started with `Start.cmd`. Extensions connect to port 8765 and provide upload controls; inference runs in Node.
+Cake Tagger requires Windows x64 and the local service started with `Start.cmd`. Extensions connect to port 8765 and provide upload controls; inference runs in Python.
 
 ## Firefox
 
@@ -36,6 +36,6 @@ Both extensions require storage and download permissions. Browser download prefe
 
 ## Development
 
-Build with `runtime/node.exe scripts/Build-Extension.mjs firefox` or `runtime/node.exe scripts/Build-Extension.mjs chrome`. Each build assembles a fresh allowlisted package. Previous unpacked contents are preserved under ignored `work/extension-build/`, outside current releases.
+Build with `runtime/cpython/python.exe scripts/build_extension.py firefox` or `runtime/cpython/python.exe scripts/build_extension.py chrome`. Each build assembles a fresh allowlisted package. Previous unpacked contents are preserved under ignored `work/extension-build/`, outside current releases.
 
 Firefox uses a background script; Chrome uses a module service worker and `extension/webext-api.js` for asynchronous messaging. Integration code, license notices and provenance are bundled; model binaries remain with the local service. See [testing](TESTING.md), [integration](INTEGRATION.md) and [security](SECURITY.md).

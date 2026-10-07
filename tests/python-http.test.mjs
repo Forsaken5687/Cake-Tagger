@@ -6,20 +6,20 @@ import os from 'node:os';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const root=path.resolve(import.meta.dirname,'..');
-const executable=process.env.CAKE_TAGGER_PYTHON||path.join(root,'runtime/python/Scripts/python.exe');
+const executable=process.env.CAKE_TAGGER_PYTHON||path.join(root,'runtime/cpython/python.exe');
 const available=fs.existsSync(executable)&&fs.existsSync(path.join(root,'model/joytag.onnx'));
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-test('Python HTTP variant preserves shared endpoints, downloads and stops both processes',{skip:!available,timeout:60000},async()=>{
+test('Python service preserves endpoints, downloads, cancellation and busy shutdown',{skip:!available,timeout:60000},async()=>{
  fs.mkdirSync(path.join(root,'work'),{recursive:true});const fixture=fs.mkdtempSync(path.join(root,'work/python-http-'));
- const files=['src/server/server.mjs','src/server/native-engine.mjs','src/server/native-policy.mjs','src/server/python-engine.mjs','src/server/python_worker.py','src/server/python_core.py','src/shared/messages.mjs','src/shared/session-url.mjs','src/shared/corrections.mjs','src/client/sampling.mjs','src/shared/analysis-settings.mjs','src/shared/preferences.mjs','src/shared/tagging.mjs','src/shared/tag-policy.mjs','model/mapping.json','model/tags.txt','model/provenance.json'];
+ const files=['model/mapping.json','model/policy.json','model/tags.txt','model/provenance.json'];
  for(const file of files){fs.mkdirSync(path.dirname(path.join(fixture,file)),{recursive:true});fs.copyFileSync(path.join(root,file),path.join(fixture,file));}
  fs.linkSync(path.join(root,'model/joytag.onnx'),path.join(fixture,'model/joytag.onnx'));
- fs.mkdirSync(path.join(fixture,'data'),{recursive:true});fs.writeFileSync(path.join(fixture,'data/preferences.json'),'original Node settings');fs.writeFileSync(path.join(fixture,'data/session.json'),'original Node token');
- const child=spawn(path.join(root,'runtime/node.exe'),[path.join(fixture,'src/server/server.mjs'),'--python','--no-browser'],{env:{...process.env,CAKE_TAGGER_PORT:'0',CAKE_TAGGER_PYTHON:executable},windowsHide:true,stdio:['ignore','pipe','pipe']});
+ fs.mkdirSync(path.join(fixture,'data'),{recursive:true});fs.writeFileSync(path.join(fixture,'data/preferences.json'),JSON.stringify({hideSiteAI:true,language:'en'}));fs.writeFileSync(path.join(fixture,'data/session.json'),'stale session token');
+ const child=spawn(executable,['-m','cake_tagger','--root',fixture,'--port','0'],{windowsHide:true,stdio:['ignore','pipe','pipe']});
  let error='';child.stderr.on('data',data=>error+=data);child.stdout.resume();const closed=new Promise(resolve=>child.once('close',resolve));
  let address;
  try{
-  for(let i=0;i<100;i++){try{address=JSON.parse(fs.readFileSync(path.join(fixture,'data/python/session.json'))).url;break;}catch{}await sleep(50);}
+  for(let i=0;i<100;i++){try{address=JSON.parse(fs.readFileSync(path.join(fixture,'data/session.json'))).url;break;}catch{}await sleep(50);}
   assert(address,error);const url=new URL(address),headers={Authorization:'Bearer '+url.hash.slice(1)};
   const response=await fetch(url.origin+'/api/status',{headers});assert.equal((await response.json()).backendImplementation,'python');
   assert.equal((await fetch(url.origin+'/api/status',{headers:{...headers,Origin:'https://example.com'}})).status,403);
@@ -36,6 +36,6 @@ test('Python HTTP variant preserves shared endpoints, downloads and stops both p
   const active=await infer(new Uint8Array(802816*8).fill(127));const activeReader=active.body.getReader();let stream='';while(!stream.includes('"type":"progress"')){const chunk=await activeReader.read();assert(!chunk.done);stream+=new TextDecoder().decode(chunk.value);}
   const stop=await fetch(url.origin+'/api/stop',{method:'POST',headers});assert.equal((await stop.json()).stopped,true);await activeReader.cancel().catch(()=>{});
   assert.equal(await closed,0,error);
-  assert.equal(fs.readFileSync(path.join(fixture,'data/preferences.json'),'utf8'),'original Node settings');assert.equal(fs.readFileSync(path.join(fixture,'data/session.json'),'utf8'),'original Node token');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(fixture,'data/preferences.json'))).hideSiteAI,true);assert.equal(fs.existsSync(path.join(fixture,'data/session.json')),false);
  }finally{if(child.exitCode===null){child.kill();await closed;}if(!fixture.startsWith(path.join(root,'work')+path.sep))throw Error('Unsafe fixture path');fs.rmSync(fixture,{recursive:true,force:true});}
 });
