@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {candidateTags,comparisonMetrics,problemTags,compareVariants,frameEvidence,reviewPartition,validateVariants,createReviewSnapshot} from '../src/shared/evaluation.mjs';
+import {candidateTags,comparisonMetrics,problemTags,compareVariants,frameEvidence,sortReviewCandidates,reviewPartition,validateVariants,createReviewSnapshot} from '../src/shared/evaluation.mjs';
 import {createDraft,restoreDraft,importReview} from '../src/client/review-session.mjs';
 
 const mapping={glasses:[0],tattoos:[1]},tags=['glasses','tattoos','watermark','lying on back'];
@@ -92,4 +92,16 @@ test('candidate display threshold persists and offline reports cannot replace a 
  assert.equal(restoreDraft(draft,tags,mapping).candidateMinimum,25);
  delete draft.candidateMinimum;assert.equal(restoreDraft(draft,tags,mapping).candidateMinimum,20);
  assert.throws(()=>importReview({version:1,reviewed:34,unreviewed:15},tags,mapping),/reportNotSession/);
+});
+
+test('review sorting uses numerical evidence, stable ties and missing values last',()=>{
+ const rows=[{tag:'z',score:.9,frames:2},{tag:'b',score:.8,frames:10},{tag:'a',score:.8,frames:1},{tag:'missing',score:null,frames:null}];
+ assert.deepEqual(sortReviewCandidates(rows).map(r=>r.tag),['z','a','b','missing']);
+ assert.deepEqual(sortReviewCandidates(rows,'score','ascending').map(r=>r.tag),['a','b','z','missing']);
+ assert.deepEqual(sortReviewCandidates(rows,'frames').map(r=>r.tag),['b','z','a','missing']);
+ assert.deepEqual(sortReviewCandidates(rows,'tag','ascending').map(r=>r.tag),['a','b','missing','z']);
+ assert.equal(rows[0].tag,'z');
+ const draft=createDraft([entry()],variants,'4','en',20,{key:'frames',direction:'ascending'});
+ assert.deepEqual(restoreDraft(draft,tags,mapping).tagSort,{key:'frames',direction:'ascending'});
+ delete draft.tagSort;assert.deepEqual(restoreDraft(draft,tags,mapping).tagSort,{key:'score',direction:'descending'});
 });

@@ -5,9 +5,9 @@ export const REVIEW_DATABASE = 'cake-tagger-review-v1';
 import { canonicalTagName as canonical } from '../shared/tag-policy.mjs';
 const tagName = tag => typeof tag === 'string' && tag.length > 0 && tag.length <= 80 && !['__proto__', 'prototype', 'constructor'].includes(tag);
 
-// Persist annotations and typed score arrays, never video bytes or credentials.
-export function createDraft(entries, variants, frames, language, candidateMinimum = 20) {
-  return { version: 1, savedAt: new Date().toISOString(), variants, frames, language, candidateMinimum,
+// Drafts contain annotations and evidence; video files use a separate browser cache.
+export function createDraft(entries, variants, frames, language, candidateMinimum = 20, tagSort = {key:'score',direction:'descending'}) {
+  return { version: 1, savedAt: new Date().toISOString(), variants, frames, language, candidateMinimum, tagSort: {...tagSort},
     entries: entries.map(entry => ({
       file: { name: entry.file.name, size: entry.file.size ?? 0, lastModified: entry.file.lastModified ?? 0 }, knownHash: entry.knownHash,
       ...(entry.result ? { record: makeRecord(entry), scores: entry.scores, timestamps: entry.timestamps, previews: entry.previews ?? [], frameSetting: entry.frameSetting } : {}),
@@ -69,6 +69,7 @@ export function restoreDraft(input, currentTags, mapping) {
     partitions.set(entry.result.sha256, reviewPartition(entry));
   }
   return { entries, variants: validateVariants(input.variants, allowed), frames: ['auto','4','6','8','12','16','24','32','48'].includes(String(input.frames)) ? String(input.frames) : 'auto',
+    tagSort: ['tag','score','frames'].includes(input.tagSort?.key) && ['ascending','descending'].includes(input.tagSort?.direction) ? {...input.tagSort} : {key:'score',direction:'descending'},
     candidateMinimum: Number.isFinite(input.candidateMinimum) && input.candidateMinimum >= 0 && input.candidateMinimum <= 100 ? input.candidateMinimum : 20,
     language: ['de','en'].includes(input.language) ? input.language : undefined, savedAt: input.savedAt };
 }
@@ -88,7 +89,7 @@ export function importReview(input, currentTags, mapping) {
 }
 
 export function openReviewStore(factory = globalThis.indexedDB) {
-  let database;
+  let database, videoDatabase;
   const open = () => database ??= new Promise((resolve, reject) => {
     if (!factory) return reject(Error('review.storageFailed'));
     const request = factory.open(REVIEW_DATABASE, 1);
@@ -97,15 +98,27 @@ export function openReviewStore(factory = globalThis.indexedDB) {
     request.onerror = () => reject(request.error);
     request.onblocked = () => reject(Error('review.storageFailed'));
   });
-  const transaction = async (mode, action) => {
-    const db = await open();
+  // Keep video storage separate so existing annotation databases need no upgrade.
+  const openVideos = () => videoDatabase ??= new Promise((resolve,reject)=>{
+    if(!factory)return reject(Error('review.videoCacheFailed'));
+    const request=factory.open(REVIEW_DATABASE+'-videos',1);
+    request.onupgradeneeded=()=>request.result.createObjectStore('videos');
+    request.onsuccess=()=>resolve(request.result);
+    request.onerror=()=>reject(request.error);
+    request.onblocked=()=>reject(Error('review.videoCacheFailed'));
+  });
+  const transaction = async (mode, action, video = false) => {
+    const db = await (video ? openVideos() : open());
     return new Promise((resolve, reject) => {
-      const tx = db.transaction('sessions', mode), request = action(tx.objectStore('sessions'));
+      const name=video?'videos':'sessions';
+      const tx = db.transaction(name, mode), request = action(tx.objectStore(name));
       tx.oncomplete = () => resolve(request.result);
       tx.onerror = tx.onabort = () => reject(tx.error ?? Error('review.storageFailed'));
     });
   };
   return { load: () => transaction('readonly', store => store.get('draft')),
     save: draft => transaction('readwrite', store => store.put(draft, 'draft')),
-    clear: () => transaction('readwrite', store => store.delete('draft')) };
+    loadVideo: hash => transaction('readonly', store => store.get(hash), true),
+    saveVideo: (hash,file) => transaction('readwrite', store => store.put(file,hash), true),
+    clear: async () => {await transaction('readwrite', store => store.delete('draft'));await transaction('readwrite', store => store.clear(),true);} };
 }

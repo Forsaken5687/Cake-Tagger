@@ -144,3 +144,14 @@ export function frameEvidence(entry, tag, mapping, rules) {
     return {index,time:entry.timestamps[index],score,matched:score>=threshold,preview:entry.previews?.[index]};
   });
 }
+
+// Sort display-only metrics; missing evidence stays last in either direction.
+export function sortReviewCandidates(rows, key = 'score', direction = 'descending') {
+ const sign = direction === 'ascending' ? 1 : -1;
+ return [...rows].sort((a,b)=>{
+  if(key==='tag')return sign*a.tag.localeCompare(b.tag);
+  const x=a[key],y=b[key];
+  if(x==null||y==null)return x==null&&y==null?a.tag.localeCompare(b.tag):x==null?1:-1;
+  return sign*(x-y)||a.tag.localeCompare(b.tag);
+ });
+}

@@ -13,6 +13,8 @@ Start `Review.cmd` from a source checkout. The lab uses the local inference serv
 
 Changing a judgment marks the review as pending. Changing experimental rules or resampling preserves annotations. Only completed reviews contribute to accuracy metrics.
 
+Candidates are sorted by confidence score, highest first. Click **Confidence score**, **Matching frames (A)** or **Tag** to sort by that column; click again to reverse the order. The sort preference is saved with the browser session. Missing evidence stays at the end.
+
 **Confidence score** averages the two strongest frame scores. **Matching frames (A)** shows how many frames meet Variant A's threshold. Neither is a guaranteed probability of correctness.
 
 ## Compare and improve rules
@@ -36,9 +38,9 @@ Holdout suggestions and metrics remain hidden until **Reveal holdout results** i
 
 ## Sessions and downloads
 
-The lab automatically saves annotations, scores, rules and preview images in the current browser. Wait for **Saved locally** before closing. Browser storage can be cleared; download JSON as a separate backup.
+The lab automatically saves annotations, scores, rules and preview images in the current browser. Selected videos are cached separately in this browser for automatic reconnection during session restore or JSON import. This uses browser disk storage; video files are never included in JSON exports. Wait for **Saved locally** before closing. Browser storage can be cleared; download JSON as a separate backup.
 
-Under **Session options** you can change frame count, import JSON, save immediately or start a new session. **New session** clears this lab's browser backup after confirmation. **Restore session** reloads a saved session. Original videos are not stored: select them again for playback or resampling; they are matched by content hash.
+Under **Session options** you can change frame count, import JSON, save immediately or start a new session. **New session** clears this lab's browser backup after confirmation. **Restore session** reloads a saved session. Videos are restored from the browser cache by content hash. If the cache is unavailable or cleared, select missing videos again for playback or resampling. Video cache failures do not prevent annotation saves. Starting a new session also clears the video cache.
 
 **Download JSON** includes analyzed videos, annotations, scores, timestamps and rules, but no video files or previews. **Import JSON** restores these results. Unreviewed analyzed videos are included, but excluded from accuracy metrics.
 

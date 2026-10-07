@@ -5,7 +5,7 @@ import {normalizeSettings,suggestionPolicy} from '../shared/preferences.mjs';
 import {ANALYSIS_VERSION,aggregate} from '../shared/tagging.mjs';
 import {makeRecord} from '../shared/corrections.mjs';
 import {DEFAULT_THRESHOLD,DEFAULT_COVERAGE} from '../shared/analysis-settings.mjs';
-import {candidateTags,comparisonMetrics,createReviewSnapshot,validateVariants,DEFAULT_VARIANTS,reviewPartition,problemTags,compareVariants,frameEvidence} from '../shared/evaluation.mjs';
+import {candidateTags,comparisonMetrics,createReviewSnapshot,validateVariants,DEFAULT_VARIANTS,reviewPartition,problemTags,compareVariants,frameEvidence,sortReviewCandidates} from '../shared/evaluation.mjs';
 // Load the optional development module after translating the shell. An older
 // running backend may not yet allow this file, even though HTML is current.
 let createDraft,restoreDraft,importReview,store;
@@ -15,6 +15,7 @@ import {setLanguage,t,translatePage,localizedText} from './i18n.mjs';
 const $=selector=>document.querySelector(selector),session=createLocalSession();
 const client=createNativeClient({fetcher:session.request,onProgress:(current,total)=>localizedText($('#status'),'analysis.progress',{current,total})});
 let entries=[],active,controller,running=false,settings=normalizeSettings(),mapping,allTags=[],playerURL,downloadURL;
+let tagSort={key:'score',direction:'descending'};
 let variants=validateVariants(DEFAULT_VARIANTS),evidenceTag,pendingDraft,saveTimer,dirty=false,saveChain=Promise.resolve(),changeVersion=0,attaching=false;
 const percent=value=>value==null?'—':Math.round(value*100)+'%';
 const label=(node,key,params)=>localizedText(node,key,params);
@@ -38,7 +39,7 @@ function clearDownload(){
 function saveNow(){
  clearTimeout(saveTimer);
  if(pendingDraft||!mapping)return Promise.resolve();
- const revision=changeVersion,draft=createDraft(entries,variants,$('#frames').value,$('#language').value,Number($('#candidate-minimum').value));
+ const revision=changeVersion,draft=createDraft(entries,variants,$('#frames').value,$('#language').value,Number($('#candidate-minimum').value),tagSort);
  label($('#save-status'),'review.saving');
  saveChain=saveChain.catch(()=>{}).then(()=>store.save(draft)).then(()=>{
   if(revision===changeVersion){dirty=false;label($('#save-status'),'review.saved',{time:new Date(draft.savedAt).toLocaleTimeString()});}
@@ -146,8 +147,17 @@ function renderTags(){
  const expanded=active.scores?aggregate(active.scores,mapping,Number($('#candidate-minimum').value)/100,DEFAULT_COVERAGE,{excludedTags:settings.excludedTags,limitResults:false}):{tags:[],uncertain:[]};
  const possible=new Set([...active.selected.keys(),...active.ignoredTags,...baseline.keys(),...expanded.tags.map(row=>row.tag),...expanded.uncertain,...a,...b]),query=$('#search').value.trim().toLowerCase();
  const tags=($('#all').checked||query?allowedTags():allowedTags().filter(tag=>possible.has(tag))).filter(tag=>tag.toLowerCase().includes(query));
- // Stable order prevents rows moving while the user evaluates them.
- tags.sort((x,y)=>x.localeCompare(y));
+ // Use the same evidence for sorting and the displayed cells. Judgments do not
+ // affect order, so changing a verdict never moves its row.
+ const metrics=new Map(tags.map(tag=>{
+  const frames=frameEvidence(active,tag,mapping,rules('A')),scores=frames.map(frame=>frame.score).sort((x,y)=>y-x);
+  return [tag,{tag,score:scores.length?scores.slice(0,2).reduce((x,y)=>x+y,0)/Math.min(2,scores.length):null,frames:frames.length?frames.filter(frame=>frame.matched).length:null,total:frames.length}];
+ }));
+ tags.splice(0,tags.length,...sortReviewCandidates([...metrics.values()],tagSort.key,tagSort.direction).map(row=>row.tag));
+ for(const key of ['tag','score','frames']){
+  const selected=key===tagSort.key;$('#sort-'+key+'-heading').setAttribute('aria-sort',selected?tagSort.direction:'none');
+  $('#sort-'+key+' .sort-arrow').textContent=selected?(tagSort.direction==='descending'?'↓':'↑'):'';
+ }
  for(const tag of tags){
   const tr=node('tr'),td=node('td'),tagButton=node('button',tag);
   const ignored=active.ignoredTags.has(tag);if(ignored)tr.className='ignored';
@@ -170,9 +180,9 @@ function renderTags(){
    choices.append(button);
   }
   verdictCell.append(choices);tr.append(verdictCell);
-  const frames=frameEvidence(active,tag,mapping,rules('A')),scores=frames.map(frame=>frame.score).sort((x,y)=>y-x);
-  tr.append(node('td',percent(scores.length?scores.slice(0,2).reduce((x,y)=>x+y,0)/Math.min(2,scores.length):null)));
-  tr.append(node('td',frames.length?frames.filter(f=>f.matched).length+'/'+frames.length:'—'));
+  const metric=metrics.get(tag);
+  tr.append(node('td',percent(metric.score)));
+  tr.append(node('td',metric.total?metric.frames+'/'+metric.total:'—'));
   for(const present of [baseline.has(tag),a.has(tag),b.has(tag)]){const cell=node('td',present?'✓':'—');cell.className='comparison-column'+(present?' yes':'');tr.append(cell);}
   $('#tags').append(tr);
  }
@@ -198,26 +208,39 @@ function openEvidence(tag,scroll=true){
  }
  if(scroll)$('#evidence-close').focus();
 }
+async function reconnectVideos(restored){
+ let count=0;
+ for(const entry of restored.entries){
+  const hash=entry.knownHash??entry.result?.sha256;if(!hash)continue;
+  try{
+   const file=await store.loadVideo(hash);
+   if(file instanceof File){entry.file=new File([file],entry.file.name,{type:file.type,lastModified:file.lastModified});entry.knownHash=hash;count++;}
+  }catch{/* Missing browser cache leaves annotations usable and files reconnectable. */}
+ }
+ return count;
+}
 function adopt(restored){
  entries=restored.entries;variants=restored.variants;active=entries[0];evidenceTag=undefined;
- $('#frames').value=restored.frames;$('#candidate-minimum').value=restored.candidateMinimum;
+ tagSort=restored.tagSort;$('#frames').value=restored.frames;$('#candidate-minimum').value=restored.candidateMinimum;
  if(restored.language){$('#language').value=setLanguage({language:restored.language});translatePage();}
  controlsFromVariants();showPlayer();renderQueue();renderTags();label($('#status'),'review.imported');
 }
 $('#files').onchange=async event=>{
- const files=[...event.target.files].slice(0,1000);event.target.value='';attaching=true;summary();
+ const files=[...event.target.files].slice(0,1000);let cacheFailed=false;event.target.value='';attaching=true;summary();
  try{
   for(const file of files){
    if(!/\.(mp4|m4v|webm|mov)$/i.test(file.name))continue;
    // Restored videos are associated by content, never guessed by filename.
    const hash=await hashFile(file);
+   // A failed video cache must never prevent annotation saves or analysis.
+   try{await store.saveVideo(hash,file);}catch{cacheFailed=true;}
    const saved=entries.find(e=>(e.result?.sha256===hash||e.knownHash===hash)&&!(e.file instanceof File));
    if(saved){saved.file=file;saved.knownHash=hash;continue;}
    if(entries.some(e=>e.file instanceof File&&e.knownHash===hash))continue;
    if(entries.length>=1000)throw messageError('error.invalidAnalysisData');
    entries.push({file,knownHash:hash,selected:new Map(),tagSources:{},reviewed:false,ignoredTags:new Set(),partition:'auto'});
   }
-  active ||= entries[0];changed();showPlayer();renderQueue();renderTags();label($('#status'),'analysis.ready');
+  active ||= entries[0];changed();showPlayer();renderQueue();renderTags();label($('#status'),cacheFailed?'review.videoCacheFailed':'analysis.ready');
  }catch(error){label($('#status'),errorMessage(error));}finally{attaching=false;summary();}
 };
 $('#import').onchange=async event=>{
@@ -227,7 +250,7 @@ $('#import').onchange=async event=>{
  try{
   if(file.size>256*1024*1024)throw Error('review.invalidSession');
   const restored=importReview(JSON.parse(await file.text()),allTags,mapping);
-  adopt(restored);changed();await saveNow();
+  const count=await reconnectVideos(restored);adopt(restored);label($('#status'),'review.videosRestored',{count,total:restored.entries.length});changed();await saveNow();
  }catch(error){label($('#status'),error.message==='review.reportNotSession'?'review.reportNotSession':'review.invalidSession');}finally{attaching=false;summary();}
 };
 $('#analyze').onclick=async()=>{
@@ -316,6 +339,10 @@ window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('#evidence
 $('#scope').onchange=summary;$('#problem-source').onchange=summary;
 $('#reveal').onchange=()=>{renderQueue();renderTags();};
 $('#candidate-minimum').onchange=()=>{if($('#candidate-minimum').checkValidity()){renderTags();changed();}};
+for(const key of ['tag','score','frames'])$('#sort-'+key).onclick=()=>{
+ tagSort={key,direction:tagSort.key===key?(tagSort.direction==='descending'?'ascending':'descending'):key==='tag'?'ascending':'descending'};
+ renderTags();changed();
+};
 $('#search').oninput=renderTags;
 $('#clear-search').onclick=()=>{$('#search').value='';renderTags();$('#search').focus({preventScroll:true});};$('#all').onchange=renderTags;
 $('#frames').onchange=changed;
@@ -327,9 +354,14 @@ $('#clear').onclick=async()=>{
  try{await store.clear();entries=[];active=undefined;evidenceTag=undefined;dirty=false;clearDownload();showPlayer();renderQueue();renderTags();$('#save-status').textContent='';label($('#status'),'review.intro');}
  catch{label($('#save-status'),'review.storageFailed');}
 };
-$('#restore').onclick=()=>{
- try{adopt(restoreDraft(pendingDraft,allTags,mapping));pendingDraft=undefined;$('#resume').hidden=true;changed();summary();saveNow();}
- catch{label($('#status'),'review.invalidSession');}
+$('#restore').onclick=async()=>{
+ attaching=true;$('#restore').disabled=true;summary();
+ try{
+  const restored=restoreDraft(pendingDraft,allTags,mapping),count=await reconnectVideos(restored);
+  adopt(restored);pendingDraft=undefined;$('#resume').hidden=true;
+  label($('#status'),'review.videosRestored',{count,total:restored.entries.length});changed();await saveNow();
+ }catch{label($('#status'),'review.invalidSession');}
+ finally{attaching=false;$('#restore').disabled=false;summary();}
 };
 $('#discard').onclick=async()=>{
  if(!confirm(t('review.confirmClear')))return;
