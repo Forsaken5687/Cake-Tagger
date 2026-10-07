@@ -131,6 +131,7 @@ function showPlayer(){
  $('#filename').textContent=active.file.name;$('#partition').value=active.partition;
 }
 function renderTags(){
+ $('#clear-search').hidden=!$('#search').value;
  $('#tags').replaceChildren();$('#evidence').hidden=true;if(!active)return;
  const concealed=hiddenHoldout(active);
  label($('#review-state'),concealed?'review.holdoutHidden':!active.result?'analysis.waiting':active.reviewed?'review.done':'review.pending');
@@ -311,7 +312,8 @@ $('#complete-next').onclick=()=>{
 window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('#evidence').hidden){$('#evidence-close').click();}});
 $('#scope').onchange=summary;$('#problem-source').onchange=summary;
 $('#reveal').onchange=()=>{renderQueue();renderTags();};
-$('#search').oninput=renderTags;$('#all').onchange=renderTags;
+$('#search').oninput=renderTags;
+$('#clear-search').onclick=()=>{$('#search').value='';renderTags();$('#search').focus({preventScroll:true});};$('#all').onchange=renderTags;
 $('#frames').onchange=changed;
 $('#language').onchange=()=>{setLanguage({language:$('#language').value});translatePage();renderQueue();renderTags();changed();};
 $('#save').onclick=saveNow;

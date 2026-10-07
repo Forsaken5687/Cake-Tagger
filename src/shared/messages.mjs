@@ -81,6 +81,7 @@ export const messages = {
   "review.coverage": { en: "Required frames (%)", de: "Benötigte Bilder (%)" },
   "review.pending": { en: "Needs review", de: "Noch zu prüfen" },
   "review.done": { en: "Reviewed", de: "Geprüft" },
+  "review.clearSearch": { en: "Clear tag search", de: "Tag-Suche leeren" },
   "review.search": { en: "Find a tag…", de: "Tag suchen…" },
   "review.allTags": { en: "Show all tags", de: "Alle Tags anzeigen" },
   "review.baseline": { en: "Current", de: "Aktuell" },

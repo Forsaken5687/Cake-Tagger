@@ -48,7 +48,12 @@ h1,h2{font-size:16px;flex:1;margin:0}
 video{width:100%;height:min(58vh,600px);background:#080808;border-radius:8px;display:block}
 .tag-tools{margin:12px 0}
 .judgments>.tag-tools{margin-top:0;gap:8px}
-.tag-tools input[type=search]{flex:1;min-width:150px}
+.tag-search{position:relative;flex:1;min-width:150px}
+.tag-search input[type=search]{width:100%;padding-right:38px}
+.tag-search input::-webkit-search-cancel-button{-webkit-appearance:none}
+#clear-search{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:28px;height:28px;padding:0;border:0;background:transparent;color:#aaa;font-size:22px;line-height:1}
+#clear-search:hover{color:#eee;background:#333}
+#clear-search[hidden]{display:none}
 .tag-tools span{font-size:13px;color:#aaa}
 .table-scroll{max-height:54vh;overflow:auto;scrollbar-gutter:stable}
 table{border-collapse:collapse;width:100%;font-size:13px}
