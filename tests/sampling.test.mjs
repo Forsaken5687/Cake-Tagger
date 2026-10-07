@@ -28,3 +28,25 @@ test('long-video metadata survives persistence and export', () => {
   assert.throws(()=>validateRecord({...record,result:{...record.result,durationSeconds:601}},['solo']));
   assert.throws(()=>validateRecord({...record,result:{...record.result,tags:[{tag:'solo',confidence:0.9,supportingFrames:49}]}},['solo']));
 });
+
+
+test('incremental file hashes match native SHA-256 across padding and chunk boundaries', async()=>{
+  const {hashFile}=await import('../src/client/sampling.mjs');
+  const {createHash}=await import('node:crypto');
+  for(const size of [0,1,55,56,63,64,65,127,128,1024*1024-1,1024*1024,1024*1024+1,2*1024*1024+57]) {
+    const bytes=Uint8Array.from({length:size},(_,i)=>(i*37+13)%256);
+    assert.equal(await hashFile(new Blob([bytes])),createHash('sha256').update(bytes).digest('hex'),String(size));
+  }
+});
+test('files above the former limit use bounded reads and can be cancelled',async()=>{
+  const {hashFile}=await import('../src/client/sampling.mjs');
+  const {createHash}=await import('node:crypto');
+  const size=251*1024*1024,expected=createHash('sha256'),chunk=new Uint8Array(1024*1024);
+  let reads=0;
+  const file={size,slice(start,end){const length=Math.min(end,size)-start;assert(length<=chunk.length);reads++;return {arrayBuffer:async()=>chunk.buffer.slice(0,length)};},arrayBuffer(){throw Error('Whole file must not be read');}};
+  for(let i=0;i<251;i++)expected.update(chunk);
+  assert.equal(await hashFile(file),expected.digest('hex'));assert.equal(reads,251);
+  const controller=new AbortController();let cancelledReads=0;
+  const cancelled={size,slice(){cancelledReads++;return {arrayBuffer:async()=>{controller.abort();return chunk.buffer;}};}};
+  await assert.rejects(hashFile(cancelled,controller.signal),{name:'AbortError'});assert.equal(cancelledReads,1);
+});

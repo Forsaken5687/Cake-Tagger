@@ -37,7 +37,7 @@ Open **Settings** on the upload toolbar. Preferences are shared by all connected
 
 The confidence score is the average of the two strongest sampled-frame scores. It is a model signal, not the probability that a tag is correct or the proportion of the video showing it.
 
-- Videos must be at most 10 minutes and 250 MiB. Codec support depends on the browser.
+- Videos must be at most 10 minutes. Codec support depends on the browser.
 - Sampled frames can miss short events and cannot reliably establish motion or context.
 - 219 of 302 bundled tags have automatic mappings under default settings. Mapping coverage is not recognition accuracy; see [tag coverage](docs/TAG_COVERAGE.md).
 - Context-dependent and identity-related tags remain manual. Corrections do not train the model.

@@ -115,11 +115,11 @@ async function setFiles(files) {
       if (batch.signal.aborted) break;
       const entry = next[i];
       try {
-        entry.sha256 = await hashFile(entry.file);
+        entry.sha256 = await hashFile(entry.file, batch.signal);
         const reconciled=next[i]=reconcileHashedFile(entry,previous);
         const record = sessionRecords.get(reconciled.sha256); if (record && !reconciled.result) await restore(reconciled, record);
       }
-      catch (e) { entry.error = errorMessage(e); }
+      catch (e) { if (e.name === 'AbortError') break; entry.error = errorMessage(e); entry.state = 'analysis.failed'; }
     }
     entries = next;
     showMessage(batch.signal.aborted ? 'analysis.cancelledHint' : '');

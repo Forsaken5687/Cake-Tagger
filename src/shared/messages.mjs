@@ -211,7 +211,6 @@ export const messages = {
   'error.uploadTabUnavailable': { en: 'Upload tab unavailable. Please reload cake.ski.', de: 'Upload-Tab nicht erreichbar. Bitte cake.ski neu laden.' },
   'error.videoDecode': { en: 'The browser cannot read this video.', de: 'Das Video lässt sich im Browser nicht lesen.' },
   'error.videoDurationLimit': { en: 'Videos must be no longer than 10 minutes.', de: 'Videos dürfen höchstens 10 Minuten lang sein.' },
-  'error.videoSize': { en: 'Each video can be up to 250 MB.', de: 'Pro Video sind maximal 250 MB möglich.' },
   'error.videoTimeout': { en: 'Reading the video took too long.', de: 'Das Lesen des Videos dauert zu lange.' },
 
   // Export messages.

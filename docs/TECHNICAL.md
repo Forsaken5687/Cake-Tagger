@@ -14,7 +14,7 @@ Each worker uses intra-operator parallelism: multiple CPU threads cooperate on a
 
 The server streams newline-delimited JSON: state/progress records followed by one done or error record. The done record contains server-aggregated tags, uncertain candidates, timings and runtime metadata. Normal UI requests do not send raw label scores back to the browser. `raw=1` supplies the full score matrix for synthetic diagnostics and comparisons. The backend owns inference, production aggregation, the job queue and resource policy. The development review lab recomputes experimental rules in the browser from returned raw scores.
 
-`src/client/sampling.mjs` distributes samples at bin midpoints and limits videos to 600 seconds. Automatic counts are 8/12/16/24/32/48 at duration boundaries 15/30/60/120/300/600 seconds; fixed counts remain available. Files above 250 MiB are rejected before hashing or sampling.
+`src/client/sampling.mjs` distributes samples at bin midpoints and limits videos to 600 seconds. Automatic counts are 8/12/16/24/32/48 at duration boundaries 15/30/60/120/300/600 seconds; fixed counts remain available. Content hashes use incremental SHA-256 with 1 MiB reads and no fixed file-size limit; hashes remain compatible with existing sessions.
 
 ## Tag aggregation
 
