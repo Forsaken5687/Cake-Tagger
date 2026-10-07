@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 function analyzeReviews(input,mapping,allowed){
- const script="import json,sys; from analyze_reviews import analyze_reviews; from cake_tagger.config import load_catalog; from pathlib import Path; value=json.load(sys.stdin); policy=load_catalog(Path.cwd()/'model')[1]; print(json.dumps(analyze_reviews(value['input'],value['mapping'],value['allowed'],policy)))";
+ const script="import json,sys; from analyze_reviews import analyze_reviews; from server.config import load_catalog; from pathlib import Path; value=json.load(sys.stdin); policy=load_catalog(Path.cwd()/'model')[1]; print(json.dumps(analyze_reviews(value['input'],value['mapping'],value['allowed'],policy)))";
  const result=spawnSync(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)),['-c',script],{input:JSON.stringify({input,mapping,allowed}),encoding:'utf8',windowsHide:true});
  if(result.status!==0)throw Error(result.stderr);return JSON.parse(result.stdout);
 }

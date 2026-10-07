@@ -2,7 +2,7 @@
 
 ## Structure and integration boundary
 
-The installable Python package is `src/server/cake_tagger/`:
+The installable Python package is `src/server/`:
 
 - `core.py`: model verification, preprocessing, inference, aggregation and the shared queue.
 - `config.py`: catalog loading, CPU capabilities and preference normalization.

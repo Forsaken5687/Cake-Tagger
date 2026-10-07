@@ -10,10 +10,10 @@ import time
 import unittest
 from pathlib import Path
 
-from cake_tagger.config import capabilities, load_catalog, normalize_settings
-from cake_tagger.review import review_export
-from cake_tagger.service import LocalService
-from cake_tagger.validation import export_item, validate_record
+from server.config import capabilities, load_catalog, normalize_settings
+from server.review import review_export
+from server.service import LocalService
+from server.validation import export_item, validate_record
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -88,7 +88,7 @@ class ServiceTests(unittest.TestCase):
         for path in (
             "/data/session.json",
             "/model/joytag.onnx",
-            "/src/server/cake_tagger/service.py",
+            "/src/server/service.py",
             "/.git/config",
             "/model/%2e%2e/data/session.json",
         ):

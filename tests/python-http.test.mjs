@@ -15,7 +15,7 @@ test('Python service preserves endpoints, downloads, cancellation and busy shutd
  for(const file of files){fs.mkdirSync(path.dirname(path.join(fixture,file)),{recursive:true});fs.copyFileSync(path.join(root,file),path.join(fixture,file));}
  fs.linkSync(path.join(root,'model/joytag.onnx'),path.join(fixture,'model/joytag.onnx'));
  fs.mkdirSync(path.join(fixture,'data'),{recursive:true});fs.writeFileSync(path.join(fixture,'data/preferences.json'),JSON.stringify({hideSiteAI:true,language:'en'}));fs.writeFileSync(path.join(fixture,'data/session.json'),'stale session token');
- const child=spawn(executable,['-m','cake_tagger','--root',fixture,'--port','0'],{windowsHide:true,stdio:['ignore','pipe','pipe']});
+ const child=spawn(executable,['-m','server','--root',fixture,'--port','0'],{windowsHide:true,stdio:['ignore','pipe','pipe']});
  let error='';child.stderr.on('data',data=>error+=data);child.stdout.resume();const closed=new Promise(resolve=>child.once('close',resolve));
  let address;
  try{

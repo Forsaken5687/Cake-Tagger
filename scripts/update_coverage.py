@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from cake_tagger.config import load_catalog
+from server.config import load_catalog
 
 ROOT = Path(__file__).resolve().parents[1]
 

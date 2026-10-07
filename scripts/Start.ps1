@@ -25,4 +25,4 @@ $listener = New-Object Net.Sockets.TcpClient
 try { $listener.Connect('127.0.0.1', $Port); throw 'The local port is occupied. Quit the running service first.' }
 catch [Net.Sockets.SocketException] { }
 finally { $listener.Dispose() }
-Start-Process -FilePath $python -ArgumentList @('-m', 'cake_tagger', '--root', ('"' + $taggerRoot + '"'), '--port', $Port) -WorkingDirectory $taggerRoot -WindowStyle Hidden
+Start-Process -FilePath $python -ArgumentList @('-m', 'server', '--root', ('"' + $taggerRoot + '"'), '--port', $Port) -WorkingDirectory $taggerRoot -WindowStyle Hidden

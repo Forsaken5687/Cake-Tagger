@@ -605,7 +605,7 @@ def main():
         description="Start the authenticated Cake Tagger loopback service."
     )
     parser.add_argument(
-        "--root", type=Path, default=Path(__file__).resolve().parents[3]
+        "--root", type=Path, default=Path(__file__).resolve().parents[2]
     )
     parser.add_argument(
         "--port", type=int, default=int(os.environ.get("CAKE_TAGGER_PORT", "8765"))

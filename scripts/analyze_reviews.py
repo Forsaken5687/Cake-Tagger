@@ -5,9 +5,9 @@ import json
 import re
 from pathlib import Path
 
-from cake_tagger.config import load_catalog
-from cake_tagger.core import aggregate
-from cake_tagger.validation import analysis_policy, number, require
+from server.config import load_catalog
+from server.core import aggregate
+from server.validation import analysis_policy, number, require
 
 ROOT = Path(__file__).resolve().parents[1]
 

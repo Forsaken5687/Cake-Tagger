@@ -19,7 +19,7 @@ $runtime = Join-Path $taggerRoot 'runtime/cpython'
 New-Item -ItemType Directory -Force -Path $runtime | Out-Null
 Expand-Archive -LiteralPath (Join-Path $taggerRoot $manifest.python.runtime.path) -DestinationPath $runtime -Force
 # Isolated search paths exclude user-site packages and PYTHONPATH.
-$searchPaths = @('python313.zip', '.', 'Lib/site-packages', '../../src/server', '../../scripts', '../../tests', 'import site')
+$searchPaths = @('python313.zip', '.', 'Lib/site-packages', '../../src', '../../scripts', '../../tests', 'import site')
 $searchPaths | Set-Content -LiteralPath (Join-Path $runtime 'python313._pth') -Encoding ascii
 $python = Join-Path $runtime 'python.exe'
 & $python (Join-Path $PSScriptRoot 'install_runtime.py')

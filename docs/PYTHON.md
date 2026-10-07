@@ -1,14 +1,14 @@
 # Python integration
 
-The complete backend uses Python. The reusable package is `cake_tagger`, under `src/server/`; the local HTTP service is an optional adapter. Windows releases bundle isolated CPython 3.13.16 and pinned CPU dependencies. Run `Setup.cmd` in a source checkout, then `Start.cmd`.
+The complete backend uses Python. The reusable package is `server`, under `src/server/`; the local HTTP service is an optional adapter. Windows releases bundle isolated CPython 3.13.16 and pinned CPU dependencies. Run `Setup.cmd` in a source checkout, then `Start.cmd`.
 
 ## Use from another Python application
 
 From a source checkout, create a dedicated Python 3.13+ environment and install the package with `python -m pip install .`. Model weights are distributed separately; obtain the pinned artifact from `scripts/assets.json` and retain its license. The Windows release lock is `scripts/python-requirements.txt`; other platforms require their own verified dependency lock.
 
 ```python
-from cake_tagger import create_engine
-from cake_tagger.core import aggregate
+from server import create_engine
+from server.core import aggregate
 
 # catalog/ contains tags.txt, mapping.json, policy.json and provenance.json.
 # rgba contains 1–48 packed 448 x 448 RGBA frames in chronological order.

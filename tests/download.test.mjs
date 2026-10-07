@@ -19,7 +19,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
   fs.mkdirSync(path.join(root, 'data'));
   const old = path.join(root, 'data/corrections.json');
   fs.writeFileSync(old, 'legacy data deliberately not parsed');
-  let child = spawn(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)), ['-m','cake_tagger','--root',root,'--port','0'], { cwd: root, env: { ...process.env, CAKE_TAGGER_PORT: '0' }, stdio: 'ignore' });
+  let child = spawn(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)), ['-m','server','--root',root,'--port','0'], { cwd: root, env: { ...process.env, CAKE_TAGGER_PORT: '0' }, stdio: 'ignore' });
   try {
     const sessionPath = path.join(root, 'data/session.json');
     for (let i = 0; i < 100 && !fs.existsSync(sessionPath); i++) await delay(30);
@@ -119,7 +119,7 @@ test('download snapshots stay in memory and legacy corrections are not loaded or
     assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).parallelism,settings.parallelism);
     assert.equal(JSON.parse(fs.readFileSync(path.join(root,'data/preferences.json'))).hideSiteAI,true);
     assert.equal(fs.existsSync(sessionPath),false);
-    child=spawn(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)),['-m','cake_tagger','--root',root,'--port','0'],{cwd:root,env:{...process.env,CAKE_TAGGER_PORT:'0'},stdio:'ignore'});
+    child=spawn(fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url)),['-m','server','--root',root,'--port','0'],{cwd:root,env:{...process.env,CAKE_TAGGER_PORT:'0'},stdio:'ignore'});
     for(let i=0;i<100&&!fs.existsSync(sessionPath);i++)await delay(30);
     assert(fs.existsSync(sessionPath),'server restarted');
     const restarted=new URL(JSON.parse(fs.readFileSync(sessionPath,'utf8')).url);

@@ -47,12 +47,12 @@
     "model/policy.json",
     "scripts/install_runtime.py",
     "scripts/python-requirements.txt",
-    "src/server/cake_tagger/config.py",
-    "src/server/cake_tagger/core.py",
-    "src/server/cake_tagger/metrics.py",
-    "src/server/cake_tagger/service.py",
-    "src/server/cake_tagger/validation.py",
-    "src/server/cake_tagger/__init__.py",
-    "src/server/cake_tagger/__main__.py"
+    "src/server/config.py",
+    "src/server/core.py",
+    "src/server/metrics.py",
+    "src/server/service.py",
+    "src/server/validation.py",
+    "src/server/__init__.py",
+    "src/server/__main__.py"
   ]
 }

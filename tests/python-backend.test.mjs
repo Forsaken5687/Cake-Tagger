@@ -35,7 +35,7 @@ test('Python catalog policy and correction exports agree with browser validators
   const input={filename:'synthetic.mp4',sha256:'a'.repeat(64),tags:['tattoos'],candidateTags:['tattoos','glasses'],tagSources:sources,reviewed:true,originalSuggestionsKnown:known,updatedAt:'2026-01-01T00:00:00Z',result:{sha256:'a'.repeat(64),tags:[{tag:'glasses',confidence:.8,supportingFrames:2}],uncertain:['tattoos'],uncertainScores:[{tag:'tattoos',confidence:.6,supportingFrames:0}],sampledFrames:2,threshold:.4,model:'JoyTag-FP32',analysisPolicy:'coverage-v6:majority:[]',durationSeconds:10}};
   const record=validateRecord(input,tags);cases.push({input,expected:exportItem(applyRecord({file:{name:input.filename}},record))});
  }
- const script="import json,sys; from cake_tagger.validation import validate_record,export_item; v=json.load(sys.stdin); actual=[export_item(validate_record(x['input'],v['tags'])) for x in v['cases']]; print(json.dumps(actual))";
+ const script="import json,sys; from server.validation import validate_record,export_item; v=json.load(sys.stdin); actual=[export_item(validate_record(x['input'],v['tags'])) for x in v['cases']]; print(json.dumps(actual))";
  const result=spawnSync(executable,['-c',script],{input:JSON.stringify({tags,cases}),encoding:'utf8',windowsHide:true});
  assert.equal(result.status,0,result.stderr);assert.deepEqual(JSON.parse(result.stdout),cases.map(x=>x.expected));
 });

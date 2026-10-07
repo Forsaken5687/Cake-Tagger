@@ -6,8 +6,8 @@ import statistics
 import time
 from pathlib import Path
 
-from cake_tagger import create_engine
-from cake_tagger.core import aggregate
+from server import create_engine
+from server.core import aggregate
 
 ROOT = Path(__file__).resolve().parents[1]
 

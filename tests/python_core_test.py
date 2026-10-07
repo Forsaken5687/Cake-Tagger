@@ -7,9 +7,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src/server"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import numpy as np
-from cake_tagger.core import FRAME_BYTES, Engine, aggregate, resolve_threads
+
+from server.core import FRAME_BYTES, Engine, aggregate, resolve_threads
 
 
 class CoreTests(unittest.TestCase):
@@ -58,7 +59,7 @@ class CoreTests(unittest.TestCase):
 
         with (
             tempfile.TemporaryDirectory() as folder,
-            patch("cake_tagger.core.ort.InferenceSession", Session),
+            patch("server.core.ort.InferenceSession", Session),
         ):
             model = Path(folder) / "fixture"
             model.write_bytes(b"fixture")
@@ -103,7 +104,7 @@ class CoreTests(unittest.TestCase):
 
         with (
             tempfile.TemporaryDirectory() as folder,
-            patch("cake_tagger.core.ort.InferenceSession", Session),
+            patch("server.core.ort.InferenceSession", Session),
         ):
             model = Path(folder) / "fixture"
             model.write_bytes(b"fixture")
