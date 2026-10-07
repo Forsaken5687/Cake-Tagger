@@ -49,7 +49,7 @@ Upload results remain in page memory. The review lab retains its own browser-loc
 
 Timing fields distinguish sampling, loading, preprocessing, inference, queue wait and transport. `cpuSeconds` measures total process CPU during a job; it can exceed wall time and includes other activity. RSS snapshots describe the whole process, not isolated or peak model memory. Python exports `serverMemory: {rssBytes, scope: "process-rss"}`; unavailable measurements are null. Legacy export formats remain readable.
 
-`Setup.cmd` restores the checksum-pinned application-local CPython runtime, wheels and model. It does not change global Python or install packages into a user's environment. `scripts/package.py` packages only the explicit release allowlist and verified archives. Firefox is a ZIP; Chrome is an unpacked folder. External Python integrations use the source checkout and provide their own model and dependency setup.
+`Start.cmd` automatically restores the checksum-pinned application-local CPython runtime, wheels and model. It does not change global Python or install packages into a user's environment. `scripts/package.py` packages only the explicit release allowlist and verified archives. Firefox is a ZIP; Chrome is an unpacked folder. External Python integrations use the source checkout and provide their own model and dependency setup.
 
 Browser messages, inactivity recovery, tag transfer and download-manager behavior are described in [integration](INTEGRATION.md). Browser-specific checks are still required after website or extension changes.
 

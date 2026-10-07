@@ -12,7 +12,7 @@
 *.tmp
 *.bak
 
-# Large dependencies: restored by Setup.cmd or included in the sharing package
+# Large dependencies: restored by Start.cmd or included in the sharing package
 /model/*.onnx
 
 # Media must never enter the repository

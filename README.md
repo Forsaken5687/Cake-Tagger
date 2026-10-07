@@ -20,7 +20,7 @@ Use **Download JSON** to keep results before closing or reloading the upload pag
 
 The terminal shows operational logs. Press **Ctrl+C** to stop gracefully, or use **Quit** in the extension. Closing the terminal can force termination while native work is active; use these controls to wait for cleanup. Logs omit filenames, tags, payloads and session tokens.
 
-For a source checkout, run `Setup.cmd` once to download and verify dependencies. Complete releases include them; `Start.cmd` prepares the isolated Python runtime on first use.
+`Start.cmd` checks dependencies and prepares the isolated Python runtime automatically. A source checkout downloads missing verified dependencies on first use; complete releases include the required archives.
 
 ## Settings
 

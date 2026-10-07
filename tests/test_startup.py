@@ -122,13 +122,13 @@ class StartupTests(unittest.TestCase):
             shutil.copyfile(
                 ROOT / "runtime/cpython/python.exe", root / "runtime/cpython/python.exe"
             )
-            (root / "scripts/setup.py").write_text('print("bootstrap-ok")')
+            (root / "scripts/start.py").write_text('print("bootstrap-ok")')
             runtime = json.loads((ROOT / "scripts/assets.json").read_text())["python"][
                 "runtime"
             ]
             os.link(ROOT / runtime["path"], root / runtime["path"])
             result = subprocess.run(
-                ["cmd.exe", "/d", "/c", "scripts\\launch.cmd setup"],
+                ["cmd.exe", "/d", "/c", "scripts\\launch.cmd start"],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -136,3 +136,21 @@ class StartupTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("bootstrap-ok", result.stdout)
+
+    def test_start_prepares_missing_dependencies_before_serving(self):
+        from start import main as start_main
+
+        steps = []
+        with (
+            patch("sys.argv", ["start.py", "--port", "8799"]),
+            patch("start.running", return_value=False),
+            patch("start.socket.socket"),
+            patch("start.ready", return_value=False),
+            patch("start.setup", side_effect=lambda: steps.append("setup")),
+            patch(
+                "server.service.main", side_effect=lambda args: steps.append("serve")
+            ),
+        ):
+            start_main()
+        self.assertEqual(steps, ["setup", "serve"])
+        self.assertFalse((ROOT / "Setup.cmd").exists())

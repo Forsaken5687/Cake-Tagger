@@ -1,6 +1,6 @@
 # Python integration
 
-The complete backend uses Python. The reusable package is `server`, under `src/server/`; the local HTTP service is an optional adapter. Windows releases bundle isolated CPython 3.13.16 and pinned CPU dependencies. Run `Setup.cmd` in a source checkout, then `Start.cmd`.
+The complete backend uses Python. The reusable package is `server`, under `src/server/`; the local HTTP service is an optional adapter. Windows releases bundle isolated CPython 3.13.16 and pinned CPU dependencies. Run `Start.cmd`; it prepares missing local dependencies automatically.
 
 ## Use from another Python application
 
