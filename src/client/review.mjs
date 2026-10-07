@@ -141,7 +141,10 @@ function renderTags(){
  if(concealed){label($('#counts'),'review.holdoutHidden');return;}
  if(!active.result){label($('#counts'),'review.waiting');return;}if(!validRules())return;
  const baseline=new Map(active.result.tags.map(row=>[row.tag,row])),a=new Set(candidate(active,'A').map(row=>row.tag)),b=new Set(candidate(active,'B').map(row=>row.tag));
- const possible=new Set([...active.selected.keys(),...active.ignoredTags,...baseline.keys(),...a,...b]),query=$('#search').value.trim().toLowerCase();
+ // Expand the review list from raw scores, keeping the recorded upload baseline
+ // and user annotations intact so accuracy comparisons still mean the same thing.
+ const expanded=active.scores?aggregate(active.scores,mapping,DEFAULT_THRESHOLD,DEFAULT_COVERAGE,{excludedTags:settings.excludedTags,limitResults:false}):{tags:[],uncertain:[]};
+ const possible=new Set([...active.selected.keys(),...active.ignoredTags,...baseline.keys(),...expanded.tags.map(row=>row.tag),...expanded.uncertain,...a,...b]),query=$('#search').value.trim().toLowerCase();
  const tags=($('#all').checked||query?allowedTags():allowedTags().filter(tag=>possible.has(tag))).filter(tag=>tag.toLowerCase().includes(query));
  // Stable order prevents rows moving while the user evaluates them.
  tags.sort((x,y)=>x.localeCompare(y));

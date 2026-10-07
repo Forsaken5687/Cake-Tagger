@@ -104,3 +104,15 @@ test('sloppy requires oral and saliva evidence in the same frames', () => {
   assert.deepEqual(aggregate(isolated, mapping, .4).tags, []);
   assert.deepEqual(aggregate(isolated, mapping, .4).uncertain, ['sloppy']);
 });
+
+
+test('review candidates can exceed upload limits without changing default suggestions',()=>{
+ const mapping=Object.fromEntries(Array.from({length:80},(_,i)=>['review tag '+i,[i]]));
+ const frames=Array.from({length:4},(_,frame)=>Array.from({length:80},(_,i)=>i<40||frame===0?.8:.1));
+ const normal=aggregate(frames,mapping,.4),expanded=aggregate(frames,mapping,.4,'majority',{limitResults:false});
+ assert.equal(normal.tags.length,20);assert.equal(normal.uncertain.length,15);
+ assert.equal(expanded.tags.length,40);assert.equal(expanded.uncertain.length,40);
+ assert.deepEqual(expanded.tags.slice(0,20),normal.tags);
+ assert.deepEqual(expanded.uncertainScores.slice(0,15),normal.uncertainScores);
+ assert.deepEqual(aggregate(frames,mapping,.4),normal);
+});

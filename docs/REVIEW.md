@@ -9,6 +9,8 @@ Start `Review.cmd` from a source checkout. The lab uses the local inference serv
 3. Click a tag name to inspect sampled frames and scores. Click a frame to seek the video. Close the evidence drawer with its close button, Escape or a click outside.
 4. Choose **Complete & next** after reviewing the whole clip. **Previous** and **Next** navigate without completing a review. **Reopen review** returns a completed video to pending.
 
+The review list includes all qualifying suggestions and uncertain candidates from stored model scores, beyond the upload display limits. Recorded upload suggestions remain unchanged for baseline metrics.
+
 Changing a judgment marks the review as pending. Changing experimental rules or resampling preserves annotations. Only completed reviews contribute to accuracy metrics.
 
 **Confidence score** averages the two strongest frame scores. **Matching frames (A)** shows how many frames meet Variant A's threshold. Neither is a guaranteed probability of correctness.

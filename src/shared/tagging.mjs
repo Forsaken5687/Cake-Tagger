@@ -29,6 +29,7 @@ export function aggregate(frameScores, mapping, threshold = 0.5, coverage = 'maj
     else if (scores[0] >= threshold) uncertain.push({ tag, confidence, supportingFrames: support });
   }
   predicted.sort((a, b) => b.confidence - a.confidence); uncertain.sort((a, b) => b.confidence - a.confidence);
-  const uncertainScores = uncertain.slice(0, 15);
-  return { tags: predicted.slice(0, 20), uncertain: uncertainScores.map(row => row.tag), uncertainScores, reviewRequired: true };
+  // The review lab can inspect the full candidate set without changing upload defaults.
+  const uncertainScores = options.limitResults === false ? uncertain : uncertain.slice(0, 15);
+  return { tags: options.limitResults === false ? predicted : predicted.slice(0, 20), uncertain: uncertainScores.map(row => row.tag), uncertainScores, reviewRequired: true };
 }
