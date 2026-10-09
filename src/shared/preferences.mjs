@@ -1,5 +1,5 @@
 export const SETTINGS_KEY = 'cake-tagger-settings-v1';
-export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', frames: 'auto', parallelism: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, suggestionLimit: 20, uncertainLimit: 15, autoAnalyzeEmbed: true, hideSiteAI: false });
+export const DEFAULT_SETTINGS = Object.freeze({ language: 'auto', frames: 'auto', parallelism: 'auto', excludedTags: Object.freeze(['hairy', 'watermark']), showScores: true, showUncertain: true, suggestionThreshold: 0.4, suggestionLimit: 20, uncertainLimit: 15, autoAnalyzeEmbed: true, hideSiteAI: false });
 export function normalizeSettings(value = {}) {
   // This allowlist is also the persistence boundary: unrelated fields are discarded.
   if (!value || typeof value !== 'object' || Array.isArray(value)) value = {};
@@ -9,6 +9,7 @@ export function normalizeSettings(value = {}) {
     frames: ['auto', '4', '6', '8', '12', '16', '24', '32', '48'].includes(frames) ? frames : 'auto',
     parallelism: /^[1-9]\d*$/.test(String(value.parallelism)) && Number.isSafeInteger(Number(value.parallelism)) ? String(value.parallelism) : 'auto',
     excludedTags: Array.isArray(value.excludedTags) ? [...new Set(value.excludedTags.filter(tag => typeof tag === 'string' && tag.trim().length > 0 && tag.trim().length <= 80).map(tag => tag.trim().toLowerCase()))].slice(0, 302) : [...DEFAULT_SETTINGS.excludedTags],
+    suggestionThreshold: typeof value.suggestionThreshold === 'number' && Number.isFinite(value.suggestionThreshold) && value.suggestionThreshold >= 0 && value.suggestionThreshold <= 1 ? value.suggestionThreshold : 0.4,
     suggestionLimit: Number.isInteger(value.suggestionLimit) && value.suggestionLimit >= 1 && value.suggestionLimit <= 302 ? value.suggestionLimit : 20,
     uncertainLimit: Number.isInteger(value.uncertainLimit) && value.uncertainLimit >= 0 && value.uncertainLimit <= 302 ? value.uncertainLimit : 15,
     showScores: typeof value.showScores === 'boolean' ? value.showScores : true,

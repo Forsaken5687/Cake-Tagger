@@ -2,7 +2,7 @@ import { message, messageError, errorMessage } from '../shared/messages.mjs';
 import { ANALYSIS_VERSION } from '../shared/tagging.mjs';
 import { makeRecord, applyRecord, tagSource } from '../shared/corrections.mjs';
 import { samplingPlan, hashFile, sampleVideo as sample } from './sampling.mjs';
-import { DEFAULT_THRESHOLD, DEFAULT_COVERAGE, PREPROCESS_VERSION } from '../shared/analysis-settings.mjs';
+import { DEFAULT_COVERAGE, PREPROCESS_VERSION } from '../shared/analysis-settings.mjs';
 import { createSettingsStore, suggestionPolicy } from '../shared/preferences.mjs';
 import { createUploadAutoAnalysis, reconcileHashedFile } from './auto-analysis.mjs';
 import { createNativeClient } from './native-client.mjs';
@@ -52,7 +52,7 @@ function cancelAnalysis() {
 function cancelInference() {
   nativeClient?.stop();
 }
-function infer(frames, parallelism, excludedTags) {
+function infer(frames, parallelism, analysisSettings) {
   // One transport per page. Session configuration belongs to the backend.
   if (!nativeClient) {
     nativeClient = createNativeClient({ fetcher: session.request,
@@ -60,7 +60,7 @@ function infer(frames, parallelism, excludedTags) {
       onProgress: (current, total) => localizedText($('#status'), message('analysis.progress', { current, total }))
     });
   }
-  return nativeClient.infer(frames, parallelism, { excludedTags, raw: false }).then(result => {
+  return nativeClient.infer(frames, parallelism, { ...analysisSettings, raw: false }).then(result => {
     return { ...result, runtime: { ...result.runtime, parallelismLimit: parallelism, memory: memorySnapshot() } };
   });
 }
@@ -138,14 +138,15 @@ async function analyze(targets = entries, automatic = false) {
   try {
     settings = await settingsStore.load(); batch.signal.throwIfAborted();
     if (automatic && !settings.autoAnalyzeEmbed) return;
-    const setting = settings.frames, threshold = DEFAULT_THRESHOLD;
+    const setting = settings.frames, threshold = settings.suggestionThreshold;
+    const limitsKey = settings.suggestionLimit + ":" + settings.uncertainLimit;
     const analysisSettings = { ...settings, excludedTags: [...settings.excludedTags] };
     // Freeze preferences for this batch; later changes apply to subsequent analyses.
     const coverage = DEFAULT_COVERAGE, analysisPolicy = ANALYSIS_VERSION + ':' + coverage + ':' + suggestionPolicy(analysisSettings);
     for (const entry of targets) {
       if (!entry.hasFile) continue;
       const expectedCount = setting === 'auto' ? (entry.result?.durationSeconds ? samplingPlan(entry.result.durationSeconds).count : null) : Number(setting);
-      if (entry.result && entry.frames && entry.result.sampledFrames === expectedCount && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy) continue;
+      if (entry.result && entry.frames && entry.result.sampledFrames === expectedCount && entry.result.threshold === threshold && entry.result.analysisPolicy === analysisPolicy && entry.analysisLimits === limitsKey) continue;
       batch.signal.throwIfAborted(); entry.state = 'analysis.sampling'; entry.error = ''; render();
       try {
         const started = performance.now();
@@ -153,12 +154,12 @@ async function analyze(targets = entries, automatic = false) {
         const samplingSeconds = (performance.now() - started) / 1000;
         const count = sampleData.sampledFrames; entry.sha256 = sampleData.sha256;
         entry.frames = sampleData.frames; entry.state = message('analysis.frameProgress', { count }); render();
-        const key = analysisKey(sampleData.sha256, count, threshold, analysisPolicy);
+        const key = analysisKey(sampleData.sha256, count, threshold, analysisPolicy) + "|" + limitsKey;
         let result = await cached(key);
         if (result) result = { ...result, filename: entry.file.name, cached: true };
         else {
           const requestStarted = performance.now();
-          const inference = await infer(sampleData.inputs, analysisSettings.parallelism, analysisSettings.excludedTags);
+          const inference = await infer(sampleData.inputs, analysisSettings.parallelism, analysisSettings);
           const requestSeconds = (performance.now() - requestStarted) / 1000;
           batch.signal.throwIfAborted();
           result = { filename: entry.file.name, sha256: sampleData.sha256, ...inference.analysis, sampledFrames: count, threshold, analysisPolicy, model: 'JoyTag-FP32', runtime: { ...inference.runtime, clientBrowser: { family: /Firefox\//.test(navigator.userAgent) ? 'firefox' : /(?:Chrome|Chromium)\//.test(navigator.userAgent) ? 'chromium' : 'other', visibilityState: document.visibilityState } }, seconds: Math.round((performance.now() - started) / 100) / 10, timings: { samplingSeconds, ...inference.timings, requestSeconds, transportSeconds: Math.max(0, requestSeconds - (inference.timings.queueSeconds + inference.timings.workerWallSeconds)), totalSeconds: (performance.now() - started) / 1000 }, createdAt: new Date().toISOString() };
@@ -168,6 +169,7 @@ async function analyze(targets = entries, automatic = false) {
         const previous = sessionRecords.get(result.sha256);
         if (previous) applyRecord(entry, { ...previous, originalSuggestionsKnown: true }, result);
         else { entry.result = result; entry.selected = new Map([...result.tags.map(t => [t.tag, true]), ...result.uncertain.map(tag => [tag, false])]); entry.tagSources = Object.fromEntries([...entry.selected.keys()].map(tag => [tag, 'suggestion'])); entry.reviewed = false; entry.originalSuggestionsKnown = true; }
+        entry.analysisLimits = limitsKey;
         entry.updatedAt = entry.updatedAt || new Date().toISOString(); await remember(entry);
         entry.state = result.cached ? message('analysis.cached', { count }) : message('analysis.complete', { count, seconds: result.seconds });
       } catch (e) {

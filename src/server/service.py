@@ -277,6 +277,20 @@ class Handler(BaseHTTPRequestHandler):
         settings = s.settings or normalize_settings()
         exclusions = settings["excludedTags"]
         try:
+            threshold = float(params.get("threshold", [settings["suggestionThreshold"]])[0])
+            if not 0 <= threshold <= 1:
+                raise ValueError()
+            limits = {}
+            for key, minimum in [("suggestionLimit", 1), ("uncertainLimit", 0)]:
+                value = str(params.get(key, [settings[key]])[0])
+                if len(value) > 3 or not value.isascii() or not value.isdecimal():
+                    raise ValueError()
+                limits[key] = int(value)
+                if not minimum <= limits[key] <= 302:
+                    raise ValueError()
+        except (ValueError, TypeError, OverflowError):
+            raise RequestError(400, "error.invalidAnalysisPolicy") from None
+        try:
             if self.headers.get("X-Cake-Tagger-Exclusions"):
                 exclusions = json.loads(self.headers["X-Cake-Tagger-Exclusions"])
             if (
@@ -334,9 +348,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.stream(progress.get_nowait())
             result = future.result()
             result["analysis"] = aggregate(
-                result["scores"], s.policy, excluded_tags=exclusions,
-                suggestion_limit=settings["suggestionLimit"],
-                uncertain_limit=settings["uncertainLimit"],
+                result["scores"], s.policy, threshold=threshold, excluded_tags=exclusions,
+                suggestion_limit=limits["suggestionLimit"],
+                uncertain_limit=limits["uncertainLimit"],
             )
             result["runtime"].update(
                 memory_snapshot(),

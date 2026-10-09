@@ -61,6 +61,14 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(restored["uncertainLimit"], 0)
         self.assertEqual(restored, persisted)
 
+    def test_invalid_request_thresholds_and_limits_are_rejected(self):
+        for query in ("threshold=nan", "threshold=inf", "threshold=-1", "threshold=2", "suggestionLimit=0", "uncertainLimit=303"):
+            status, _, _ = self.request("/api/infer?" + query, "POST", {
+                "Authorization": "Bearer " + self.service.token,
+                "Content-Type": "application/octet-stream",
+            }, b"")
+            self.assertEqual(status, 400)
+
     def raw(self, data):
         with socket.create_connection(
             ("127.0.0.1", self.port), timeout=5
@@ -299,6 +307,19 @@ class ValidationTests(unittest.TestCase):
             self.assertEqual(normalize_settings({"suggestionLimit": value})["suggestionLimit"], 20)
         self.assertEqual(normalize_settings({"suggestionLimit": 302, "uncertainLimit": 0})["suggestionLimit"], 302)
         self.assertEqual(normalize_settings({"uncertainLimit": 0})["uncertainLimit"], 0)
+
+    def test_threshold_changes_support_without_changing_scores(self):
+        from server.core import aggregate
+        policy = dict(mapping={"a": [0]}, manualOnly=[], details=[])
+        frames = [[.7], [.6], [.5], [.1]]
+        relaxed = aggregate(frames, policy, threshold=.4)
+        strict = aggregate(frames, policy, threshold=.65)
+        self.assertEqual(len(relaxed["tags"]), 1)
+        self.assertEqual(strict["tags"], [])
+        self.assertEqual(relaxed["tags"][0]["confidence"], strict["uncertainScores"][0]["confidence"])
+        self.assertEqual(normalize_settings({"suggestionThreshold": .75})["suggestionThreshold"], .75)
+        for value in (True, "0.5", float("nan"), float("inf"), -1, 2):
+            self.assertEqual(normalize_settings({"suggestionThreshold": value})["suggestionThreshold"], .4)
 
     def test_thread_policy_and_settings(self):
         self.assertEqual(capabilities(24)["recommendedThreads"], 8)

@@ -278,6 +278,8 @@ export const messages = {
   'embed.openUpload': { en: 'Open the upload area on cake.ski to tag videos.', de: 'Öffne den Upload-Bereich auf cake.ski, um Videos zu taggen.' },
   'settings.language': { en: 'Language', de: 'Sprache' },
   'settings.removeExclusion': { en: 'Remove exclusion: {tag}', de: 'Ausschluss entfernen: {tag}' },
+  'settings.suggestionThreshold': { en: 'Suggestion threshold (%)', de: 'Vorschlagsschwelle (%)' },
+  'settings.thresholdHint': { en: 'Minimum frame score used to assess recurring evidence. Higher values are stricter. Detail-specific minimums still apply. Applies to new analyses; this is not a probability of correctness.', de: 'Mindestscore pro Bild für wiederkehrende Erkennung. Höhere Werte sind strenger. Mindestschwellen für Details bleiben erhalten. Gilt für neue Analysen; keine Trefferwahrscheinlichkeit.' },
   'settings.suggestionLimit': { en: 'Maximum suggested tags per video', de: 'Maximale Tag-Vorschläge pro Video' },
   'settings.uncertainLimit': { en: 'Maximum uncertain tags per video', de: 'Maximale unsichere Tags pro Video' },
   'settings.limitHint': { en: 'Applies to new analyses. Existing selections are preserved. Set uncertain tags to 0 to omit them.', de: 'Gilt für neue Analysen. Bestehende Auswahlen bleiben erhalten. Mit 0 werden keine unsicheren Tags ausgegeben.' },

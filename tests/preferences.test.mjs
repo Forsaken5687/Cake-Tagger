@@ -63,3 +63,8 @@ test('language changes translate controls and dynamic analysis messages; tag nam
   for(const suggestionLimit of [true,'5',0,303,2.5])assert.equal(normalizeSettings({suggestionLimit}).suggestionLimit,20);
   assert.equal(normalizeSettings({suggestionLimit:302}).suggestionLimit,302);
  });
+
+test('suggestion threshold accepts finite scores and retains safe defaults',()=>{
+ assert.equal(normalizeSettings({suggestionThreshold:.75}).suggestionThreshold,.75);
+ for(const suggestionThreshold of [true,'0.5',NaN,Infinity,-.1,1.1])assert.equal(normalizeSettings({suggestionThreshold}).suggestionThreshold,.4);
+});

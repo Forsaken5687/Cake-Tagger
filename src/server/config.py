@@ -90,6 +90,8 @@ def normalize_settings(value=None):
         parallelism=parallelism,
         excludedTags=exclusions,
     )
+    threshold = value.get("suggestionThreshold")
+    result["suggestionThreshold"] = threshold if type(threshold) in (int, float) and 0 <= threshold <= 1 else 0.4
     for key, minimum, fallback in [("suggestionLimit", 1, 20), ("uncertainLimit", 0, 15)]:
         limit = value.get(key)
         result[key] = limit if type(limit) is int and minimum <= limit <= 302 else fallback

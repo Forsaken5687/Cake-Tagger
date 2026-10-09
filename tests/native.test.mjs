@@ -34,3 +34,12 @@ test('native exports retain overrides above eight and reject impossible thread c
   assert.throws(()=>validateRuntime({...runtime,configuredNativeThreads:25}));
   assert.throws(()=>validateRuntime({...runtime,modelSha256:'unknown'}));
 });
+
+test('upload requests freeze threshold and tag limits for the batch',async()=>{
+ const client=createNativeClient({fetcher:async(url)=>{
+  const query=new URL(url,'http://localhost').searchParams;
+  assert.equal(query.get('threshold'),'0.75');assert.equal(query.get('suggestionLimit'),'7');assert.equal(query.get('uncertainLimit'),'0');
+  return new Response(JSON.stringify({type:'done',analysis:{tags:[],uncertain:[],uncertainScores:[]},timings:{modelLoadSeconds:0,preprocessSeconds:0,inferenceSeconds:0,queueSeconds:0}})+'\n');
+ }});
+ await client.infer([image(0)],'auto',{raw:false,suggestionThreshold:.75,suggestionLimit:7,uncertainLimit:0});
+});
