@@ -38,6 +38,8 @@ Holdout suggestions and metrics remain hidden until **Reveal holdout results** i
 
 ## Sessions and downloads
 
+Use **Remove video** beside the selected video's status to remove it from the current session after confirmation. Its analysis and annotations leave the saved session, metrics and future exports. Other reviews and rules are preserved. Original files and the optional browser video cache are kept for reimport. Removal is unavailable during analysis or session loading. The session menu closes on an outside click or Escape.
+
 The lab automatically saves annotations, scores, rules and preview images in the current browser. Selected videos are cached separately in this browser for automatic reconnection during session restore or JSON import. This uses browser disk storage; video files are never included in JSON exports. Wait for **Saved locally** before closing. Browser storage can be cleared; download JSON as a separate backup.
 
 Under **Session options** you can change frame count, import JSON, save immediately or start a new session. **New session** clears this lab's browser backup after confirmation. **Restore session** reloads a saved session. Videos are restored from the browser cache by content hash. If the cache is unavailable or cleared, select missing videos again for playback or resampling. Video cache failures do not prevent annotation saves. Starting a new session also clears the video cache.

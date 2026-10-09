@@ -157,3 +157,5 @@ header .session-menu{left:auto;right:0}
 .column-sort{border:0;background:transparent;padding:0;color:inherit;font:inherit;display:inline-flex;align-items:center;gap:6px;text-align:left}
 .column-sort:hover{color:#fff;background:transparent}
 .sort-arrow{min-width:1ch}
+
+#remove-video{font-size:12px;padding:5px 8px;background:transparent;color:#ffb4c7;border-color:#71404e}

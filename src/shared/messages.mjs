@@ -1,5 +1,8 @@
 // Stable message IDs keep wording and runtime data independent of each other.
 export const messages = {
+  "review.removeVideo": {en:"Remove video",de:"Video entfernen"},
+  "review.confirmRemove": {en:"Remove {filename} from this session, including its analysis and annotations? The original video file is kept.",de:"{filename} aus dieser Sitzung entfernen, einschließlich Analyse und Bewertungen? Die ursprüngliche Videodatei bleibt erhalten."},
+  "review.removed": {en:"Video removed from the session.",de:"Video aus der Sitzung entfernt."},
   "review.reopen": {"en":"Reopen review","de":"Erneut bearbeiten"},
   "review.restartRequired": {"en":"The review tool could not start. Restart the local Cake Tagger service, then reload this page. Your saved reviews are retained.","de":"Das Bewertungstool konnte nicht starten. Starte den lokalen Cake-Tagger-Dienst neu und lade diese Seite erneut. Gesicherte Bewertungen bleiben erhalten."},
   "review.unclear": {"en":"Unclear","de":"Unklar"},

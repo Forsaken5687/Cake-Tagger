@@ -110,6 +110,7 @@ function summary(){
  $('#analyze').disabled=blocked||!mapping||!entries.some(e=>e.file instanceof File);$('#files').disabled=blocked;
  $('#import').disabled=blocked;$('#frames').disabled=blocked;
  $('#cancel').hidden=!running;$('#export').disabled=blocked||!entries.some(e=>e.result)||!validRules();
+ $('#remove-video').disabled=blocked||!mapping||!active;
  $('#save').disabled=attaching||!!pendingDraft||!mapping;$('#clear').disabled=running||attaching||!!pendingDraft;
  label($("#progress"),"review.progress",{done:entries.filter(e=>e.reviewed&&e.result).length,total:entries.length});
  const index=entries.indexOf(active);
@@ -289,6 +290,16 @@ $('#analyze').onclick=async()=>{
  finally{running=false;controller=undefined;renderQueue();renderTags();await saveNow();}
 };
 $('#cancel').onclick=()=>{controller?.abort();client.stop();};
+$('#remove-video').onclick=async()=>{
+ if(running||attaching||pendingDraft||!mapping||!active)return;
+ const entry=active,index=entries.indexOf(entry);
+ if(index<0||!confirm(t('review.confirmRemove',{filename:entry.file.name})))return;
+ // Remove the session entry only. Cached source files remain available for reimport,
+ // and the serialized save chain keeps earlier writes from restoring this entry.
+ entries.splice(index,1);active=entries[Math.min(index,entries.length-1)];
+ evidenceTag=undefined;$('#search').value='';changed();showPlayer();renderQueue();renderTags();
+ label($('#status'),'review.removed');await saveNow();
+};
 $('#reopen').onclick=()=>{
  if(!active?.result||hiddenHoldout(active))return;
  active.reviewed=false;active.updatedAt=new Date().toISOString();changed();renderQueue();renderTags();
@@ -322,6 +333,7 @@ $('#evidence-close').onclick=()=>closeEvidence();
 // Outside clicks keep focus on their own target and still perform their action.
 document.addEventListener('pointerdown',event=>{
  if(!$('#evidence').hidden&&!event.composedPath().includes($('#evidence')))closeEvidence(false);
+ const menu=$('.session-options');if(menu.open&&!event.composedPath().includes(menu))menu.open=false;
 });
 for(const name of ['review','compare','problems']){
  const tab=$('#tab-'+name);tab.onclick=()=>view(name);
@@ -341,7 +353,11 @@ $('#complete-next').onclick=()=>{
  const next=ordered.find(entry=>entry.result&&!entry.reviewed&&!hiddenHoldout(entry));
  if(next)selectEntry(next);else{renderQueue();renderTags();}
 };
-window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('#evidence').hidden){$('#evidence-close').click();}});
+window.addEventListener('keydown',event=>{
+ if(event.key!=='Escape')return;
+ if(!$('#evidence').hidden)$('#evidence-close').click();
+ const menu=$('.session-options');if(menu.open){menu.open=false;menu.querySelector('summary').focus();}
+});
 $('#scope').onchange=summary;$('#problem-source').onchange=summary;
 $('#reveal').onchange=()=>{renderQueue();renderTags();};
 $('#candidate-minimum').onchange=()=>{if($('#candidate-minimum').checkValidity()){renderTags();changed();}};
