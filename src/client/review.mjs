@@ -5,7 +5,7 @@ import {normalizeSettings,suggestionPolicy} from '../shared/preferences.mjs';
 import {ANALYSIS_VERSION,aggregate} from '../shared/tagging.mjs';
 import {makeRecord} from '../shared/corrections.mjs';
 import {DEFAULT_THRESHOLD,DEFAULT_COVERAGE} from '../shared/analysis-settings.mjs';
-import {candidateTags,comparisonMetrics,createReviewSnapshot,validateVariants,DEFAULT_VARIANTS,reviewPartition,problemTags,compareVariants,frameEvidence,sortReviewCandidates} from '../shared/evaluation.mjs';
+import {candidateTags,comparisonMetrics,createReviewSnapshot,validateVariants,DEFAULT_VARIANTS,reviewPartition,problemTags,compareVariants,frameEvidence,sortReviewCandidates,reviewableTags} from '../shared/evaluation.mjs';
 // Load the optional development module after translating the shell. An older
 // running backend may not yet allow this file, even though HTML is current.
 let createDraft,restoreDraft,importReview,store;
@@ -89,7 +89,7 @@ function labSummary(){
   button.onclick=()=>jump(entry,change.tag);$('#variant-changes').append(button);
  }
  const source=$('#problem-source').value,predict=entry=>source==='current'?entry.result.tags:candidate(entry,source);
- const problems=problemTags(scoped,predict).filter(row=>row.falsePositive+row.falseNegative);
+ const problems=problemTags(scoped,predict).filter(row=>Object.hasOwn(mapping,row.tag)&&(row.falsePositive+row.falseNegative));
  $('#problem-empty').textContent=problems.length?'':t('review.noProblems');
  for(const problem of problems){
   const tr=node('tr');tr.append(node('td',problem.tag),node('td',problem.falsePositive),node('td',problem.falseNegative));
@@ -152,7 +152,7 @@ function renderTags(){
  // and user annotations intact so accuracy comparisons still mean the same thing.
  const expanded=active.scores?aggregate(active.scores,mapping,Number($('#candidate-minimum').value)/100,DEFAULT_COVERAGE,{excludedTags:settings.excludedTags,limitResults:false}):{tags:[],uncertain:[]};
  const possible=new Set([...active.selected.keys(),...active.ignoredTags,...baseline.keys(),...expanded.tags.map(row=>row.tag),...expanded.uncertain,...a,...b]),query=$('#search').value.trim().toLowerCase();
- const tags=($('#all').checked||query?allowedTags():allowedTags().filter(tag=>possible.has(tag))).filter(tag=>tag.toLowerCase().includes(query));
+ const tags=reviewableTags(($('#all').checked||query?allowedTags():allowedTags().filter(tag=>possible.has(tag))),mapping).filter(tag=>tag.toLowerCase().includes(query));
  // Use the same evidence for sorting and the displayed cells. Judgments do not
  // affect order, so changing a verdict never moves its row.
  const metrics=new Map(tags.map(tag=>{
@@ -192,7 +192,7 @@ function renderTags(){
   for(const present of [baseline.has(tag),a.has(tag),b.has(tag)]){const cell=node('td',present?'✓':'—');cell.className='comparison-column'+(present?' yes':'');tr.append(cell);}
   $('#tags').append(tr);
  }
- label($('#counts'),'tags.selectedCount',{count:[...active.selected].filter(([tag,yes])=>yes&&!active.ignoredTags.has(tag)).length});
+ label($('#counts'),'tags.selectedCount',{count:[...active.selected].filter(([tag,yes])=>yes&&Object.hasOwn(mapping,tag)&&!active.ignoredTags.has(tag)).length});
  scroller.scrollTop=scrollTop;scroller.scrollLeft=scrollLeft;
  if(evidenceTag)openEvidence(evidenceTag,false);
 }

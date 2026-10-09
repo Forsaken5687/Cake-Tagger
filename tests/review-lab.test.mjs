@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {candidateTags,comparisonMetrics,problemTags,compareVariants,frameEvidence,sortReviewCandidates,reviewPartition,validateVariants,createReviewSnapshot} from '../src/shared/evaluation.mjs';
+import {candidateTags,comparisonMetrics,problemTags,compareVariants,frameEvidence,sortReviewCandidates,reviewPartition,validateVariants,createReviewSnapshot,reviewableTags} from '../src/shared/evaluation.mjs';
 import {createDraft,restoreDraft,importReview,openReviewStore} from '../src/client/review-session.mjs';
 
 const mapping={glasses:[0],tattoos:[1]},tags=['glasses','tattoos','watermark','lying on back'];
@@ -119,4 +119,16 @@ test('an unavailable video database cannot delete the annotation backup during c
  const opened=[];const store=openReviewStore({open(name){opened.push(name);throw Error('storage unavailable');}});
  await assert.rejects(store.clear(),/storage unavailable/);
  assert.deepEqual(opened,['cake-tagger-review-v1-videos']);
+});
+
+test('review lists only mapped labels while preserving stored historical judgments',()=>{
+ const compound={all:[[0],[1]]};
+ const labels=['manual-only','glasses','combined','historic'];
+ assert.deepEqual(reviewableTags(labels,{glasses:[0],combined:compound}),['glasses','combined']);
+ assert.deepEqual(labels,['manual-only','glasses','combined','historic']);
+ const source=entry();source.selected.set('lying on back',true);
+ const restored=restoreDraft(createDraft([source],variants,'4','en'),tags,mapping).entries[0];
+ assert.equal(restored.selected.get('lying on back'),true);
+ assert.ok(!reviewableTags([...restored.selected.keys()],mapping).includes('lying on back'));
+ assert.equal(createDraft([restored],variants,'4','en').entries[0].record.tags.includes('lying on back'),true);
 });

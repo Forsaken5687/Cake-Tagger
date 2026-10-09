@@ -4,6 +4,9 @@ import { PREPROCESS_VERSION } from './analysis-settings.mjs';
 import { messageError } from './messages.mjs';
 import { exportItem } from './corrections.mjs';
 
+// Display filtering never removes stored annotations or historical export labels.
+export function reviewableTags(tags,mapping) { return tags.filter(tag=>Object.hasOwn(mapping,tag)); }
+
 // Candidate rules are a local experiment, never the production tagging policy.
 export function candidateTags(frames,mapping,{threshold=.5,coverage=.5,excludedTags=[],tagRules={}}={}) {
  if(!Number.isFinite(threshold)||threshold<0||threshold>1||!Number.isFinite(coverage)||coverage<=0||coverage>1)throw Error('Invalid comparison rules');
