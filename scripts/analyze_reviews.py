@@ -122,7 +122,7 @@ def analyze_reviews(input, mapping, allowed, policy):
         value = analysis_policy(result.get("analysisPolicy"))
 
         match = re.fullmatch(
-            r"coverage-v[23456]:(majority|brief)(?::(.+))?", value or ""
+            r"coverage-v[234567]:(majority|brief)(?::(.+))?", value or ""
         )
 
         require(
@@ -172,7 +172,7 @@ def analyze_reviews(input, mapping, allowed, policy):
             x["tag"]
             for x in aggregate(
                 video["modelScores"],
-                dict(policy, mapping=mapping),
+                dict(policy, mapping=mapping, tagRules=policy.get("tagRules", {}) if value.startswith("coverage-v7:") else {}),
                 result["threshold"],
                 match[1],
                 list(blocked),

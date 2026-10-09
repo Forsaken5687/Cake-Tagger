@@ -125,3 +125,37 @@ test('review display can surface weak matches without changing production predic
  assert(expanded.tags.some(row=>row.tag==='weak'));
  assert.deepEqual(aggregate(frames,mapping,.4,'majority'),baseline);
 });
+
+
+test('calibrated production rules require recurring evidence at the calibrated cutoffs', () => {
+  for (const count of [8, 16, 24, 32, 48]) {
+    for (const [tag, score, share] of [['piercings', .46, .125], ['vaginal penetration', .31, .51]]) {
+      const required = Math.max(2, Math.ceil(count * share));
+      const frames = Array.from({length:count}, (_, i) => [i < required ? score : .1]);
+      assert.equal(aggregate(frames, {[tag]:[0]}, .4).tags[0]?.supportingFrames, required);
+      frames[required-1][0] = .1;
+      assert.equal(aggregate(frames, {[tag]:[0]}, .4).tags.length, 0);
+    }
+  }
+  assert.equal(aggregate([[.99]], {piercings:[0]}, .4).tags.length, 0);
+});
+
+test('calibrated rules honor exclusions and stricter user settings without changing brief mode', () => {
+  const mapping = {piercings:[0], 'vaginal penetration':[1]};
+  const frames = Array.from({length:16}, (_, i) => [i<2?.46:.1, i<9?.31:.1]);
+  assert.equal(aggregate(frames, mapping, .4).tags.length, 2);
+  assert.equal(aggregate(frames, mapping, .5).tags.length, 0);
+  assert.equal(aggregate(frames, mapping, .4, 'majority', {excludedTags:Object.keys(mapping)}).tags.length, 0);
+  assert.deepEqual(aggregate(frames, mapping, .4, 'brief'), aggregate(frames, mapping, .4, 'brief', {tagRules:{}}));
+});
+
+test('calibration leaves every other unlimited production row unchanged', () => {
+  const mapping = {piercings:[0], 'vaginal penetration':[1], 'small tits':[2], '3d':[3], skirt:[4], solo:[5]};
+  const frames = Array.from({length:16}, (_, i) => [i<2?.46:.1, i<9?.31:.1, i<7?.8:.2, i<12?.7:.1, i<5?.8:.1, i<10?.6:.1]);
+  const options = {limitResults:false};
+  const legacy = aggregate(frames, mapping, .4, 'majority', {...options,tagRules:{}});
+  const current = aggregate(frames, mapping, .4, 'majority', options);
+  const keep = rows => rows.filter(row => !['piercings','vaginal penetration'].includes(row.tag));
+  assert.deepEqual(keep(current.tags), keep(legacy.tags));
+  assert.deepEqual(keep(current.uncertainScores), keep(legacy.uncertainScores));
+});

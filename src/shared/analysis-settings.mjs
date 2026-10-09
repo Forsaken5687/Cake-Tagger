@@ -7,7 +7,7 @@ export const PREPROCESS_VERSION = 'preprocess-v2';
 export function validateAnalysisPolicy(value) {
   if (value == null) return null;
   if (typeof value !== 'string' || value.length > 32768) throw messageError('error.invalidAnalysisPolicy');
-  const match = /^coverage-v[23456]:(majority|brief)(?::(.+))?$/.exec(value);
+  const match = /^coverage-v[234567]:(majority|brief)(?::(.+))?$/.exec(value);
   if (!match) throw messageError('error.invalidAnalysisPolicy');
   if (match[2]) {
     let exclusions;

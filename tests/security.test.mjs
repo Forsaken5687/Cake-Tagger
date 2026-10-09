@@ -13,6 +13,6 @@ test('saved sessions reject shell payloads, credentials, alternate hosts and pat
 });
 
 test('analysis policies accept current exclusion snapshots and legacy keys, rejecting malformed metadata', () => {
-  for (const value of [null, 'coverage-v2:brief', 'coverage-v5:majority', 'coverage-v6:majority:["hairy","watermark"]', 'coverage-v5:majority:["hairy","watermark"]', 'coverage-v5:majority:[]']) assert.equal(validateAnalysisPolicy(value), value);
-  for (const value of [42, 'coverage-v7:majority', 'coverage-v5:unknown', 'coverage-v5:majority:{}', 'coverage-v5:majority:[null]', 'coverage-v5:majority:[', 'coverage-v5:majority:[""]']) assert.throws(() => validateAnalysisPolicy(value));
+  for (const value of [null, 'coverage-v7:majority:[]', 'coverage-v2:brief', 'coverage-v5:majority', 'coverage-v6:majority:["hairy","watermark"]', 'coverage-v5:majority:["hairy","watermark"]', 'coverage-v5:majority:[]']) assert.equal(validateAnalysisPolicy(value), value);
+  for (const value of [42, 'coverage-v8:majority', 'coverage-v5:unknown', 'coverage-v5:majority:{}', 'coverage-v5:majority:[null]', 'coverage-v5:majority:[', 'coverage-v5:majority:[""]']) assert.throws(() => validateAnalysisPolicy(value));
 });

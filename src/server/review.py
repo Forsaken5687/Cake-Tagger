@@ -147,7 +147,7 @@ def review_export(evaluation, items, policy, allowed):
             preprocessVersion="preprocess-v2",
             mapping=policy["mapping"],
             comparisonRules=rules,
-            baselineVersion="coverage-v6",
+            baselineVersion=policy["version"],
             variants=normalized,
         ),
         items=output,

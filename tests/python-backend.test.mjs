@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { aggregate, details } from '../src/shared/tagging.mjs';
+import { aggregate, details, calibratedTagRules } from '../src/shared/tagging.mjs';
 import { excluded } from '../src/shared/tag-policy.mjs';
 import { validateRecord, applyRecord, exportItem } from '../src/shared/corrections.mjs';
 import { validateRuntime } from '../src/shared/analysis-settings.mjs';
 const executable=process.env.CAKE_TAGGER_PYTHON||fileURLToPath(new URL('../runtime/cpython/python.exe',import.meta.url));
 test('Python core agrees with JS aggregation and handles queue cancellation, shutdown and overrides',{skip:!fs.existsSync(executable)},()=>{
  const mapping=JSON.parse(fs.readFileSync(new URL('../model/mapping.json',import.meta.url)));
- const policy={mapping,details:[...details],manualOnly:[...excluded]},cases=[];
+ const policy={mapping,details:[...details],manualOnly:[...excluded],tagRules:calibratedTagRules},cases=[];
  let seed=7;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/2**32;};
  for(const count of [1,2,8,12])for(const coverage of ['majority','brief'])for(const threshold of [.4,.65]){
   const scores=Array.from({length:count},()=>Array.from({length:5813},()=>Math.fround(random())));
@@ -28,7 +28,7 @@ test('backend and Python process metrics survive validated exports',()=>{
 
 test('Python catalog policy and correction exports agree with browser validators',()=>{
  const policy=JSON.parse(fs.readFileSync(new URL('../model/policy.json',import.meta.url)));
- assert.deepEqual(policy.details,[...details]);assert.deepEqual(policy.manualOnly,[...excluded]);
+ assert.deepEqual(policy.tagRules,calibratedTagRules);assert.deepEqual(policy.details,[...details]);assert.deepEqual(policy.manualOnly,[...excluded]);
  const tags=fs.readFileSync(new URL('../model/tags.txt',import.meta.url),'utf8').trim().split(/\r?\n/);
  const cases=[];
  for(const known of [true,false])for(const sources of [undefined,{tattoos:'manual',glasses:'suggestion'}]){

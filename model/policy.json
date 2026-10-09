@@ -65,7 +65,7 @@
     "hairy",
     "watermark"
   ],
-  "version": "coverage-v6",
+  "version": "coverage-v7",
   "preprocessVersion": "preprocess-v2",
   "auditReasons": {
     "4:3": "Website metadata; not inferred from sampled images.",
@@ -167,5 +167,15 @@
     "League of Legends": "league of legends",
     "ai-tagged-bare": "ai tagged bare",
     "ai-needs-review": "ai needs review"
+  },
+  "tagRules": {
+    "piercings": {
+      "threshold": 0.45,
+      "coverage": 0.125
+    },
+    "vaginal penetration": {
+      "threshold": 0.3,
+      "coverage": 0.51
+    }
   }
 }

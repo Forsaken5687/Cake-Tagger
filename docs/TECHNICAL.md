@@ -58,3 +58,9 @@ Browser messages, inactivity recovery, tag transfer and download-manager behavio
 `Start.cmd` launches the local service in the current terminal. `scripts/launch.cmd` bootstraps the pinned portable interpreter using Windows curl, certutil and tar when it is absent; the interpreter archive is verified before execution. `scripts/setup.py` restores hash-verified wheels and model weights. Python handles readiness, duplicate-service detection and errors; no shell process performs inference. The development review page is opened directly at `http://127.0.0.1:8765/review.html`.
 
 Terminal logs report startup, queued/completed analyses and shutdown without request URLs, tokens, filenames, tags or frame contents. Ctrl+C follows the same engine cleanup contract as browser Quit: finish the active native call, discard unfinished analysis and retain saved preferences. Closing a terminal window can forcibly terminate the process, so Ctrl+C or Quit is preferred. Importing the package does not configure application logging.
+
+## Calibrated production rules
+
+The `coverage-v7` policy calibrates only `piercings` and `vaginal penetration` in majority mode. Their default frame thresholds and required image shares are 45% / 12.5% and 30% / 51%, respectively, with at least two matching images. Other tags and brief mode retain their existing rules. The global score setting defaults to 40%; raising it above that default raises calibrated cutoffs by the same amount, capped at 100%. Exclusions and result limits still apply.
+
+Python reads `tagRules` from `model/policy.json`; the review's JavaScript mirror is verified against that catalog. New cache keys and exports identify policy v7. Offline replay of older exports disables these calibrations and preserves the original annotations. Existing saved review results are not recomputed on import.

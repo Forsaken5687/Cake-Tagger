@@ -34,7 +34,7 @@ def load_catalog(directory):
     )
     policy = json.loads((directory / "policy.json").read_text(encoding="utf-8"))
     mapping = json.loads((directory / "mapping.json").read_text(encoding="utf-8"))
-    if policy["version"] != "coverage-v6" or not isinstance(mapping, dict):
+    if policy["version"] != "coverage-v7" or not isinstance(mapping, dict):
         raise ValueError("Invalid catalog policy")
     for tag, rule in mapping.items():
         groups = [rule] if isinstance(rule, list) else rule.get("all", [])
@@ -53,6 +53,15 @@ def load_catalog(directory):
             tag not in tags for tag in policy[key]
         ):
             raise ValueError("Invalid catalog tags")
+    tag_rules = policy.get("tagRules", {})
+    if not isinstance(tag_rules, dict):
+        raise ValueError("Invalid calibrated tag rules")
+    for tag, rule in tag_rules.items():
+        if (tag not in mapping or tag in policy["manualOnly"] or not isinstance(rule, dict)
+            or set(rule) != {"threshold", "coverage"}
+            or type(rule["threshold"]) not in (int, float) or not 0 <= rule["threshold"] <= 1
+            or type(rule["coverage"]) not in (int, float) or not 0 < rule["coverage"] <= 1):
+            raise ValueError("Invalid calibrated tag rule")
     policy = dict(policy, mapping=mapping)
     provenance = json.loads((directory / "provenance.json").read_text(encoding="utf-8"))
     return tags, policy, provenance

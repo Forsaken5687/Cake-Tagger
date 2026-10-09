@@ -47,7 +47,7 @@ def analysis_policy(value):
     require(
         isinstance(value, str) and len(value) <= 32768, "error.invalidAnalysisPolicy"
     )
-    match = re.fullmatch(r"coverage-v[23456]:(majority|brief)(?::(.+))?", value)
+    match = re.fullmatch(r"coverage-v[234567]:(majority|brief)(?::(.+))?", value)
     require(match is not None, "error.invalidAnalysisPolicy")
     if match[2]:
         try:

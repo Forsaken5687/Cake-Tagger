@@ -127,6 +127,11 @@ def aggregate(
         support_required = (
             max(2, math.ceil(len(frame_scores) / 4)) if detail else required
         )
+        calibrated = policy.get("tagRules", {}).get(tag) if coverage == "majority" else None
+        if calibrated:
+            # Preserve user strictness above the default frame-score setting.
+            cutoff = min(1, calibrated["threshold"] + max(0, threshold - 0.4))
+            support_required = max(2, math.ceil(len(frame_scores) * calibrated["coverage"]))
         groups = [rule] if isinstance(rule, list) else rule["all"]
         scores = sorted(
             (
