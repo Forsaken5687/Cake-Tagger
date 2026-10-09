@@ -11,7 +11,7 @@ export function chooseTarget(targets, filename) {
 }
 
 export function planTags(requested, present, excluded, allowed) {
-  if (!Array.isArray(requested) || requested.length > 302 || requested.some(t => typeof t !== 'string' || !allowed.has(t))) throw messageError('error.invalidTagSelection');
+  if (!Array.isArray(requested) || requested.length > 303 || requested.some(t => typeof t !== 'string' || !allowed.has(t))) throw messageError('error.invalidTagSelection');
   const existing = new Set(present.map(normalize)), blocked = new Set(excluded.map(normalize));
   const add = [], skipped = [];
   for (const tag of new Set(requested)) {

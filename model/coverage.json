@@ -1,6 +1,6 @@
 {
-  "supportedCount": 219,
-  "totalCount": 302,
+  "supportedCount": 220,
+  "totalCount": 303,
   "supported": [
     "2girls",
     "2guys",
@@ -203,6 +203,7 @@
     "tan",
     "tanlines",
     "tattoos",
+    "tentacles",
     "thigh gap",
     "thigh highs",
     "thighjob",
@@ -2230,6 +2231,15 @@
       "status": "default-excluded",
       "labels": [],
       "reason": "Age, identity or relationship category; excluded by policy."
+    },
+    {
+      "tag": "tentacles",
+      "status": "automatic",
+      "labels": [
+        "tentacles",
+        "tentacle_sex"
+      ],
+      "scope": "Tentacles and tentacle-sex labels; tentacle hair alone is not included. Recognition of physical tentacle-shaped toys has not been validated."
     },
     {
       "tag": "thick",

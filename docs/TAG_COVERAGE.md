@@ -1,6 +1,6 @@
 # Tag coverage
 
-Under default settings, 219 of 302 tags have an automatic model mapping. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce coverage.
+Under default settings, 220 of 303 tags have an automatic model mapping. Coverage describes available signals, not recognition accuracy or calibrated probability. User exclusions further reduce coverage.
 
 Compound rules require every label group in the same image. Each group accepts alternative labels; the weakest group determines the score. Snapshot labels for motion require review.
 
@@ -209,6 +209,7 @@ Compound rules require every label group in the same image. Each group accepts a
 | tan | `tan` |  |
 | tanlines | `tanlines` |  |
 | tattoos | `tattoo` OR `shoulder_tattoo` OR `arm_tattoo` OR `pubic_tattoo` OR `facial_tattoo` OR `chest_tattoo` OR `leg_tattoo` OR `number_tattoo` OR `stomach_tattoo` OR `heart_tattoo` OR `breast_tattoo` |  |
+| tentacles | `tentacles` OR `tentacle_sex` | Tentacles and tentacle-sex labels; tentacle hair alone is not included. Recognition of physical tentacle-shaped toys has not been validated. |
 | thigh gap | `thigh_gap` |  |
 | thigh highs | `thighhighs` |  |
 | thighjob | `thigh_sex` |  |

@@ -157,7 +157,8 @@
     "dance": "Visual dancing label; sampled images do not track motion.",
     "public": "Public nudity only; other public scenes are not covered.",
     "sloppy": "Oral sex and saliva/drooling in the same sampled image; amount is approximated by model evidence.",
-    "tit shake": "Visual bouncing-breast label; sampled images do not track motion."
+    "tit shake": "Visual bouncing-breast label; sampled images do not track motion.",
+    "tentacles": "Tentacles and tentacle-sex labels; tentacle hair alone is not included. Recognition of physical tentacle-shaped toys has not been validated."
   },
   "renames": {
     "supine": "lying on back",

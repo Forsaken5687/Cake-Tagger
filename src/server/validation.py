@@ -54,7 +54,7 @@ def analysis_policy(value):
             items = json.loads(match[2])
             require(
                 isinstance(items, list)
-                and len(items) <= 302
+                and len(items) <= 303
                 and all(
                     isinstance(x, str) and x.strip() and len(x) <= 80 for x in items
                 ),

@@ -43,7 +43,7 @@ The confidence score is the average of the two strongest sampled-frame scores. I
 
 - Videos must be at most 10 minutes. Codec support depends on the browser.
 - Sampled frames can miss short events and cannot reliably establish motion or context.
-- 219 of 302 bundled tags have automatic mappings under default settings. Mapping coverage is not recognition accuracy; see [tag coverage](docs/TAG_COVERAGE.md).
+- 220 of 303 bundled tags have automatic mappings under default settings. Mapping coverage is not recognition accuracy; see [tag coverage](docs/TAG_COVERAGE.md).
 - Context-dependent and identity-related tags remain manual. Corrections do not train the model.
 - Tag transfer requires unique filenames. Image sets are unsupported.
 

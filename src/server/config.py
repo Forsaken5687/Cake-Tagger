@@ -78,7 +78,7 @@ def normalize_settings(value=None):
             for tag in exclusions
             if isinstance(tag, str) and 0 < len(tag.strip()) <= 80
         )
-    )[:302]
+    )[:303]
     frames = str(value.get("frames", "auto"))
     result = dict(
         language=value.get("language")
@@ -94,7 +94,7 @@ def normalize_settings(value=None):
     result["suggestionThreshold"] = threshold if type(threshold) in (int, float) and 0 <= threshold <= 1 else 0.4
     for key, minimum, fallback in [("suggestionLimit", 1, 20), ("uncertainLimit", 0, 15)]:
         limit = value.get(key)
-        result[key] = limit if type(limit) is int and minimum <= limit <= 302 else fallback
+        result[key] = limit if type(limit) is int and minimum <= limit <= 303 else fallback
     for key, fallback in [
         ("showScores", True),
         ("showUncertain", True),

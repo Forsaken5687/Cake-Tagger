@@ -75,5 +75,6 @@ test('current website names replace retired names and new tags use explicit labe
   assert.deepEqual(sources('league of legends'), ['league_of_legends']);
   assert.deepEqual(sources('multicolored hair'), ['multicolored_hair']);
   assert.deepEqual(sources('covering breasts'), ['covering_breasts']);
+  assert.deepEqual(sources('tentacles'), ['tentacles', 'tentacle_sex']);
   for (const tag of ['4:3', 'ai tagged', 'ai tagged bare', 'ai needs review', 'ksjhgf', 'tightjob']) assert(excluded.has(tag), tag);
 });

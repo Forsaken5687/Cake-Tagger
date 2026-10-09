@@ -60,8 +60,8 @@ test('language changes translate controls and dynamic analysis messages; tag nam
   const store = createSettingsStore({request:async (method,next) => { if(method === 'set')settings=next;return {settings,initialized:true}; }});
   await store.save({...settings,suggestionLimit:7,uncertainLimit:0});
   assert.equal((await store.load()).suggestionLimit,7);assert.equal(store.get().uncertainLimit,0);
-  for(const suggestionLimit of [true,'5',0,303,2.5])assert.equal(normalizeSettings({suggestionLimit}).suggestionLimit,20);
-  assert.equal(normalizeSettings({suggestionLimit:302}).suggestionLimit,302);
+  for(const suggestionLimit of [true,'5',0,304,2.5])assert.equal(normalizeSettings({suggestionLimit}).suggestionLimit,20);
+  assert.equal(normalizeSettings({suggestionLimit:303}).suggestionLimit,303);
  });
 
 test('suggestion threshold accepts finite scores and retains safe defaults',()=>{

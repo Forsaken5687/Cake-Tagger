@@ -62,7 +62,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(restored, persisted)
 
     def test_invalid_request_thresholds_and_limits_are_rejected(self):
-        for query in ("threshold=nan", "threshold=inf", "threshold=-1", "threshold=2", "suggestionLimit=0", "uncertainLimit=303"):
+        for query in ("threshold=nan", "threshold=inf", "threshold=-1", "threshold=2", "suggestionLimit=0", "uncertainLimit=304"):
             status, _, _ = self.request("/api/infer?" + query, "POST", {
                 "Authorization": "Bearer " + self.service.token,
                 "Content-Type": "application/octet-stream",
@@ -303,9 +303,9 @@ class ValidationTests(unittest.TestCase):
         review = aggregate(frames, policy, limit_results=False, suggestion_limit=1, uncertain_limit=0)
         self.assertEqual(len(review["tags"]), 2)
         self.assertEqual(len(review["uncertain"]), 2)
-        for value in (None, True, "5", 0, 303, 2.5):
+        for value in (None, True, "5", 0, 304, 2.5):
             self.assertEqual(normalize_settings({"suggestionLimit": value})["suggestionLimit"], 20)
-        self.assertEqual(normalize_settings({"suggestionLimit": 302, "uncertainLimit": 0})["suggestionLimit"], 302)
+        self.assertEqual(normalize_settings({"suggestionLimit": 303, "uncertainLimit": 0})["suggestionLimit"], 303)
         self.assertEqual(normalize_settings({"uncertainLimit": 0})["uncertainLimit"], 0)
 
     def test_threshold_changes_support_without_changing_scores(self):

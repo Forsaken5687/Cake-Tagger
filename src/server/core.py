@@ -148,9 +148,9 @@ def aggregate(
     predicted.sort(key=lambda row: -row["confidence"])
     uncertain.sort(key=lambda row: -row["confidence"])
     if limit_results:
-        if type(suggestion_limit) is not int or not 1 <= suggestion_limit <= 302:
+        if type(suggestion_limit) is not int or not 1 <= suggestion_limit <= 303:
             raise ValueError("Invalid suggestion limit")
-        if type(uncertain_limit) is not int or not 0 <= uncertain_limit <= 302:
+        if type(uncertain_limit) is not int or not 0 <= uncertain_limit <= 303:
             raise ValueError("Invalid uncertain limit")
         predicted, uncertain = predicted[:suggestion_limit], uncertain[:uncertain_limit]
     return dict(

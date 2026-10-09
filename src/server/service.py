@@ -286,7 +286,7 @@ class Handler(BaseHTTPRequestHandler):
                 if len(value) > 3 or not value.isascii() or not value.isdecimal():
                     raise ValueError()
                 limits[key] = int(value)
-                if not minimum <= limits[key] <= 302:
+                if not minimum <= limits[key] <= 303:
                     raise ValueError()
         except (ValueError, TypeError, OverflowError):
             raise RequestError(400, "error.invalidAnalysisPolicy") from None
