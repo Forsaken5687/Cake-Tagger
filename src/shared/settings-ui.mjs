@@ -23,7 +23,7 @@ export function settingsForm(store, tags, onSaved = () => {}, context = {}) {
   const parallelism = doc.createElement('input'); parallelism.type = 'number'; parallelism.min = '1'; parallelism.step = '1';
   parallelism.value = draft.parallelism === 'auto' ? '' : draft.parallelism;
   localizedAttribute(parallelism, 'placeholder', 'settings.automatic'); field('settings.parallelism', parallelism);
-  const computeHint = doc.createElement('p'); computeHint.className = 'settings-compute-hint'; form.append(computeHint);
+  const computeHint = doc.createElement('p'); form.append(computeHint);
   localizedText(computeHint, 'settings.parallelismHint');
   (context.capabilities ? context.capabilities() : Promise.resolve({})).then(capabilities => {
     if (!Number.isSafeInteger(capabilities.testMaximum)) return;

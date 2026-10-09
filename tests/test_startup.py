@@ -29,6 +29,24 @@ class StartupTests(unittest.TestCase):
         self.assertLess(bootstrap.index("certutil.exe"), bootstrap.index("tar.exe"))
         self.assertFalse(list((ROOT / "scripts").glob("*.ps1")))
 
+    def test_existing_corrupt_model_is_not_ready(self):
+        from setup import ready
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "scripts").mkdir()
+            (root / "model").mkdir()
+            manifest = json.loads((ROOT / "scripts/assets.json").read_text(encoding="utf-8"))
+            manifest["assets"] = [dict(path="model/joytag.onnx", sha256=hashlib.sha256(b"verified").hexdigest())]
+            (root / "scripts/assets.json").write_text(json.dumps(manifest), encoding="utf-8")
+            model = root / "model/joytag.onnx"
+            with patch("setup.subprocess.run", return_value=SimpleNamespace(returncode=0)):
+                self.assertFalse(ready(root))
+                model.write_bytes(b"verified")
+                self.assertTrue(ready(root))
+                model.write_bytes(b"corrupt")
+                self.assertFalse(ready(root))
+
     def test_rejected_download_preserves_existing_file(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

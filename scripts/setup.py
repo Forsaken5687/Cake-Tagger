@@ -66,8 +66,20 @@ def ready(root=ROOT):
             stderr=subprocess.DEVNULL,
         ).returncode
         == 0
-        and (Path(root) / "model/joytag.onnx").is_file()
+        and assets_ready(root, manifest)
     )
+
+
+def assets_ready(root, manifest):
+    """Check artifact identity so startup can repair an existing corrupt model."""
+    try:
+        for asset in manifest["assets"]:
+            with (Path(root) / asset["path"]).open("rb") as stream:
+                if hashlib.file_digest(stream, "sha256").hexdigest() != asset["sha256"]:
+                    return False
+        return True
+    except OSError:
+        return False
 
 
 def setup(root=ROOT):
