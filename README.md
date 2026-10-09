@@ -24,7 +24,7 @@ The terminal shows operational logs. Press **Ctrl+C** to stop gracefully, or use
 
 ## Settings
 
-Open **Settings** on the upload toolbar. Preferences are shared by all connected browsers and persist on the local server.
+Open **Settings** on the upload toolbar. Controls are grouped into General, Analysis, Suggestions and Excluded tags. Preferences are shared by all connected browsers and persist on the local server.
 
 - **Language:** Automatic, German or English. Automatic follows the site's language in upload views. Tag names stay unchanged.
 - **Automatic analysis:** Start analysis when new upload videos are selected.

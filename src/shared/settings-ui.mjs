@@ -30,7 +30,7 @@ export function settingsForm(store, tags, onSaved = () => {}, context = {}) {
     parallelism.max = String(capabilities.testMaximum);
     localizedText(computeHint, message('settings.hardwareThreads', { recommended: capabilities.recommendedThreads, maximum: capabilities.testMaximum }));
   }).catch(() => {});
-  const check = (label, key) => { const input = doc.createElement('input'); input.type = 'checkbox'; input.checked = draft[key]; field(label, input).classList.add('settings-check'); return input; };
+  const check = (label, key) => { const input = doc.createElement('input'); input.type = 'checkbox'; input.checked = draft[key]; field(label, input).closest('.settings-field').classList.add('settings-check'); return input; };
   const scores = check('settings.scores', 'showScores'), uncertain = check('settings.uncertain', 'showUncertain');
   const limit = (key, label, minimum) => {
     const input = doc.createElement('input'); input.type = 'number'; input.min = String(minimum); input.max = String(tags.length); input.step = '1'; input.required = true; input.value = String(draft[key]); field(label, input); return input;
@@ -81,5 +81,22 @@ export function settingsForm(store, tags, onSaved = () => {}, context = {}) {
     } catch (error) { localizedText(status, errorMessage(error)); }
     finally { save.disabled = reset.disabled = false; }
   };
-  actions.append(reset, save); form.append(status, actions); renderExclusions(); return form;
+  // Keep the scrollable settings separate from the always-reachable actions.
+  const body = doc.createElement('div'); body.className = 'settings-body';
+  const group = (key, controls, notes = []) => {
+    const section = doc.createElement('fieldset'); section.className = 'settings-group';
+    const legend = doc.createElement('legend'); localizedText(legend, key); section.append(legend);
+    for (const control of controls) section.append(control.closest('.settings-field'));
+    section.append(...notes); body.append(section);
+  };
+  group('settings.generalGroup', [language, autoAnalyze, hideSiteAI]);
+  group('settings.analysisGroup', [frames, parallelism], [computeHint]);
+  const explanation = doc.createElement('details'); explanation.className = 'settings-help';
+  const summary = doc.createElement('summary'); localizedText(summary, 'settings.thresholdHelp');
+  explanation.append(summary, thresholdHint);
+  group('settings.suggestionsGroup', [suggestionLimit, uncertainLimit, threshold, scores, uncertain], [explanation, limitHint]);
+  body.append(exclusions);
+  const footer = doc.createElement('div'); footer.className = 'settings-footer';
+  actions.append(reset, save); footer.append(status, actions);
+  form.replaceChildren(body, footer); renderExclusions(); return form;
 }

@@ -14,18 +14,36 @@
 .stok-bulk-card .cake-tagger-result-actions{margin-top:12px}
 .stok-up>.cake-tagger-suggestions{grid-column:1/-1;width:100%;box-sizing:border-box;margin:14px 0;border:1px solid var(--cake-border-2,#444);border-radius:12px}
 
-.cake-tagger-settings-dialog{box-sizing:border-box;background:var(--cake-surface-2,#1c1c1c);color:var(--cake-text,#eee);border:1px solid var(--cake-border-2,#444);border-radius:14px;padding:22px;width:min(580px,94vw);max-height:90dvh;overflow:auto;font:13px system-ui}
+/* Keep section content scrollable while the dialog title and actions stay visible. */
+.cake-tagger-settings-dialog{color-scheme:dark;box-sizing:border-box;background:var(--cake-surface-2,#1c1c1c);color:var(--cake-text,#eee);border:1px solid var(--cake-border-2,#444);border-radius:14px;padding:0;width:min(660px,94vw);max-height:90dvh;overflow:hidden;font:13px system-ui}
+.cake-tagger-settings-dialog[open]{display:flex;flex-direction:column}
 .cake-tagger-settings-dialog::backdrop{background:#000b}
-.cake-tagger-settings-dialog button,.cake-tagger-settings-dialog input,.cake-tagger-settings-dialog select{font:inherit;background:var(--cake-hover,#303030);color:var(--cake-text,#eee);border:1px solid var(--cake-border-2,#444);border-radius:8px;padding:9px;min-width:0}
-.cake-tagger-settings-dialog .settings-form{display:grid;gap:15px}
-.cake-tagger-settings-dialog .settings-field{display:grid;grid-template-columns:1fr 1.1fr;gap:15px;align-items:center}
-.cake-tagger-settings-dialog .settings-check{grid-template-columns:1fr auto}
-.cake-tagger-settings-dialog input[type=checkbox]{accent-color:var(--cake-accent,#fe2c55)}
-.cake-tagger-settings-dialog .settings-compute-hint,.cake-tagger-settings-dialog .settings-exclusions p{margin:0;color:var(--cake-text-2,#aaa);font-size:12px;line-height:1.5}
-.cake-tagger-settings-dialog .settings-excluded-tags,.cake-tagger-settings-dialog .tag-add,.cake-tagger-settings-dialog .settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.cake-tagger-settings-dialog .tag-add input{flex:1}.cake-tagger-settings-dialog .settings-actions{justify-content:flex-end}
+.cake-tagger-settings-dialog>.cake-tagger-result-heading{flex:none;align-items:center;padding:16px 20px;margin:0;border-bottom:1px solid var(--cake-border,#333)}
+.cake-tagger-settings-dialog button,.cake-tagger-settings-dialog input,.cake-tagger-settings-dialog select{font:inherit;background:var(--cake-hover,#303030);color:var(--cake-text,#eee);border:1px solid var(--cake-border-2,#444);border-radius:8px;padding:8px 10px;min-width:0;box-sizing:border-box}
+.cake-tagger-settings-dialog .settings-form{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.cake-tagger-settings-dialog .settings-body{overflow:auto;min-height:0;padding:16px 20px;display:grid;gap:16px;scrollbar-gutter:stable}
+.cake-tagger-settings-dialog .settings-group,.cake-tagger-settings-dialog .settings-exclusions{border:1px solid var(--cake-border,#333);border-radius:10px;margin:0;padding:12px 14px;min-width:0}
+.cake-tagger-settings-dialog .settings-group legend{font-weight:650;padding:0 6px;color:var(--cake-text,#eee)}
+.cake-tagger-settings-dialog .settings-field{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,230px);gap:16px;align-items:center;margin:0 0 10px;min-height:32px}
+.cake-tagger-settings-dialog .settings-field:last-child{margin-bottom:0}
+.cake-tagger-settings-dialog .settings-field input[type=number]{width:100px;justify-self:end;text-align:right}
+.cake-tagger-settings-dialog .settings-check{grid-template-columns:1fr auto;min-height:26px;margin-bottom:6px}
+.cake-tagger-settings-dialog input[type=checkbox]{accent-color:var(--cake-accent,#fe2c55);width:16px;height:16px;margin:0;cursor:pointer}
+.cake-tagger-settings-dialog p,.cake-tagger-settings-dialog .settings-help{margin:8px 0 0;color:var(--cake-text-2,#aaa);font-size:12px;line-height:1.5}
+.cake-tagger-settings-dialog .settings-help summary{cursor:pointer;color:var(--cake-text-2,#aaa);width:fit-content}
+.cake-tagger-settings-dialog .settings-help[open] summary{color:var(--cake-text,#eee)}
+.cake-tagger-settings-dialog .settings-exclusions h3{margin:0;font-size:13px}
+.cake-tagger-settings-dialog .settings-excluded-tags,.cake-tagger-settings-dialog .tag-add,.cake-tagger-settings-dialog .settings-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.cake-tagger-settings-dialog .settings-excluded-tags button{padding:6px 9px}
+.cake-tagger-settings-dialog .tag-add{flex-wrap:nowrap}
+.cake-tagger-settings-dialog .tag-add input{flex:1;width:0}
+.cake-tagger-settings-dialog .settings-footer{flex:none;border-top:1px solid var(--cake-border,#333);padding:12px 20px;background:var(--cake-surface-2,#1c1c1c)}
+.cake-tagger-settings-dialog .settings-actions{justify-content:flex-end;margin:0}
+.cake-tagger-settings-dialog .settings-status:empty{display:none}
+.cake-tagger-settings-dialog .settings-status:not(:empty){margin:0 0 10px}
 .cake-tagger-settings-dialog button[type=submit]{background:var(--cake-accent,#fe2c55);border-color:var(--cake-accent,#fe2c55);color:var(--cake-on-accent,#fff)}
-@media(max-width:780px){.cake-tagger-settings-dialog .settings-field{grid-template-columns:1fr}.cake-tagger-settings-dialog .settings-check{grid-template-columns:1fr auto}}
+.cake-tagger-settings-dialog :is(button,input,select,summary):focus-visible{outline:2px solid var(--cake-accent,#fe2c55);outline-offset:2px}
+@media(max-width:520px){.cake-tagger-settings-dialog .settings-body{padding:12px}.cake-tagger-settings-dialog .settings-field{grid-template-columns:1fr;gap:6px}.cake-tagger-settings-dialog .settings-field input[type=number]{justify-self:start}.cake-tagger-settings-dialog .settings-check{grid-template-columns:1fr auto}.cake-tagger-settings-dialog .settings-group{padding:10px}.cake-tagger-settings-dialog>.cake-tagger-result-heading,.cake-tagger-settings-dialog .settings-footer{padding:12px 16px}}
 
 /* Hide only the site's AI suggestions; retain upload fields and extension results. */
 .cake-tagger-hide-site-ai .stok-ai-suggestions{display:none!important}
