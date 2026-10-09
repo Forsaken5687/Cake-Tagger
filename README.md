@@ -30,6 +30,7 @@ Open **Settings** on the upload toolbar. Preferences are shared by all connected
 - **Automatic analysis:** Start analysis when new upload videos are selected.
 - **Images per video:** Automatic by duration, or a fixed count from 4 to 48.
 - **CPU parallelism:** Automatic uses the server's recommendation. Manual values can use up to the displayed hardware limit; higher counts can be slower.
+- **Tag counts:** Set the maximum suggested and uncertain tags per video (defaults: 20 and 15). Limits apply to new upload analyses, not the review lab; existing selections are preserved. Set uncertain tags to 0 to omit them.
 - **Suggestions:** Show scores or uncertain candidates, and exclude individual tags. `hairy` and `watermark` are excluded by default.
 - **Site AI suggestions:** Hide cake.ski's own suggestion panels. This does not prevent the website from running its analysis.
 

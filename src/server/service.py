@@ -274,7 +274,8 @@ class Handler(BaseHTTPRequestHandler):
             threads = resolve_threads(parallelism, s.capabilities)
         except ValueError as error:
             raise RequestError(400, str(error)) from None
-        exclusions = (s.settings or normalize_settings())["excludedTags"]
+        settings = s.settings or normalize_settings()
+        exclusions = settings["excludedTags"]
         try:
             if self.headers.get("X-Cake-Tagger-Exclusions"):
                 exclusions = json.loads(self.headers["X-Cake-Tagger-Exclusions"])
@@ -333,7 +334,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.stream(progress.get_nowait())
             result = future.result()
             result["analysis"] = aggregate(
-                result["scores"], s.policy, excluded_tags=exclusions
+                result["scores"], s.policy, excluded_tags=exclusions,
+                suggestion_limit=settings["suggestionLimit"],
+                uncertain_limit=settings["uncertainLimit"],
             )
             result["runtime"].update(
                 memory_snapshot(),

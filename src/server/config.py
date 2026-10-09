@@ -90,6 +90,9 @@ def normalize_settings(value=None):
         parallelism=parallelism,
         excludedTags=exclusions,
     )
+    for key, minimum, fallback in [("suggestionLimit", 1, 20), ("uncertainLimit", 0, 15)]:
+        limit = value.get(key)
+        result[key] = limit if type(limit) is int and minimum <= limit <= 302 else fallback
     for key, fallback in [
         ("showScores", True),
         ("showUncertain", True),

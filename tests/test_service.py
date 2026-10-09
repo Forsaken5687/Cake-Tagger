@@ -48,6 +48,19 @@ class ServiceTests(unittest.TestCase):
         connection.close()
         return response.status, data, response.headers
 
+    def test_tag_limits_round_trip_through_settings_api(self):
+        payload = json.dumps({"settings": {"suggestionLimit": 7, "uncertainLimit": 0}}).encode()
+        status, data, _ = self.request("/api/settings", "POST", {
+            "Authorization": "Bearer " + self.service.token,
+            "Content-Type": "application/json",
+        }, payload)
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(data)["settings"]["suggestionLimit"], 7)
+        restored = json.loads(self.request("/api/settings")[1])["settings"]
+        persisted = json.loads(self.service.settings_file.read_text(encoding="utf-8"))
+        self.assertEqual(restored["uncertainLimit"], 0)
+        self.assertEqual(restored, persisted)
+
     def raw(self, data):
         with socket.create_connection(
             ("127.0.0.1", self.port), timeout=5
@@ -270,6 +283,22 @@ class ValidationTests(unittest.TestCase):
         evaluation["videos"][0]["timestamps"] = [2, 1]
         with self.assertRaises(ValueError):
             review_export(evaluation, [item], self.policy, self.tags)
+
+    def test_tag_count_limits_preserve_ranking_and_review_candidates(self):
+        from server.core import aggregate
+        policy = dict(mapping={"a": [0], "b": [1], "c": [2], "d": [3]}, manualOnly=[], details=[])
+        frames = [[.9, .8, .7, .6], [.9, .8, .1, .1], [.9, .8, .1, .1], [.9, .8, .1, .1]]
+        result = aggregate(frames, policy, suggestion_limit=1, uncertain_limit=1)
+        self.assertEqual([row["tag"] for row in result["tags"]], ["a"])
+        self.assertEqual(result["uncertain"], ["c"])
+        self.assertEqual(aggregate(frames, policy, uncertain_limit=0)["uncertain"], [])
+        review = aggregate(frames, policy, limit_results=False, suggestion_limit=1, uncertain_limit=0)
+        self.assertEqual(len(review["tags"]), 2)
+        self.assertEqual(len(review["uncertain"]), 2)
+        for value in (None, True, "5", 0, 303, 2.5):
+            self.assertEqual(normalize_settings({"suggestionLimit": value})["suggestionLimit"], 20)
+        self.assertEqual(normalize_settings({"suggestionLimit": 302, "uncertainLimit": 0})["suggestionLimit"], 302)
+        self.assertEqual(normalize_settings({"uncertainLimit": 0})["uncertainLimit"], 0)
 
     def test_thread_policy_and_settings(self):
         self.assertEqual(capabilities(24)["recommendedThreads"], 8)
