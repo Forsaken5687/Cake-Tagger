@@ -2,7 +2,6 @@
   "version": 1,
   "files": [
     "README.md",
-    "Start.cmd",
     "THIRD_PARTY.md",
     "assets/logo.svg",
     "docs/BROWSERS.md",

@@ -1,6 +1,6 @@
 # Browser extensions
 
-Cake Tagger requires Windows x64 and the local service started with `Start.cmd`. Extensions connect to port 8765 and provide upload controls; inference runs in Python.
+Cake Tagger requires Windows x64 and the local service started with `Cake-Tagger.exe`. Extensions connect to port 8765 and provide upload controls; inference runs in Python.
 
 ## Firefox
 

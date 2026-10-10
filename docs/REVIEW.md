@@ -1,6 +1,6 @@
 # Review lab
 
-Start the service with `Start.cmd` from a source checkout and open `http://127.0.0.1:8765/review.html`. The lab uses the local inference service to evaluate tag suggestions. Its experimental rules do not change the upload extension's suggestions. It is excluded from release packages.
+Start the service with `Cake-Tagger.exe` from a source checkout and open `http://127.0.0.1:8765/review.html`. The lab uses the local inference service to evaluate tag suggestions. Its experimental rules do not change the upload extension's suggestions. It is excluded from release packages.
 
 ## Review videos
 

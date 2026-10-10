@@ -8,9 +8,9 @@ Inference runs locally in Python using JoyTag FP32 on the CPU.
 
 Requires Windows x64 and Firefox 140+ or Chrome 120+.
 
-1. Extract the complete release into a writable folder.
+1. Download `Cake-Tagger.zip` from [GitHub Releases](https://github.com/Forsaken5687/Cake-Tagger/releases) and extract it into a writable folder.
 2. Install the [browser extension](docs/BROWSERS.md).
-3. Run `Start.cmd` and leave its terminal open.
+3. Run `Cake-Tagger.exe` and leave its terminal open.
 4. Select videos in cake.ski's upload area. New videos are analyzed automatically by default.
 5. Review the suggestions and choose **Apply tags**. Add manual tags through the site's own input.
 
@@ -20,7 +20,7 @@ Use **Download JSON** to keep results before closing or reloading the upload pag
 
 The terminal shows operational logs. Press **Ctrl+C** to stop gracefully, or use **Quit** in the extension. Closing the terminal can force termination while native work is active; use these controls to wait for cleanup. Logs omit filenames, tags, payloads and session tokens.
 
-`Start.cmd` checks dependency versions and model checksums, restores missing or damaged model weights, and prepares the isolated Python runtime automatically. A source checkout downloads missing verified dependencies on first use; complete releases include the ready-to-run interpreter and dependencies directly in `runtime/`, without installation archives.
+`Cake-Tagger.exe` checks dependency versions and model checksums, restores missing or damaged model weights, and prepares the isolated Python runtime automatically. A source checkout downloads missing verified dependencies on first use; complete releases include the ready-to-run interpreter and dependencies directly in `runtime/`, without installation archives.
 
 ## Settings
 
@@ -55,10 +55,11 @@ The development review tool additionally saves a browser-local session backup. S
 
 ## Development
 
+- In a fresh source checkout, run `scripts\launch.cmd setup`, then `runtime/cpython/python.exe scripts/build_launcher.py` to create `Cake-Tagger.exe`.
 - Run `runtime/cpython/python.exe scripts/test.py` after code changes.
 - The [reusable Python package](docs/PYTHON.md) can also be integrated into another backend.
 - Build extensions with `runtime/cpython/python.exe scripts/build_extension.py firefox` or `runtime/cpython/python.exe scripts/build_extension.py chrome`.
-- Run `runtime/cpython/python.exe scripts/package.py` to create `outputs/Cake-Tagger.zip`, containing the Firefox ZIP and unpacked Chrome extension. Share this package, not the working directory.
+- Run `runtime/cpython/python.exe scripts/package.py` to create the complete Windows ZIP, separate browser-extension ZIPs and `SHA256SUMS.txt` in `outputs/`. Share the packages, not the working directory.
 - Open `http://127.0.0.1:8765/review.html` after starting the service for the [review lab](docs/REVIEW.md): video annotations, frame evidence and A/B rule comparisons. This tool and tests are excluded from releases.
 - For performance troubleshooting, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the service is running.
 

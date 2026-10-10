@@ -19,6 +19,33 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class StartupTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from build_launcher import build_launcher
+        cls.launcher = build_launcher(ROOT)
+
+    def test_executable_rejects_arguments_without_starting_service(self):
+        result = subprocess.run(
+            [str(self.launcher), "--unexpected"], cwd=ROOT.parent,
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Supported option", result.stderr)
+
+    def test_executable_reports_incomplete_distribution(self):
+        import shutil
+        with tempfile.TemporaryDirectory(prefix="starter space & ", dir=ROOT / "work") as folder:
+            executable = Path(folder) / "Cake-Tagger.exe"
+            shutil.copyfile(self.launcher, executable)
+            result = subprocess.run(
+                [str(executable)], stdin=subprocess.DEVNULL,
+                capture_output=True, text=True, timeout=10,
+                creationflags=subprocess.CREATE_NO_WINDOW,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("complete Cake Tagger folder", result.stderr)
+
     def test_bootstrap_matches_pinned_runtime(self):
         runtime = json.loads((ROOT / "scripts/assets.json").read_text())["python"][
             "runtime"
@@ -131,23 +158,26 @@ class StartupTests(unittest.TestCase):
         import os
         import shutil
 
-        with tempfile.TemporaryDirectory(dir=ROOT / "work") as folder:
+        with tempfile.TemporaryDirectory(prefix="starter space & ", dir=ROOT / "work") as folder:
             root = Path(folder)
             (root / "scripts").mkdir()
             (root / "runtime/cpython").mkdir(parents=True)
             (root / "runtime/archives").mkdir()
             shutil.copyfile(ROOT / "scripts/launch.cmd", root / "scripts/launch.cmd")
+            shutil.copyfile(self.launcher, root / "Cake-Tagger.exe")
             shutil.copyfile(
                 ROOT / "runtime/cpython/python.exe", root / "runtime/cpython/python.exe"
             )
-            (root / "scripts/start.py").write_text('print("bootstrap-ok")')
+            (root / "scripts/start.py").write_text('import sys; assert sys.argv[1:] == ["--review"]; print("bootstrap-ok")')
             runtime = json.loads((ROOT / "scripts/assets.json").read_text())["python"][
                 "runtime"
             ]
             os.link(ROOT / runtime["path"], root / runtime["path"])
             result = subprocess.run(
-                ["cmd.exe", "/d", "/c", "scripts\\launch.cmd start"],
-                cwd=root,
+                [str(root / "Cake-Tagger.exe"), "--review"],
+                cwd=ROOT.parent,
+                stdin=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW,
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -159,10 +189,11 @@ class StartupTests(unittest.TestCase):
         import shutil
         from package import prepare_runtime
 
-        with tempfile.TemporaryDirectory(dir=ROOT / "work") as folder:
+        with tempfile.TemporaryDirectory(prefix="starter space & ", dir=ROOT / "work") as folder:
             root = Path(folder)
             (root / "scripts").mkdir()
             shutil.copyfile(ROOT / "scripts/launch.cmd", root / "scripts/launch.cmd")
+            shutil.copyfile(self.launcher, root / "Cake-Tagger.exe")
             prepare_runtime(ROOT, root / "runtime")
             # Real imports exercise relocated native DLLs and preserved version metadata.
             (root / "scripts/start.py").write_text(
@@ -171,8 +202,10 @@ class StartupTests(unittest.TestCase):
                 encoding="utf-8",
             )
             result = subprocess.run(
-                ["cmd.exe", "/d", "/c", "scripts\\launch.cmd start"],
-                cwd=root, capture_output=True, text=True, timeout=30,
+                [str(root / "Cake-Tagger.exe")],
+                cwd=ROOT.parent, stdin=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                capture_output=True, text=True, timeout=30,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("flat-runtime-ok", result.stdout)

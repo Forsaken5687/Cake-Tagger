@@ -1,6 +1,6 @@
 # Python integration
 
-The complete backend uses Python. The reusable package is `server`, under `src/server/`; the local HTTP service is an optional adapter. Windows releases bundle isolated CPython 3.13.16 and pinned CPU dependencies. Run `Start.cmd`; it prepares missing local dependencies automatically.
+The complete backend uses Python. The reusable package is `server`, under `src/server/`; the local HTTP service is an optional adapter. Windows releases bundle isolated CPython 3.13.16 and pinned CPU dependencies. Run `Cake-Tagger.exe`; it prepares missing local dependencies automatically.
 
 ## Use from another Python application
 
@@ -42,4 +42,4 @@ CPU ONNX Runtime is the supported provider. The package can run on compatible pl
 
 ## Logging and lifecycle
 
-Importing `server` or creating an engine does not configure logging, open a terminal or start the local listener. Operational messages use the standard `server.service` logger; applications choose their own handlers and levels. CLI startup configures terminal logs; `--quiet` suppresses those operational messages. `Start.cmd` is only a local launcher and is not used by external integrations.
+Importing `server` or creating an engine does not configure logging, open a terminal or start the local listener. Operational messages use the standard `server.service` logger; applications choose their own handlers and levels. CLI startup configures terminal logs; `--quiet` suppresses those operational messages. `Cake-Tagger.exe` is only a local launcher and is not used by external integrations.

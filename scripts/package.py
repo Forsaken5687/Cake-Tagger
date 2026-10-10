@@ -2,12 +2,14 @@
 
 import hashlib
 import json
+import shutil
 import subprocess
 import tempfile
 import zipfile
 from pathlib import Path
 
 from build_extension import build_extension
+from build_launcher import build_launcher
 from install_runtime import install
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -112,12 +114,14 @@ def package(root=ROOT):
         verified(root / name, wheel["sha256"])
     for target in ("firefox", "chrome"):
         build_extension(target, root)
+    launcher = build_launcher(root)
     output = root / "outputs/Cake-Tagger.zip"
     temporary = output.with_suffix(".zip.tmp")
     with (
         tempfile.TemporaryDirectory(prefix="release-runtime-", dir=root / "work") as staging,
         zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as archive,
     ):
+        archive.write(launcher, "Cake-Tagger/Cake-Tagger.exe")
         runtime_directory = Path(staging) / "runtime"
         prepare_runtime(root, runtime_directory)
         for path in sorted(runtime_directory.rglob("*")):
@@ -152,6 +156,19 @@ def package(root=ROOT):
                     chrome.read(entry),
                 )
     temporary.replace(output)
+    shutil.copyfile(
+        root / "work/extension-build/Cake-Tagger-Chrome.zip",
+        root / "outputs/Cake-Tagger-Chrome.zip",
+    )
+    packages = [
+        output, root / "outputs/Cake-Tagger-Chrome.zip",
+        root / "outputs/Cake-Tagger-Firefox.zip",
+    ]
+    checksums = []
+    for path in packages:
+        with path.open("rb") as stream:
+            checksums.append(hashlib.file_digest(stream, "sha256").hexdigest() + "  " + path.name)
+    (root / "outputs/SHA256SUMS.txt").write_text("\n".join(checksums) + "\n", encoding="utf-8")
     print("Packages created in outputs/.")
 
 

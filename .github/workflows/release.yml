@@ -1,0 +1,70 @@
+name: Release packages
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Prepare verified portable Python and dependencies
+        run: scripts\launch.cmd setup
+      - name: Check release tag matches application version
+        env:
+          RELEASE_REF_TYPE: ${{ github.ref_type }}
+          RELEASE_REF_NAME: ${{ github.ref_name }}
+        run: >-
+          runtime\cpython\python.exe -c "import json,os;
+          version=json.load(open('extension/manifest.json'))['version'];
+          assert os.environ['RELEASE_REF_TYPE'] != 'tag' or os.environ['RELEASE_REF_NAME'] == 'v'+version, 'Release tag must match extension/manifest.json'"
+      - name: Run backend and browser-module tests
+        run: runtime\cpython\python.exe scripts\test.py
+      - name: Build release packages and checksums
+        run: runtime\cpython\python.exe scripts\package.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-packages
+          compression-level: 0
+          if-no-files-found: error
+          path: |
+            outputs/Cake-Tagger.zip
+            outputs/Cake-Tagger-Chrome.zip
+            outputs/Cake-Tagger-Firefox.zip
+            outputs/SHA256SUMS.txt
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-packages
+          path: packages
+      - name: Create release draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+        run: |
+          gh release create "$RELEASE_TAG" packages/* \
+            --repo "$RELEASE_REPOSITORY" --verify-tag --draft \
+            --title "Cake Tagger $RELEASE_TAG" \
+            --notes "Download Cake-Tagger.zip for the complete Windows application with Cake-Tagger.exe. Separate Chrome and Firefox extension archives and SHA-256 checksums are included. Extract the complete application before starting it."
