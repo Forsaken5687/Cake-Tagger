@@ -16,12 +16,13 @@ const $=selector=>document.querySelector(selector),session=createLocalSession();
 const client=createNativeClient({fetcher:session.request,onProgress:(current,total)=>localizedText($('#status'),'analysis.progress',{current,total})});
 let entries=[],active,controller,running=false,settings=normalizeSettings(),mapping,allTags=[],playerURL,downloadURL;
 let tagSort={key:'score',direction:'descending'};
+let sessionExcludedTags;
 let variants=validateVariants(DEFAULT_VARIANTS),evidenceTag,pendingDraft,saveTimer,dirty=false,saveChain=Promise.resolve(),changeVersion=0,attaching=false;
 const percent=value=>value==null?'—':Math.round(value*100)+'%';
 const label=(node,key,params)=>localizedText(node,key,params);
 const node=(tag,text)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;return n;};
-const allowedTags=()=>[...new Set([...allTags,...entries.flatMap(entry=>[...entry.selected.keys(),...entry.ignoredTags,...(entry.result?.tags??[]).map(row=>row.tag),...(entry.result?.uncertain??[])]),...Object.values(variants).flatMap(rule=>Object.keys(rule.tagRules))])];
-const rules=name=>({...variants[name],excludedTags:settings.excludedTags});
+const allowedTags=()=>[...new Set([...allTags,...(sessionExcludedTags??settings.excludedTags),...entries.flatMap(entry=>[...entry.selected.keys(),...entry.ignoredTags,...(entry.result?.tags??[]).map(row=>row.tag),...(entry.result?.uncertain??[])]),...Object.values(variants).flatMap(rule=>Object.keys(rule.tagRules))])];
+const rules=name=>({...variants[name],excludedTags:sessionExcludedTags??settings.excludedTags});
 const candidate=(entry,name='A')=>entry.scores?candidateTags(entry.scores,mapping,rules(name)):[];
 const revealed=()=>$('#reveal').checked;
 const hiddenHoldout=entry=>entry?.result&&reviewPartition(entry)==='holdout'&&!revealed();
@@ -39,7 +40,7 @@ function clearDownload(){
 function saveNow(){
  clearTimeout(saveTimer);
  if(pendingDraft||!mapping)return Promise.resolve();
- const revision=changeVersion,draft=createDraft(entries,variants,$('#frames').value,$('#language').value,Number($('#candidate-minimum').value),tagSort);
+ const revision=changeVersion,draft=createDraft(entries,variants,$('#frames').value,$('#language').value,Number($('#candidate-minimum').value),tagSort,sessionExcludedTags??settings.excludedTags);
  label($('#save-status'),'review.saving');
  saveChain=saveChain.catch(()=>{}).then(()=>store.save(draft)).then(()=>{
   if(revision===changeVersion){dirty=false;label($('#save-status'),'review.saved',{time:new Date(draft.savedAt).toLocaleTimeString()});}
@@ -150,7 +151,7 @@ function renderTags(){
  const baseline=new Map(active.result.tags.map(row=>[row.tag,row])),a=new Set(candidate(active,'A').map(row=>row.tag)),b=new Set(candidate(active,'B').map(row=>row.tag));
  // Expand the review list from raw scores, keeping the recorded upload baseline
  // and user annotations intact so accuracy comparisons still mean the same thing.
- const expanded=active.scores?aggregate(active.scores,mapping,Number($('#candidate-minimum').value)/100,DEFAULT_COVERAGE,{excludedTags:settings.excludedTags,limitResults:false}):{tags:[],uncertain:[]};
+ const expanded=active.scores?aggregate(active.scores,mapping,Number($('#candidate-minimum').value)/100,DEFAULT_COVERAGE,{excludedTags:sessionExcludedTags??settings.excludedTags,limitResults:false}):{tags:[],uncertain:[]};
  const possible=new Set([...active.selected.keys(),...active.ignoredTags,...baseline.keys(),...expanded.tags.map(row=>row.tag),...expanded.uncertain,...a,...b]),query=$('#search').value.trim().toLowerCase();
  const tags=reviewableTags(($('#all').checked||query?allowedTags():allowedTags().filter(tag=>possible.has(tag))),mapping).filter(tag=>tag.toLowerCase().includes(query));
  // Use the same evidence for sorting and the displayed cells. Judgments do not
@@ -227,7 +228,7 @@ async function reconnectVideos(restored){
  return count;
 }
 function adopt(restored){
- entries=restored.entries;variants=restored.variants;active=entries[0];evidenceTag=undefined;
+ entries=restored.entries;variants=restored.variants;sessionExcludedTags=restored.excludedTags === undefined ? [...settings.excludedTags] : [...restored.excludedTags];active=entries[0];evidenceTag=undefined;
  tagSort=restored.tagSort;$('#frames').value=restored.frames;$('#candidate-minimum').value=restored.candidateMinimum;
  if(restored.language){$('#language').value=setLanguage({language:restored.language});translatePage();}
  controlsFromVariants();showPlayer();renderQueue();renderTags();label($('#status'),'review.imported');
@@ -373,7 +374,7 @@ $('#save').onclick=saveNow;
 $('#clear').onclick=async()=>{
  if(!confirm(t('review.confirmClear')))return;
  attaching=true;summary();clearTimeout(saveTimer);await saveChain;
- try{await store.clear();entries=[];active=undefined;evidenceTag=undefined;dirty=false;clearDownload();showPlayer();renderQueue();renderTags();$('#save-status').textContent='';label($('#status'),'review.intro');}
+ try{await store.clear();entries=[];sessionExcludedTags=[...settings.excludedTags];active=undefined;evidenceTag=undefined;dirty=false;clearDownload();showPlayer();renderQueue();renderTags();$('#save-status').textContent='';label($('#status'),'review.intro');}
  catch{label($('#save-status'),'review.storageFailed');}
  finally{attaching=false;summary();}
 };
@@ -425,7 +426,7 @@ try{
   ({createDraft,restoreDraft,importReview}=module);store=module.openReviewStore();
  }catch{throw messageError('review.restartRequired');}
  const [tags,map,config]=await Promise.all([fetch('/model/tags.txt').then(r=>r.text()),fetch('/model/mapping.json').then(r=>r.json()),session.request('/api/settings').then(async r=>{if(!r.ok)throw messageError('error.nativeServer');return r.json();})]);
- allTags=tags.replace(/^\uFEFF/,'').split(/\r?\n/).filter(Boolean);mapping=map;settings=normalizeSettings(config.settings);
+ allTags=tags.replace(/^\uFEFF/,'').split(/\r?\n/).filter(Boolean);mapping=map;settings=normalizeSettings(config.settings);sessionExcludedTags=[...settings.excludedTags];
  $('#frames').value=settings.frames;$('#language').value=setLanguage(settings);translatePage();controlsFromVariants();
  try{pendingDraft=await store.load();if(pendingDraft?.entries?.length){$('#resume').hidden=false;label($('#resume-text'),'review.savedSession',{count:pendingDraft.entries.length,time:pendingDraft.savedAt??'—'});}else pendingDraft=undefined;}
  catch{label($('#save-status'),'review.storageFailed');}

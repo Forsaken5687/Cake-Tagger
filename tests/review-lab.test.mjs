@@ -132,3 +132,22 @@ test('review lists only mapped labels while preserving stored historical judgmen
  assert.ok(!reviewableTags([...restored.selected.keys()],mapping).includes('lying on back'));
  assert.equal(createDraft([restored],variants,'4','en').entries[0].record.tags.includes('lying on back'),true);
 });
+
+
+test('review exclusions survive import, local saves and exports without changing annotations',()=>{
+ const e=entry(),snapshot=createReviewSnapshot([e],mapping,{...variants.A,excludedTags:['tattoos']},tags,variants);
+ const imported=importReview(JSON.parse(JSON.stringify(snapshot)),tags,mapping);
+ assert.deepEqual(imported.excludedTags,['tattoos']);
+ const restored=restoreDraft(createDraft(imported.entries,imported.variants,'4','en',20,{key:'score',direction:'descending'},imported.excludedTags),tags,mapping);
+ assert.deepEqual(restored.excludedTags,['tattoos']);
+ assert.equal(restored.entries[0].selected.get('tattoos'),true);
+ const rules={...restored.variants.A,excludedTags:restored.excludedTags};
+ assert.deepEqual(candidateTags(restored.entries[0].scores,mapping,rules),snapshot.items[0].evaluation.candidateSuggestions);
+ const exported=createReviewSnapshot(restored.entries,mapping,rules,tags,restored.variants);
+ assert.deepEqual(exported.evaluation.comparisonRules.excludedTags,['tattoos']);
+ for(const excludedTags of [null,{},['__proto__'],[null],Array(304).fill('tattoos')]){
+  const broken=structuredClone(snapshot);broken.evaluation.comparisonRules.excludedTags=excludedTags;
+  assert.throws(()=>importReview(broken,tags,mapping));
+ }
+ assert.equal(restoreDraft(createDraft([e],variants,'4','en'),tags,mapping).excludedTags,undefined);
+});

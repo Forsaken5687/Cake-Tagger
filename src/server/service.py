@@ -320,21 +320,21 @@ class Handler(BaseHTTPRequestHandler):
             len(payload) // FRAME_BYTES,
             threads,
         )
-        self.send_response(200)
-        for key, value in {
-            "Content-Type": "application/x-ndjson",
-            "Cache-Control": "no-store",
-            "X-Content-Type-Options": "nosniff",
-            "Connection": "close",
-        }.items():
-            self.send_header(key, value)
-        if self.cors:
-            self.send_header("Access-Control-Allow-Origin", self.cors)
-            self.send_header("Vary", "Origin")
-        self.end_headers()
-        self.close_connection = True
-        self.stream_started = True
         try:
+            self.send_response(200)
+            for key, value in {
+                "Content-Type": "application/x-ndjson",
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+                "Connection": "close",
+            }.items():
+                self.send_header(key, value)
+            if self.cors:
+                self.send_header("Access-Control-Allow-Origin", self.cors)
+                self.send_header("Vary", "Origin")
+            self.end_headers()
+            self.close_connection = True
+            self.stream_started = True
             self.stream(dict(type="state", state="analysis.loadingModel"))
             while not future.done():
                 if self.disconnected():

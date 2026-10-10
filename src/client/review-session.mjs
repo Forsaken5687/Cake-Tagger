@@ -6,8 +6,8 @@ import { canonicalTagName as canonical } from '../shared/tag-policy.mjs';
 const tagName = tag => typeof tag === 'string' && tag.length > 0 && tag.length <= 80 && !['__proto__', 'prototype', 'constructor'].includes(tag);
 
 // Drafts contain annotations and evidence; video files use a separate browser cache.
-export function createDraft(entries, variants, frames, language, candidateMinimum = 20, tagSort = {key:'score',direction:'descending'}) {
-  return { version: 1, savedAt: new Date().toISOString(), variants, frames, language, candidateMinimum, tagSort: {...tagSort},
+export function createDraft(entries, variants, frames, language, candidateMinimum = 20, tagSort = {key:'score',direction:'descending'}, excludedTags) {
+  return { version: 1, savedAt: new Date().toISOString(), variants, frames, language, candidateMinimum, tagSort: {...tagSort}, ...(excludedTags === undefined ? {} : {excludedTags:[...excludedTags]}),
     entries: entries.map(entry => ({
       file: { name: entry.file.name, size: entry.file.size ?? 0, lastModified: entry.file.lastModified ?? 0 }, knownHash: entry.knownHash,
       ...(entry.result ? { record: makeRecord(entry), scores: entry.scores, timestamps: entry.timestamps, previews: entry.previews ?? [], frameSetting: entry.frameSetting } : {}),
@@ -43,7 +43,9 @@ function renamedVariants(value){
 export function restoreDraft(input, currentTags, mapping) {
   if (!input || !Array.isArray(input.entries) || input.version !== 1 || input.entries.length > 1000) throw Error('review.invalidSession');
   const variants=renamedVariants(input.variants);
-  const allowed = [...new Set([...currentTags,...Object.values(variants??{}).flatMap(rule=>Object.keys(rule.tagRules)), ...input.entries.flatMap(entry => {
+  if(input.excludedTags !== undefined && (!Array.isArray(input.excludedTags) || input.excludedTags.length>303 || input.excludedTags.some(tag=>!tagName(tag))))throw Error('review.invalidSession');
+  const excludedTags=input.excludedTags === undefined ? undefined : [...new Set(input.excludedTags.map(canonical))];
+  const allowed = [...new Set([...currentTags,...(excludedTags??[]),...Object.values(variants??{}).flatMap(rule=>Object.keys(rule.tagRules)), ...input.entries.flatMap(entry => {
     const r = entry?.record;
     return [ ...(r?.tags ?? []), ...(r?.candidateTags ?? []), ...(r?.result?.tags ?? []).map(row => row.tag), ...(r?.result?.uncertain ?? []), ...(entry?.ignoredTags ?? []) ];
   }).map(canonical)])];
@@ -84,7 +86,7 @@ export function restoreDraft(input, currentTags, mapping) {
     if (previous && previous !== reviewPartition(entry)) throw Error('review.conflictingSplit');
     partitions.set(entry.result.sha256, reviewPartition(entry));
   }
-  return { entries, variants: validateVariants(variants, allowed), frames: ['auto','4','6','8','12','16','24','32','48'].includes(String(input.frames)) ? String(input.frames) : 'auto',
+  return { entries, excludedTags, variants: validateVariants(variants, allowed), frames: ['auto','4','6','8','12','16','24','32','48'].includes(String(input.frames)) ? String(input.frames) : 'auto',
     tagSort: ['tag','score','frames'].includes(input.tagSort?.key) && ['ascending','descending'].includes(input.tagSort?.direction) ? {key:input.tagSort.key,direction:input.tagSort.direction} : {key:'score',direction:'descending'},
     candidateMinimum: Number.isFinite(input.candidateMinimum) && input.candidateMinimum >= 0 && input.candidateMinimum <= 100 ? input.candidateMinimum : 20,
     language: ['de','en'].includes(input.language) ? input.language : undefined, savedAt: input.savedAt };
@@ -101,7 +103,7 @@ export function importReview(input, currentTags, mapping) {
       timestamps: item.evaluation?.timestamps, ignoredTags: item.evaluation?.ignoredTags ?? [], partition: item.evaluation?.partition ?? 'auto',
       frameSetting: item.samplingMode === 'auto' ? 'auto' : String(item.sampledFrames) };
   });
-  return restoreDraft({ version: 1, entries, variants: input.evaluation?.variants, frames: 'auto' }, currentTags, mapping);
+  return restoreDraft({ version: 1, entries, variants: input.evaluation?.variants, excludedTags: input.evaluation?.comparisonRules?.excludedTags, frames: 'auto' }, currentTags, mapping);
 }
 
 export function openReviewStore(factory = globalThis.indexedDB) {

@@ -59,3 +59,5 @@ Open a terminal in the project folder and run:
 ```
 
 Change the input filename to match your downloaded export. The reports are written to `work/review-analysis/report.md` and `report.json`. These reports cannot be imported as review sessions; keep the JSON downloaded from the lab to restore your work. Reports use completed, assessable judgments and the recorded group assignments and exclusions. Known website renames are resolved without changing the export. Session imports also migrate custom tag rules; conflicting rules after a rename are rejected rather than silently overwritten. Other historical labels absent from the current catalog are preserved and listed; rule replay uses the available mapping.
+
+Comparison tag exclusions are stored with the review session and retained on import and restore. Changing upload preferences does not change an existing session's comparison exclusions. Older sessions without this snapshot use the current exclusions when restored.

@@ -8,11 +8,15 @@ import tempfile
 import threading
 import time
 import unittest
+from concurrent.futures import Future
+from types import SimpleNamespace
+from unittest.mock import Mock
 from pathlib import Path
 
 from server.config import capabilities, load_catalog, normalize_settings
 from server.review import review_export
-from server.service import LocalService
+from server.service import Handler, LocalService
+from server.core import FRAME_BYTES
 from server.validation import export_item, validate_record
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -157,6 +161,19 @@ class ServiceTests(unittest.TestCase):
         ]:
             response = self.raw((prefix + suffix).encode())
             self.assertRegex(response, rb"HTTP/1.1 (400|413) ")
+
+    def test_inference_header_disconnect_cancels_admitted_job(self):
+        future = Future()
+        engine = SimpleNamespace(submit=Mock(return_value=future))
+        engine.cancel = Mock(side_effect=lambda _: future.set_exception(ValueError("analysis.cancelled")))
+        server = SimpleNamespace(capabilities=self.service.capabilities,
+            settings=normalize_settings(), tags=self.service.tags, get_engine=lambda: engine)
+        handler = SimpleNamespace(server=server, headers={}, cors=None,
+            body=lambda *_: bytes(FRAME_BYTES), send_response=Mock(), send_header=Mock(),
+            end_headers=Mock(side_effect=BrokenPipeError("disconnected")))
+        Handler.infer(handler, {})
+        engine.cancel.assert_called_once_with(engine.submit.call_args.args[0])
+        self.assertTrue(future.done())
 
     def test_quit_disconnect_still_stops(self):
         entered = threading.Event()
