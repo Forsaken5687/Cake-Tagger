@@ -1,4 +1,4 @@
-"""Package the runtime release with both browser extensions."""
+"""Package the local runtime and separate browser-extension downloads."""
 
 import hashlib
 import json
@@ -143,18 +143,6 @@ def package(root=ROOT):
                 archive.writestr("Cake-Tagger/" + name, distribution_text(root, name))
             else:
                 archive.write(root / name, "Cake-Tagger/" + name)
-        archive.write(
-            root / "outputs/Cake-Tagger-Firefox.zip",
-            "Cake-Tagger/extensions/Cake-Tagger-Firefox.zip",
-        )
-        with zipfile.ZipFile(
-            root / "work/extension-build/Cake-Tagger-Chrome.zip"
-        ) as chrome:
-            for entry in chrome.infolist():
-                archive.writestr(
-                    "Cake-Tagger/extensions/chrome/" + entry.filename,
-                    chrome.read(entry),
-                )
     temporary.replace(output)
     shutil.copyfile(
         root / "work/extension-build/Cake-Tagger-Chrome.zip",

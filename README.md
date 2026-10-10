@@ -9,7 +9,7 @@ Inference runs locally in Python using JoyTag FP32 on the CPU.
 Requires Windows x64 and Firefox 140+ or Chrome 120+.
 
 1. Download `Cake-Tagger.zip` from [GitHub Releases](https://github.com/Forsaken5687/Cake-Tagger/releases) and extract it into a writable folder.
-2. Install the [browser extension](docs/BROWSERS.md).
+2. Download the separate ZIP for your browser from the same release and [install the extension](docs/BROWSERS.md).
 3. Run `Cake-Tagger.exe` and leave its terminal open.
 4. Select videos in cake.ski's upload area. New videos are analyzed automatically by default.
 5. Review the suggestions and choose **Apply tags**. Add manual tags through the site's own input.

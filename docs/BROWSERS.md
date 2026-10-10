@@ -6,7 +6,7 @@ Cake Tagger requires Windows x64 and the local service started with `Cake-Tagger
 
 Requires Firefox Desktop 140 or later. The development package is unsigned.
 
-1. Extract `outputs/Cake-Tagger-Firefox.zip` (`extensions/Cake-Tagger-Firefox.zip` in the full release).
+1. Download `Cake-Tagger-Firefox.zip` separately from [GitHub Releases](https://github.com/Forsaken5687/Cake-Tagger/releases) and extract it.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Choose **Load Temporary Add-on** and select the extracted `manifest.json`.
 4. Allow access to cake.ski and loopback when requested, then reload cake.ski.
@@ -17,7 +17,7 @@ To update, replace the extracted files, reload the add-on in about:debugging, th
 
 Requires Chrome Desktop 120 or later.
 
-1. Use `outputs/chrome/` (`extensions/chrome/` in the full release).
+1. Download `Cake-Tagger-Chrome.zip` separately from [GitHub Releases](https://github.com/Forsaken5687/Cake-Tagger/releases) and extract it.
 2. Open `chrome://extensions` and enable **Developer mode**.
 3. Choose **Load unpacked** and select the folder containing `manifest.json`.
 4. Reload cake.ski and open its upload area.
@@ -36,6 +36,6 @@ Both extensions require storage and download permissions. Browser download prefe
 
 ## Development
 
-Build with `runtime/cpython/python.exe scripts/build_extension.py firefox` or `runtime/cpython/python.exe scripts/build_extension.py chrome`. Each build assembles a fresh allowlisted package. Previous unpacked contents are preserved under ignored `work/extension-build/`, outside current releases.
+Build with `runtime/cpython/python.exe scripts/build_extension.py firefox` or `runtime/cpython/python.exe scripts/build_extension.py chrome`. Chrome builds also provide `outputs/chrome/` for local development; Firefox builds provide `outputs/Cake-Tagger-Firefox.zip`. Each build assembles a fresh allowlisted package. Previous unpacked contents are preserved under ignored `work/extension-build/`, outside current releases.
 
 Firefox uses a background script; Chrome uses a module service worker and `extension/webext-api.js` for asynchronous messaging. Integration code, license notices and provenance are bundled; model binaries remain with the local service. See [testing](TESTING.md), [integration](INTEGRATION.md) and [security](SECURITY.md).
