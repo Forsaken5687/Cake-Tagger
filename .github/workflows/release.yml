@@ -64,6 +64,10 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_REPOSITORY: ${{ github.repository }}
         run: |
+          if gh release view "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release already exists; its files are preserved."
+            exit 0
+          fi
           gh release create "$RELEASE_TAG" packages/* \
             --repo "$RELEASE_REPOSITORY" --verify-tag --draft \
             --title "Cake Tagger $RELEASE_TAG" \
