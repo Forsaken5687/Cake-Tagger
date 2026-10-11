@@ -63,7 +63,8 @@ def relocate_text(source, content):
 EXTENSION_NOTICES = """# Extension notices
 
 Cake Tagger is an independent project and is not an official cake.ski application.
-This document does not grant an additional license for the project's source code.
+Cake Tagger's own code is licensed under the MIT License in `LICENSE`.
+Bundled components retain their own separate license terms.
 
 The upstream JoyTag license is retained unchanged in `licenses/JoyTag.txt`.
 Source: https://github.com/fpgaminer/joytag
@@ -111,6 +112,7 @@ def build_extension(target, root=ROOT):
     ))
     entries = {
         "manifest.json": json.dumps(manifest, indent=2).encode(),
+        "LICENSE": (root / "LICENSE").read_bytes(),
         "THIRD_PARTY.md": EXTENSION_NOTICES.encode("utf-8"),
         "README.md": (root / "docs/BROWSERS.md")
         .read_text(encoding="utf-8")

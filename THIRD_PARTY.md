@@ -1,6 +1,6 @@
 # Third-party components
 
-Bundled components retain their own licenses. This document does not grant an additional license for the project's source code.
+Cake Tagger's own code is licensed under the MIT License in `LICENSE`. Bundled components retain their own licenses listed below; the project license does not replace those terms.
 
 | Component | Version / provenance | License notices |
 | --- | --- | --- |

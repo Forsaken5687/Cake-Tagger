@@ -39,6 +39,8 @@ Keep personal media and test reports outside Git and release packages.
 
 From a source checkout, start the local service, open `http://127.0.0.1:8765/review.html` and use synthetic videos. Check annotation and status changes, frame seeking, per-tag overrides, holdout visibility and A/B example navigation. Verify autosave restoration and JSON import/export without losing judgments. Check desktop and narrow layouts, evidence dismissal and startup failure reporting. See [review lab](REVIEW.md).
 
+The same checks run on GitHub Actions for pushes to `main` and pull requests through `.github/workflows/checks.yml`. The workflow uses read-only repository permissions and does not publish packages.
+
 ## Release checks
 
 Run the test suite, build both extensions, then run `runtime/cpython/python.exe scripts/package.py`. Verify both manifest versions, required modules, dependency checksums and license notices. Confirm that the main ZIP contains only the local application and that both extension ZIPs are separate downloads. Confirm there are no developer tests, build tools, duplicate extension sources, `data/`, `work/`, videos, session tokens or Git history.

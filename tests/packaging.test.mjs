@@ -15,7 +15,8 @@ test('browser packages contain only runtime resources with relocated references'
   const root=new URL(target === 'chrome' ? '../outputs/chrome/' : '../work/extension-build/firefox/',import.meta.url);
   const manifest=JSON.parse(fs.readFileSync(new URL('manifest.json',root)));
   assert.equal(manifest.version,JSON.parse(fs.readFileSync(new URL('../extension/'+(target === 'chrome' ? 'manifest.chrome.json' : 'manifest.json'),import.meta.url))).version);
-  assert.deepEqual(fs.readdirSync(root).sort(),['_locales','app','assets','licenses','manifest.json','README.md','THIRD_PARTY.md'].sort());
+  assert.deepEqual(fs.readdirSync(root).sort(),['_locales','app','assets','licenses','LICENSE','manifest.json','README.md','THIRD_PARTY.md'].sort());
+  assert.deepEqual(fs.readFileSync(new URL('LICENSE',root)),fs.readFileSync(new URL('../LICENSE',import.meta.url)));
   assert.deepEqual(fs.readFileSync(new URL('licenses/JoyTag.txt',root)),fs.readFileSync(new URL('../model/LICENSE.txt',import.meta.url)));
   assert.deepEqual(fs.readFileSync(new URL('assets/tags.txt',root)),fs.readFileSync(new URL('../model/tags.txt',import.meta.url)));
   for(const file of built.files)assert(!/^(src|model|scripts|vendor|extension|runtime)\//.test(file),file);

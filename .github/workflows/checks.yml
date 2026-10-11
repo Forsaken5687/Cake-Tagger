@@ -1,0 +1,31 @@
+name: Checks
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Backend and browser modules
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Prepare verified portable Python and dependencies
+        run: scripts\launch.cmd setup
+      - name: Run backend and browser-module tests
+        run: runtime\cpython\python.exe scripts\test.py

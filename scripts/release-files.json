@@ -52,6 +52,9 @@
     "src/server/__main__.py",
     "scripts/launch.cmd",
     "scripts/setup.py",
-    "scripts/start.py"
+    "scripts/start.py",
+    "LICENSE",
+    "docs/SETTINGS.md",
+    "assets/interface-preview.png"
   ]
 }

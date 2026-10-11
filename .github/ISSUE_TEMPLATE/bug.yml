@@ -1,0 +1,29 @@
+name: Bug report
+description: Report something that does not work as expected.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Cake Tagger version
+      placeholder: Application and extension versions
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome, Firefox or Zen
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, what happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Error message or additional details
+      description: Paste the error text or relevant logs. Remove tokens and personal data. Do not attach private videos or review exports.
