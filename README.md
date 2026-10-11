@@ -6,7 +6,8 @@ Local AI-assisted video tagging for cake.ski. Get suggestions directly beside up
 
 [Download the latest release](https://github.com/Forsaken5687/Cake-Tagger/releases/latest) · [Install the extension](docs/BROWSERS.md) · [Report a bug](https://github.com/Forsaken5687/Cake-Tagger/issues/new/choose)
 
-![Checks](https://github.com/Forsaken5687/Cake-Tagger/actions/workflows/checks.yml/badge.svg)
+[![Checks: main](https://github.com/Forsaken5687/Cake-Tagger/actions/workflows/checks.yml/badge.svg?branch=main)](https://github.com/Forsaken5687/Cake-Tagger/actions/workflows/checks.yml?query=branch%3Amain)
+[![Checks: dev](https://github.com/Forsaken5687/Cake-Tagger/actions/workflows/checks.yml/badge.svg?branch=dev)](https://github.com/Forsaken5687/Cake-Tagger/actions/workflows/checks.yml?query=branch%3Adev)
 
 ![Cake Tagger upload controls with sample results](assets/interface-preview.png)
 
