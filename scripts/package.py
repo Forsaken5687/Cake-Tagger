@@ -148,15 +148,6 @@ def package(root=ROOT):
         root / "work/extension-build/Cake-Tagger-Chrome.zip",
         root / "outputs/Cake-Tagger-Chrome.zip",
     )
-    packages = [
-        output, root / "outputs/Cake-Tagger-Chrome.zip",
-        root / "outputs/Cake-Tagger-Firefox.zip",
-    ]
-    checksums = []
-    for path in packages:
-        with path.open("rb") as stream:
-            checksums.append(hashlib.file_digest(stream, "sha256").hexdigest() + "  " + path.name)
-    (root / "outputs/SHA256SUMS.txt").write_text("\n".join(checksums) + "\n", encoding="utf-8")
     print("Packages created in outputs/.")
 
 

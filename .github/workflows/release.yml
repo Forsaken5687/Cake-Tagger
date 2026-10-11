@@ -33,7 +33,7 @@ jobs:
           assert os.environ['RELEASE_REF_TYPE'] != 'tag' or os.environ['RELEASE_REF_NAME'] == 'v'+version, 'Release tag must match extension/manifest.json'"
       - name: Run backend and browser-module tests
         run: runtime\cpython\python.exe scripts\test.py
-      - name: Build release packages and checksums
+      - name: Build release packages
         run: runtime\cpython\python.exe scripts\package.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -44,7 +44,6 @@ jobs:
             outputs/Cake-Tagger.zip
             outputs/Cake-Tagger-Chrome.zip
             outputs/Cake-Tagger-Firefox.zip
-            outputs/SHA256SUMS.txt
 
   release:
     if: github.ref_type == 'tag'

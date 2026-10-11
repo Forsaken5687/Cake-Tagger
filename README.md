@@ -59,7 +59,7 @@ The development review tool additionally saves a browser-local session backup. S
 - Run `runtime/cpython/python.exe scripts/test.py` after code changes.
 - The [reusable Python package](docs/PYTHON.md) can also be integrated into another backend.
 - Build extensions with `runtime/cpython/python.exe scripts/build_extension.py firefox` or `runtime/cpython/python.exe scripts/build_extension.py chrome`.
-- Run `runtime/cpython/python.exe scripts/package.py` to create the complete Windows ZIP, separate browser-extension ZIPs and `SHA256SUMS.txt` in `outputs/`. Share the packages, not the working directory.
+- Run `runtime/cpython/python.exe scripts/package.py` to create the complete Windows ZIP and separate browser-extension ZIPs in `outputs/`. Share the packages, not the working directory.
 - Open `http://127.0.0.1:8765/review.html` after starting the service for the [review lab](docs/REVIEW.md): video annotations, frame evidence and A/B rule comparisons. This tool and tests are excluded from releases.
 - For performance troubleshooting, open [runtime diagnostics](http://127.0.0.1:8765/diagnostics.html) while the service is running.
 
