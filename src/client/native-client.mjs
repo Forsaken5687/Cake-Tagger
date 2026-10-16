@@ -6,6 +6,15 @@ export function createNativeClient({ token = '', onState = () => {}, onProgress 
   async function request(url, options = {}) {
     return fetcher(url, { ...options, headers: { Authorization: 'Bearer ' + token, ...options.headers } });
   }
+  async function transport(promise, phase) {
+    try { return await promise; }
+    catch (error) {
+      if (!(error instanceof TypeError) || active?.signal.aborted) throw error;
+      // Report only a fixed phase, without filenames, frame data or browser error text.
+      void request('/api/client-error', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phase }), signal: AbortSignal.timeout(2000) }).catch(() => {});
+      throw messageError(phase === 'stream' ? 'error.nativeInterrupted' : 'error.nativeConnection');
+    }
+  }
   async function infer(frames, parallelism = 'auto', { excludedTags, raw = true, suggestionThreshold, suggestionLimit, uncertainLimit } = {}) {
     if (active) throw messageError('error.analysisStart');
     if (!Array.isArray(frames) || !frames.length || frames.length > 48 || frames.some(frame => !(frame instanceof Uint8ClampedArray) || frame.length !== 802816)) throw messageError('error.invalidModelInputImage');
@@ -15,7 +24,7 @@ export function createNativeClient({ token = '', onState = () => {}, onProgress 
       frames.forEach((frame, index) => payload.set(frame, index * 802816));
       const policy = new URLSearchParams();
       for (const [key, value] of Object.entries({ threshold: suggestionThreshold, suggestionLimit, uncertainLimit })) if (value !== undefined) policy.set(key, String(value));
-      const response = await request('/api/infer?parallelism=' + encodeURIComponent(parallelism) + (raw ? '&raw=1' : '') + (policy.size ? '&' + policy.toString() : ''), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', ...(excludedTags ? { 'X-Cake-Tagger-Exclusions': JSON.stringify(excludedTags) } : {}) }, body: payload, signal: controller.signal });
+      const response = await transport(request('/api/infer?parallelism=' + encodeURIComponent(parallelism) + (raw ? '&raw=1' : '') + (policy.size ? '&' + policy.toString() : ''), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', ...(excludedTags ? { 'X-Cake-Tagger-Exclusions': JSON.stringify(excludedTags) } : {}) }, body: payload, signal: controller.signal }), 'request');
       if (!response.ok) { const data = await response.json(); throw messageError(data.error || 'error.nativeInference'); }
       const reader = response.body.getReader(), decoder = new TextDecoder();
       let pending = '', result;
@@ -29,7 +38,7 @@ export function createNativeClient({ token = '', onState = () => {}, onProgress 
       }
       try {
         for (;;) {
-          const { value, done } = await reader.read();
+          const { value, done } = await transport(reader.read(), 'stream');
           pending += decoder.decode(value, { stream: !done });
           let end;
           while ((end = pending.indexOf('\n')) >= 0) { accept(pending.slice(0, end)); pending = pending.slice(end + 1); }
@@ -47,7 +56,7 @@ export function createNativeClient({ token = '', onState = () => {}, onProgress 
     } catch (error) {
       if (controller.signal.aborted) throw new DOMException('analysis.cancelled', 'AbortError');
       controller.abort();
-      if (error instanceof TypeError) throw messageError('error.nativeServer');
+      if (error instanceof TypeError) throw messageError('error.nativeInference');
       throw error;
     } finally { if (active === controller) active = undefined; }
   }

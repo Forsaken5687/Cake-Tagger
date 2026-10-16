@@ -15,6 +15,7 @@ import re
 import secrets
 import select
 import socket
+import sys
 import threading
 import time
 import webbrowser
@@ -77,6 +78,7 @@ class LocalService(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = False
     request_queue_size = 16
+    header_timeout = 5
 
     def __init__(self, root, port=8765, data_dir=None, engine=None):
         self.root = Path(root).resolve()
@@ -124,6 +126,7 @@ class LocalService(ThreadingHTTPServer):
     def process_request(self, request, address):
         # Bound HTTP readers as well as queued inference payloads.
         if not self.slots.acquire(blocking=False):
+            logger.warning("HTTP connection limit reached; request rejected before admission")
             try:
                 request.sendall(
                     b"HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\nContent-Length: 0\r\n\r\n"
@@ -149,9 +152,26 @@ class LocalService(ThreadingHTTPServer):
                 self.connections.discard(request)
             self.slots.release()
 
+    def shutdown_request(self, request):
+        # Let a close-delimited response reach the peer before closing its socket.
+        # An immediate close can reset unread loopback replies on Windows.
+        try:
+            deadline = time.monotonic() + 0.2
+            remaining = 65536
+            while remaining and (timeout := deadline - time.monotonic()) > 0:
+                request.settimeout(timeout)
+                chunk = request.recv(min(8192, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+        except OSError:
+            pass
+        finally:
+            super().shutdown_request(request)
+
     def handle_error(self, *_):
-        # Request failures never expose tokens, filenames or a Python traceback.
-        pass
+        # Log only the exception class, never request contents or a traceback.
+        logger.warning("HTTP handler failed: %s", type(sys.exception()).__name__)
 
     def close_program(self):
         self.shutdown()
@@ -171,9 +191,24 @@ class Handler(BaseHTTPRequestHandler):
 
     def setup(self):
         super().setup()
-        self.connection.settimeout(60)
+        self.connection.settimeout(self.server.header_timeout)
+        self.request_phase = "headers"
         self.cors = None
         self.stream_started = False
+
+    def handle_one_request(self):
+        self.connection.settimeout(self.server.header_timeout)
+        self.request_phase = "headers"
+        self.cors = None
+        self.stream_started = False
+        return super().handle_one_request()
+
+    def parse_request(self):
+        parsed = super().parse_request()
+        if parsed:
+            self.connection.settimeout(60)
+            self.request_phase = "request"
+        return parsed
 
     def log_message(self, *_):
         pass
@@ -264,7 +299,10 @@ class Handler(BaseHTTPRequestHandler):
             return True
 
     def stream(self, value):
-        self.wfile.write(encode(value) + b"\n")
+        payload = encode(value) + b"\n"
+        for start in range(0, len(payload), 16384):
+            chunk = payload[start:start + 16384]
+            self.wfile.write(f"{len(chunk):x}\r\n".encode("ascii") + chunk + b"\r\n")
         self.wfile.flush()
 
     def infer(self, params):
@@ -301,6 +339,8 @@ class Handler(BaseHTTPRequestHandler):
                 raise ValueError()
         except ValueError:
             raise RequestError(400, "error.invalidAnalysisPolicy") from None
+        self.request_phase = "analysis upload"
+        logger.info("Analysis request received; reading sampled images")
         payload = self.body(48 * FRAME_BYTES, "application/octet-stream")
         if len(payload) % FRAME_BYTES:
             raise RequestError(400, "error.invalidModelInputImage")
@@ -324,21 +364,25 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(200)
             for key, value in {
                 "Content-Type": "application/x-ndjson",
+                "Transfer-Encoding": "chunked",
                 "Cache-Control": "no-store",
                 "X-Content-Type-Options": "nosniff",
-                "Connection": "close",
+                "Connection": "keep-alive",
+                "Keep-Alive": "timeout=5",
             }.items():
                 self.send_header(key, value)
             if self.cors:
                 self.send_header("Access-Control-Allow-Origin", self.cors)
                 self.send_header("Vary", "Origin")
             self.end_headers()
-            self.close_connection = True
+            self.close_connection = False
             self.stream_started = True
+            self.request_phase = "analysis stream"
             self.stream(dict(type="state", state="analysis.loadingModel"))
             while not future.done():
                 if self.disconnected():
                     engine.cancel(job_id)
+                    logger.warning("Analysis connection closed by browser; job cancelled")
                     return
                 try:
                     self.stream(progress.get(timeout=0.05))
@@ -365,8 +409,10 @@ class Handler(BaseHTTPRequestHandler):
                 result["timings"]["workerWallSeconds"],
             )
             self.stream(dict(type="done", **result))
-        except (BrokenPipeError, ConnectionError, OSError):
+            logger.info("Analysis result sent to browser")
+        except (BrokenPipeError, ConnectionError, OSError) as error:
             engine.cancel(job_id)
+            logger.warning("Analysis connection interrupted: %s", type(error).__name__)
         except Exception as error:
             engine.cancel(job_id)
             key = (
@@ -379,6 +425,12 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             if not future.done():
                 engine.cancel(job_id)
+            if getattr(self, "stream_started", False):
+                try:
+                    self.wfile.write(b"0\r\n\r\n")
+                    self.wfile.flush()
+                except OSError:
+                    pass
 
     def dispatch(self):
         s = self.server
@@ -441,6 +493,12 @@ class Handler(BaseHTTPRequestHandler):
             )
         if requested.startswith("/api/"):
             self.authenticated()
+            if requested == "/api/client-error" and self.command == "POST":
+                data = self.body(128, "application/json")
+                if not isinstance(data, dict) or set(data) != {"phase"} or data["phase"] not in ("request", "stream"):
+                    raise RequestError(400, "error.invalidAnalysisData")
+                logger.warning("Browser reported analysis connection failure during %s", data["phase"])
+                return self.reply(200, dict(recorded=True))
             if requested == "/api/infer" and self.command == "POST":
                 return self.infer(params)
             if requested == "/api/status" and self.command == "GET":
@@ -567,6 +625,7 @@ class Handler(BaseHTTPRequestHandler):
                     "/api/capabilities",
                     "/api/stop",
                     "/api/export",
+                    "/api/client-error",
                 )
                 else 405,
                 "error.requestFailed",
@@ -615,10 +674,12 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self.dispatch()
         except RequestError as error:
+            logger.warning("Request rejected: HTTP %d (%s)", error.status, error.error)
             self.reply(error.status, dict(error=error.error))
-        except (BrokenPipeError, ConnectionError, OSError):
-            pass
+        except (BrokenPipeError, ConnectionError, OSError) as error:
+            logger.warning("Request connection interrupted during %s: %s", self.request_phase, type(error).__name__)
         except ValueError as error:
+            logger.warning("Request failed during %s: %s", self.request_phase, type(error).__name__)
             if not self.stream_started:
                 self.reply(
                     500,
@@ -628,7 +689,8 @@ class Handler(BaseHTTPRequestHandler):
                         else "error.nativeInference"
                     ),
                 )
-        except Exception:
+        except Exception as error:
+            logger.warning("Request failed during %s: %s", self.request_phase, type(error).__name__)
             if not self.stream_started:
                 self.reply(500, dict(error="error.nativeInference"))
 

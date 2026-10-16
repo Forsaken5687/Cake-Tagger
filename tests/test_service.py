@@ -1,6 +1,7 @@
 """HTTP hardening, disconnected shutdown and validation regression tests."""
 
 import copy
+from email.message import Message
 import http.client
 import json
 import socket
@@ -15,7 +16,7 @@ from pathlib import Path
 
 from server.config import capabilities, load_catalog, normalize_settings
 from server.review import review_export
-from server.service import Handler, LocalService
+from server.service import Handler, LocalService, RequestError
 from server.core import FRAME_BYTES
 from server.validation import export_item, validate_record
 
@@ -127,7 +128,13 @@ class ServiceTests(unittest.TestCase):
             + "9" * 5000
             + "\r\n\r\n"
         ).encode()
-        self.assertIn(b"413", self.raw(oversized).split(b"\r\n")[0])
+        self.assertRegex(self.raw(oversized).split(b"\r\n")[0], rb"HTTP/1.1 (400|413) ")
+        headers = Message()
+        headers["Content-Length"] = "9" * 5000
+        handler = SimpleNamespace(headers=headers)
+        with self.assertRaises(RequestError) as rejected:
+            Handler.body(handler, 32768, "application/json")
+        self.assertEqual(rejected.exception.status, 413)
 
     def test_private_files_and_embedding(self):
         for path in (
@@ -196,23 +203,94 @@ class ServiceTests(unittest.TestCase):
         self.assertFalse(self.worker.is_alive())
         self.assertTrue(self.service.stopping.is_set())
 
+    def test_inference_stream_finishes_without_closing_socket_and_resets_origin(self):
+        future = Future()
+        future.set_result(dict(scores=[[0.0] * 5813], runtime={}, timings={
+            "workerWallSeconds": 0, "modelLoadSeconds": 0, "preprocessSeconds": 0,
+            "inferenceSeconds": 0, "queueSeconds": 0}))
+        self.service.engine = SimpleNamespace(submit=Mock(return_value=future),
+            cancel=Mock(), power_policy={})
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=2)
+        origin = "chrome-extension://" + "a" * 32
+        try:
+            connection.request("POST", "/api/infer", bytes(FRAME_BYTES), {
+                "Authorization": "Bearer " + self.service.token,
+                "Content-Type": "application/octet-stream", "Origin": origin})
+            response = connection.getresponse()
+            self.assertEqual(response.getheader("Transfer-Encoding"), "chunked")
+            self.assertEqual(response.getheader("Access-Control-Allow-Origin"), origin)
+            self.assertFalse(response.will_close)
+            self.assertIn(b'"type":"done"', response.read())
+            previous = connection.sock
+            connection.request("GET", "/api/status", headers={
+                "Authorization": "Bearer " + self.service.token,
+                "Origin": "https://example.invalid"})
+            self.assertIs(connection.sock, previous)
+            response = connection.getresponse()
+            self.assertEqual(response.status, 403)
+            self.assertIsNone(response.getheader("Access-Control-Allow-Origin"))
+            response.read()
+        finally:
+            connection.close()
+
+    def test_repeated_replies_are_delivered_before_connections_close(self):
+        for _ in range(40):
+            self.assertEqual(self.request()[0], 200)
+
+    def test_browser_transport_diagnostics_are_authenticated_and_fixed(self):
+        payload = json.dumps({"phase": "stream"}).encode()
+        headers = {"Content-Type": "application/json"}
+        self.assertEqual(self.request("/api/client-error", "POST", headers, payload)[0], 401)
+        headers["Authorization"] = "Bearer " + self.service.token
+        with self.assertLogs("server.service", level="WARNING") as logged:
+            self.assertEqual(self.request("/api/client-error", "POST", headers, payload)[0], 200)
+        self.assertIn("during stream", logged.output[0])
+        self.assertNotIn(self.service.token, str(logged.output))
+        for value in [{"phase": "private filename"}, {"phase": "request", "filename": "private"}, {"phase": []}]:
+            self.assertEqual(self.request("/api/client-error", "POST", headers, json.dumps(value).encode())[0], 400)
+
+    def test_idle_connections_release_slots_without_shortening_body_timeout(self):
+        self.service.header_timeout = 0.1
+        held = []
+        try:
+            for _ in range(16):
+                held.append(socket.create_connection(("127.0.0.1", self.port)))
+            deadline = time.monotonic() + 2
+            while self.service.connections and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertEqual(self.request()[0], 200)
+            payload = b'{"settings":{}}'
+            with socket.create_connection(("127.0.0.1", self.port), timeout=2) as connection:
+                connection.sendall((f"POST /api/settings HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\nAuthorization: Bearer {self.service.token}\r\nContent-Type: application/json\r\nContent-Length: {len(payload)}\r\n\r\n").encode())
+                time.sleep(0.3)
+                connection.sendall(payload)
+                self.assertIn(b"200", connection.recv(4096))
+        finally:
+            for connection in held:
+                connection.close()
+
     def test_snapshot_expiry_and_bounded_http_readers(self):
         self.service.downloads["/api/download/" + "a" * 48] = dict(
             expires=time.monotonic() - 1, data=b"{}", filename="cake-tags.json"
         )
         self.assertEqual(self.request("/api/download/" + "a" * 48)[0], 404)
         self.assertEqual(len(self.service.downloads), 0)
+        deadline = time.monotonic() + 2
+        while self.service.connections and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertFalse(self.service.connections)
         held = []
         try:
             for _ in range(16):
                 held.append(socket.create_connection(("127.0.0.1", self.port)))
-            for _ in range(100):
-                if len(self.service.connections) >= 16:
-                    break
+            deadline = time.monotonic() + 2
+            while len(self.service.connections) < 16 and time.monotonic() < deadline:
                 time.sleep(0.005)
+            self.assertEqual(len(self.service.connections), 16)
             with socket.create_connection(
                 ("127.0.0.1", self.port), timeout=2
             ) as excess:
+                excess.sendall(f"GET /api/status HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\n\r\n".encode())
                 self.assertIn(b"503", excess.recv(1024))
         finally:
             for connection in held:

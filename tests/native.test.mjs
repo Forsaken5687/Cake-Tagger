@@ -43,3 +43,25 @@ test('upload requests freeze threshold and tag limits for the batch',async()=>{
  }});
  await client.infer([image(0)],'auto',{raw:false,suggestionThreshold:.75,suggestionLimit:7,uncertainLimit:0});
 });
+
+for (const phase of ['request','stream']) test('transport failures report a fixed '+phase+' phase without replaying inference',async()=>{
+ const calls=[];
+ const client=createNativeClient({fetcher:async(url,options)=>{
+  calls.push({url,options});
+  if(url==='/api/client-error')return Response.json({recorded:true});
+  if(phase==='request')throw new TypeError('private browser details');
+  return new Response(new ReadableStream({start(controller){controller.error(new TypeError('private stream details'));}}));
+ }});
+ await assert.rejects(client.infer([image(0)]),error=>error.localizedMessage?.key===(phase==='request'?'error.nativeConnection':'error.nativeInterrupted'));
+ assert.equal(calls.filter(call=>call.url.startsWith('/api/infer?')).length,1);
+ const report=calls.find(call=>call.url==='/api/client-error');
+ assert.deepEqual(JSON.parse(report.options.body),{phase});
+ assert.equal(calls[0].options.signal.aborted,true);
+});
+
+test('callback exceptions are not misreported as connection failures',async()=>{
+ const calls=[];
+ const client=createNativeClient({onState(){throw new TypeError('callback failed');},fetcher:async url=>{calls.push(url);return new Response('{"type":"state","state":"analysis.loadingModel"}\n');}});
+ await assert.rejects(client.infer([image(0)]),error=>error.localizedMessage?.key==='error.nativeInference');
+ assert.equal(calls.length,1);
+});

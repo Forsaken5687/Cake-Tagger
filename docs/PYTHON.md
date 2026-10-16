@@ -43,3 +43,7 @@ CPU ONNX Runtime is the supported provider. The package can run on compatible pl
 ## Logging and lifecycle
 
 Importing `server` or creating an engine does not configure logging, open a terminal or start the local listener. Operational messages use the standard `server.service` logger; applications choose their own handlers and levels. CLI startup configures terminal logs; `--quiet` suppresses those operational messages. `Cake-Tagger.exe` is only a local launcher and is not used by external integrations.
+
+Connection-limit rejections, interrupted uploads/streams and fixed browser transport phases are logged without request paths, tokens, filenames or frame data. Idle connections must begin their request within five seconds; parsed requests retain the 60-second I/O timeout. Browser analysis requests are not automatically replayed after an uncertain transport failure.
+Responses use a bounded TCP shutdown drain (at most 200 ms and 64 KiB) before the socket is closed, avoiding premature Windows loopback resets. This does not repeat inference requests.
+Analysis responses use bounded HTTP chunks and an explicit final chunk. Completed streams can reuse their connection; per-request origin and streaming state are reset before reading the next request.

@@ -22,7 +22,15 @@ class StartupTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         from build_launcher import build_launcher
-        cls.launcher = build_launcher(ROOT)
+        import shutil
+        folder = tempfile.TemporaryDirectory(prefix="launcher-tests-", dir=ROOT / "work")
+        cls.addClassCleanup(folder.cleanup)
+        root = Path(folder.name)
+        for name in ("extension/manifest.json", "src/client/launcher.cs"):
+            target = root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / name, target)
+        cls.launcher = build_launcher(root)
 
     def test_executable_rejects_arguments_without_starting_service(self):
         result = subprocess.run(
