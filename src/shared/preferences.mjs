@@ -32,23 +32,32 @@ export function createSettingsStore({ storage, events, request } = {}) {
     if (JSON.stringify(next) === JSON.stringify(current)) return;
     current = next; for (const listener of listeners) listener(normalizeSettings(current));
   }
-  async function load() {
-    if (request) {
+  // Keep reads, legacy migration and writes in invocation order. A late read
+  // must never replace a completed save, and failed requests must not block retries.
+  let pending = Promise.resolve();
+  function enqueue(operation) {
+    const result = pending.then(operation);
+    pending = result.catch(() => {});
+    return result;
+  }
+  function load() {
+    return enqueue(async () => {
       let response = await request('get');
       if (!response.initialized && storage) {
         let legacy; try { legacy = JSON.parse(storage.getItem(SETTINGS_KEY)); } catch {}
         if (legacy) response = await request('set', normalizeSettings(legacy));
       }
       accept(response.settings);
-    }
-    return normalizeSettings(current);
+      return normalizeSettings(current);
+    });
   }
-  async function save(value) {
+  function save(value) {
     const next = normalizeSettings(value);
-    if (request) {
-      const response = await request('set', next); accept(response.settings);
-    }
-    return normalizeSettings(current);
+    return enqueue(async () => {
+      const response = await request('set', next);
+      accept(response.settings);
+      return normalizeSettings(current);
+    });
   }
   events?.addEventListener('storage', event => {
     if (event.key !== SETTINGS_KEY) return;

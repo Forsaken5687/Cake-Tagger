@@ -31,7 +31,7 @@ Use local fixtures when no upload is permitted. Real cake.ski Bulk selection may
 6. Change the site's accent color and language. Check chips, buttons, focus and Settings.
 7. Verify unique filename matching, inherited Bulk tags and per-card exclusions. Check both member and maintainer roles.
 8. Test Quit while idle and during inference. Confirm the Python process exits and saved preferences and existing data remain intact.
-9. Open runtime diagnostics and run its synthetic single-image check. Record cold and warm runs separately.
+9. Open runtime diagnostics and run its synthetic single-image check. Each run uses the current saved CPU parallelism setting. Record cold and warm runs separately.
 
 Keep personal media and test reports outside Git and release packages.
 

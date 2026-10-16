@@ -151,3 +151,22 @@ test('review exclusions survive import, local saves and exports without changing
  }
  assert.equal(restoreDraft(createDraft([e],variants,'4','en'),tags,mapping).excludedTags,undefined);
 });
+
+
+test('long filenames survive draft and JSON roundtrips without losing corrections', () => {
+  for (const name of ['a'.repeat(237) + '.mp4', 'a'.repeat(251) + '.mp4', '\u{1f600}'.repeat(125) + 'a.mp4']) {
+    const e = entry(); e.file.name = name;
+    const draft = createDraft([e], variants, '4', 'en');
+    const snapshot = createReviewSnapshot([e], mapping, {...variants.A, excludedTags: []}, tags, variants);
+    for (const restored of [restoreDraft(draft, tags, mapping), importReview(snapshot, tags, mapping)]) {
+      assert.equal(restored.entries[0].file.name, name);
+      assert.equal(restored.entries[0].selected.get('tattoos'), true);
+      assert.equal(restored.entries[0].reviewed, true);
+    }
+    const pending = {...e, result: undefined};
+    assert.equal(restoreDraft(createDraft([pending], variants, '4', 'en'), tags, mapping).entries[0].file.name, name);
+  }
+  const e = entry(); e.file.name = 'a'.repeat(252) + '.mp4';
+  assert.throws(() => restoreDraft(createDraft([e], variants, '4', 'en'), tags, mapping));
+  assert.throws(() => importReview(createReviewSnapshot([e], mapping, {...variants.A, excludedTags: []}, tags, variants), tags, mapping));
+});

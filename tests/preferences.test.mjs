@@ -68,3 +68,47 @@ test('suggestion threshold accepts finite scores and retains safe defaults',()=>
  assert.equal(normalizeSettings({suggestionThreshold:.75}).suggestionThreshold,.75);
  for(const suggestionThreshold of [true,'0.5',NaN,Infinity,-.1,1.1])assert.equal(normalizeSettings({suggestionThreshold}).suggestionThreshold,.4);
 });
+
+
+test('overlapping loads and saves preserve invocation order including legacy migration', async () => {
+  let release, backend, reads = 0;
+  const firstRead = new Promise(resolve => { release = resolve; });
+  const calls = [];
+  const store = createSettingsStore({
+    storage: { getItem: () => JSON.stringify({ language: 'de' }) },
+    request: async (method, value) => {
+      calls.push(method);
+      if (method === 'get' && ++reads === 1) return firstRead;
+      if (method === 'set') backend = value;
+      return { initialized: !!backend, settings: backend || normalizeSettings() };
+    }
+  });
+  const loading = store.load();
+  const saving = store.save({ hideSiteAI: true, language: 'en' });
+  const reloading = store.load();
+  await Promise.resolve();
+  assert.deepEqual(calls, ['get']);
+  release({ initialized: false, settings: normalizeSettings() });
+  await Promise.all([loading, saving, reloading]);
+  assert.deepEqual(calls, ['get', 'set', 'set', 'get']);
+  assert.equal(store.get().hideSiteAI, true);
+  assert.equal(store.get().language, 'en');
+  assert.deepEqual(store.get(), backend);
+});
+
+test('failed settings operations release the queue and saves snapshot their input', async () => {
+  let backend = normalizeSettings(), fail = true;
+  const store = createSettingsStore({ request: async (method, value) => {
+    if (fail) { fail = false; throw Error('Unavailable'); }
+    if (method === 'set') backend = value;
+    return { initialized: true, settings: backend };
+  } });
+  const rejected = store.load();
+  const value = { hideSiteAI: true };
+  const saving = store.save(value);
+  value.hideSiteAI = false;
+  const loading = store.load();
+  await assert.rejects(rejected, /Unavailable/);
+  await saving;
+  assert.equal((await loading).hideSiteAI, true);
+});
