@@ -1,5 +1,6 @@
 import { setLanguage, translatePage, localizedText } from './i18n.mjs';
-import { errorMessage } from '../shared/messages.mjs';
+import { errorMessage, messageError } from '../shared/messages.mjs';
+import { normalizeSettings } from '../shared/preferences.mjs';
 import { memorySnapshot } from './runtime-metrics.mjs';
 import { createNativeClient } from './native-client.mjs';
 import { createLocalSession } from './local-session.mjs';
@@ -17,9 +18,12 @@ run.onclick = async () => {
   busy = true; run.disabled = download.disabled = true;
   localizedText(status, 'diagnostics.running');
   try {
+    const response = await session.request('/api/settings');
+    if (!response.ok) throw messageError('error.nativeServer');
+    const settings = normalizeSettings((await response.json()).settings);
     const started = performance.now();
     const frame = new Uint8ClampedArray(448 * 448 * 4).fill(127);
-    const result = await client.infer([frame]);
+    const result = await client.infer([frame], settings.parallelism);
     details = { runtime: { ...result.runtime, memory: memorySnapshot() }, sampledFrames: 1,
       timings: result.timings, totalSeconds: (performance.now() - started) / 1000, outputLabels: result.scores[0].length };
     report.textContent = JSON.stringify(details, null, 2);

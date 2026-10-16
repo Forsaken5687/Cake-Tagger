@@ -47,7 +47,7 @@ export function validateRecord(input, tags) {
     if (!Array.isArray(value) || value.length > tags.length || value.some(t => typeof t !== 'string' || !allowed.has(t))) throw messageError('error.invalidTagsInTheCorrection');
     return [...new Set(value)];
   };
-  if (!input || typeof input.filename !== 'string' || !input.filename || input.filename.length > 240 || !/^[a-f0-9]{64}$/.test(input.sha256) || typeof input.reviewed !== 'boolean' || typeof input.originalSuggestionsKnown !== 'boolean') throw messageError('error.invalidFileAssociation');
+  if (!input || typeof input.filename !== 'string' || !input.filename || input.filename.length > 255 || !/^[a-f0-9]{64}$/.test(input.sha256) || typeof input.reviewed !== 'boolean' || typeof input.originalSuggestionsKnown !== 'boolean') throw messageError('error.invalidFileAssociation');
   const r = input.result;
   validateAnalysisPolicy(r?.analysisPolicy);
   if (r?.samplingMode != null && !['auto', 'fixed'].includes(r.samplingMode)) throw messageError('error.invalidFrameSelection');

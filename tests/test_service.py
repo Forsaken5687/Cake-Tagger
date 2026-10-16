@@ -329,6 +329,18 @@ class ValidationTests(unittest.TestCase):
             ),
         )
 
+    def test_long_filename_export_boundaries(self):
+        for name in ["a" * 237 + ".mp4", "a" * 251 + ".mp4", "\U0001f600" * 125 + "a.mp4"]:
+            with self.subTest(length=len(name)):
+                self.record["filename"] = name
+                item = export_item(validate_record(self.record, self.tags))
+                self.assertEqual(item["filename"], name)
+                self.assertEqual(item["addedTags"], ["tattoos"])
+        for name in ["a" * 252 + ".mp4", "\U0001f600" * 126 + ".mp4"]:
+            self.record["filename"] = name
+            with self.assertRaises(ValueError):
+                validate_record(self.record, self.tags)
+
     def test_corrections_and_sources_survive(self):
         item = export_item(validate_record(self.record, self.tags))
         self.assertEqual(item["tags"], ["tattoos"])

@@ -51,7 +51,7 @@ export function restoreDraft(input, currentTags, mapping) {
   }).map(canonical)])];
   if (allowed.some(tag => !tagName(tag))) throw Error('review.invalidSession');
   const entries = input.entries.map(saved => {
-    if (!saved?.file || typeof saved.file.name !== 'string' || !saved.file.name || saved.file.name.length > 240 || !Number.isFinite(saved.file.size) || saved.file.size < 0 || !Number.isFinite(saved.file.lastModified)) throw Error('review.invalidSession');
+    if (!saved?.file || typeof saved.file.name !== 'string' || !saved.file.name || saved.file.name.length > 255 || !Number.isFinite(saved.file.size) || saved.file.size < 0 || !Number.isFinite(saved.file.lastModified)) throw Error('review.invalidSession');
     const entry = { file: { name:saved.file.name, size:saved.file.size, lastModified:saved.file.lastModified }, selected: new Map(), tagSources: {}, reviewed: false, ignoredTags: new Set(), partition: saved.partition ?? 'auto' };
     if (!['auto','development','holdout'].includes(entry.partition)) throw Error('review.invalidSession');
     if (!Array.isArray(saved.ignoredTags) || saved.ignoredTags.length > allowed.length || saved.ignoredTags.some(tag => !tagName(tag))) throw Error('review.invalidSession');

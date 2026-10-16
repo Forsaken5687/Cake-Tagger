@@ -259,7 +259,7 @@ def validate_record(item, allowed):
     result = item.get("result")
     require(
         isinstance(filename, str)
-        and 0 < len(filename) <= 240
+        and 0 < len(filename.encode("utf-16-le", errors="surrogatepass")) <= 510
         and isinstance(sha, str)
         and re.fullmatch("[a-f0-9]{64}", sha)
         and type(item.get("reviewed")) is bool
