@@ -10,7 +10,7 @@ export function missingSuggestions(analysis, present, allowed, settings) {
   return [...found.values()].sort((a,b)=>b.confidence-a.confidence || a.tag.localeCompare(b.tag));
 }
 export function mountSceneSuggestions(doc,runtime,allowed) {
-  const cache=new Map(); let active, root, timer, stopped=false, expanded=false;
+  const cache=new Map(); let active, root, timer, stopped=false;
   let settings={language:'auto',showScores:true,showUncertain:true,excludedTags:[]};
   const language=()=>settings.language==='de' || (settings.language!=='en' && doc.documentElement.lang.startsWith('de'))?'de':'en';
   const t=(key,params)=>translate(key,language(),params);
@@ -28,20 +28,20 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
     if(!root || !active)return;
     const entry=active;
     if(!root.firstElementChild) {
-      const heading=element('summary',null,'cake-tagger-scene-heading');
-      heading.append(element('span','Cake Tagger','stok-tv-suglabel'),element('span','\u203a','cake-tagger-scene-chevron'));
-      root.append(heading);
+      const heading=element('div',null,'cake-tagger-scene-heading');
+      heading.append(element('span','Cake Tagger','cake-tagger-scene-label'));
       const body=element('div',null,'cake-tagger-scene-body');
       const actions=element('div',null,'cake-tagger-result-actions');
       const analyze=element('button',null,'cake-tagger-scene-analyze');analyze.type='button';
       const cancelButton=element('button',null,'cake-tagger-scene-cancel');cancelButton.type='button';
       analyze.addEventListener('click',event=>{if(isTrustedEvent(event))void analyzeScene(entry);});
       cancelButton.addEventListener('click',event=>{if(isTrustedEvent(event))cancel(entry);});
-      actions.append(analyze,cancelButton);
-      body.append(actions,element('p',null,'cake-tagger-scene-status'),element('div',null,'cake-tagger-scene-list'));
+      actions.append(analyze,cancelButton);heading.append(actions);root.append(heading);
+      const status=element('p',null,'cake-tagger-scene-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+      body.append(status,element('div',null,'cake-tagger-scene-list'));
       root.append(body);
     }
-    root.querySelector('summary').title=t('scene.title');
+    root.setAttribute('aria-label','Cake Tagger: '+t('scene.title'));
     const analyze=root.querySelector('.cake-tagger-scene-analyze');analyze.textContent=t('scene.analyze');analyze.disabled=entry.busy;
     const cancelButton=root.querySelector('.cake-tagger-scene-cancel');cancelButton.textContent=t('scene.cancel');cancelButton.hidden=!entry.busy;
     const status=root.querySelector('.cake-tagger-scene-status');
@@ -73,7 +73,7 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
 
   async function analyzeScene(entry) {
     if(entry!==active || entry.busy || !sameScene(doc,entry.scene))return;
-    entry.busy=true;entry.controller=new AbortController();entry.message=t('scene.sampling');expanded=true;root.open=true;render();
+    entry.busy=true;entry.controller=new AbortController();entry.message=t('scene.sampling');render();
     try {
       const started=await call('cake-tagger:scene-start',{duration:entry.scene.video.duration});
       entry.job=started.job;settings=started.settings;
@@ -111,15 +111,13 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
     const scene=activeScene(doc);
     if(!scene || !active || !sameScene(doc,active.scene) || !root?.isConnected) {
       if(active?.busy) cache.set(active.scene.id,{...active,busy:false,message:'',job:null,controller:null});
-      if(root)expanded=root.open;
       cancel(active);root?.remove();root=null;active=null;
       if(!scene)return;
       let entry=cache.get(scene.id);
       if(!entry){entry={analysis:null,outcomes:new Map(),busy:false,message:'',job:null};cache.set(scene.id,entry);}
       while(cache.size>4){const key=cache.keys().next().value;cache.delete(key);}
       entry.scene=scene;active=entry;
-      root=element('details',null,'cake-tagger-scene');root.dataset.sceneId=scene.id;root.open=expanded;
-      root.addEventListener('toggle',event=>{if(event.target===root)expanded=root.open;});
+      root=element('section',null,'cake-tagger-scene');root.dataset.sceneId=scene.id;
       render();
     }
     if(root) {
