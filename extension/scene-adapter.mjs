@@ -17,6 +17,19 @@ export function sameScene(doc, scene) {
   const current = activeScene(doc);
   return current?.card === scene.card && current.video === scene.video && current.id === scene.id;
 }
+export function sceneMount(doc) {
+  const rail=doc.querySelector('.stok-rpanel');
+  if (visible(rail)) {
+    const panel=rail.querySelector('.stok-tv-panel--rail');
+    if (panel) return {parent:panel,before:panel.querySelector('.stok-tv-list'),floating:false};
+  }
+  const sheets=[...doc.querySelectorAll('.stok-tagsheet')].filter(visible);
+  if (sheets.length===1) {
+    const panel=sheets[0].querySelector('.stok-tv-panel');
+    if (panel) return {parent:panel,before:panel.querySelector('.stok-tv-list'),floating:false};
+  }
+  return {parent:doc.body,before:null,floating:true};
+}
 export function sceneTags(doc) {
   const panel = [...doc.querySelectorAll('.stok-tv-panel')].find(visible);
   return new Set([...panel?.querySelectorAll('.stok-tv-name,.stok-tv-pendtag') || []].map(node => norm(node.textContent)));
@@ -37,6 +50,17 @@ async function seek(video, time, signal) {
   if (Math.abs(video.currentTime-time) < .01 && video.readyState >= 2 && !video.seeking) return;
   await eventWait(video,'seeked',() => { video.currentTime=time; },signal);
 }
+export function samplingSource(doc,scene) {
+  if (doc.defaultView.location.origin!=='https://cake.ski') return null;
+  try {
+    const source=new URL(scene.video.currentSrc || scene.video.src);
+    if (source.protocol!=='https:' || source.hostname!=='cdn-stream.cake.ski' || source.port
+      || source.username || source.password || source.pathname!==`/scene/${scene.id}/stream`) return null;
+    // Cake serves this same authorized scene stream without a CDN redirect.
+    // Keep its signed query; never send media URLs or credentials to the backend.
+    return new URL(source.pathname+source.search,'https://cake.ski').href;
+  } catch { return null; }
+}
 export async function sampleScene(doc, scene, setting, signal, frameReady) {
   const video=scene.video, originalTime=video.currentTime, wasPaused=video.paused;
   const plan=samplingPlan(video.duration,setting), canvas=doc.createElement('canvas');
@@ -47,20 +71,26 @@ export async function sampleScene(doc, scene, setting, signal, frameReady) {
   const activeSignal=AbortSignal.any([signal,interaction.signal]);
   const interrupt=event=>{if(isTrustedEvent(event))interaction.abort();};
   video.addEventListener('pointerdown',interrupt);video.addEventListener('keydown',interrupt);
+  let media=video;
   video.pause();
   try {
+    const source=samplingSource(doc,scene);
+    if(source) {
+      media=doc.createElement('video');media.muted=true;media.preload='auto';media.playsInline=true;
+      await eventWait(media,'loadeddata',()=>{media.src=source;media.load();},activeSignal);
+    }
     for (let index=0; index<plan.count; index++) {
       activeSignal.throwIfAborted();
       if (!sameScene(doc,scene)) throw messageError('scene.changed');
-      await seek(video,plan.timestamps[index],activeSignal);
+      await seek(media,plan.timestamps[index],activeSignal);
       if (!sameScene(doc,scene)) throw messageError('scene.changed');
-      const edge=Math.max(video.videoWidth,video.videoHeight);
+      const edge=Math.max(media.videoWidth,media.videoHeight);
       if (!edge) throw messageError('error.videoDecode');
       // Match upload preprocessing, including its intermediate 640px resize.
       const intermediate=doc.createElement('canvas'), ratio=Math.min(1,640/edge);
-      intermediate.width=Math.max(1,Math.round(video.videoWidth*ratio));
-      intermediate.height=Math.max(1,Math.round(video.videoHeight*ratio));
-      intermediate.getContext('2d').drawImage(video,0,0,intermediate.width,intermediate.height);
+      intermediate.width=Math.max(1,Math.round(media.videoWidth*ratio));
+      intermediate.height=Math.max(1,Math.round(media.videoHeight*ratio));
+      intermediate.getContext('2d').drawImage(media,0,0,intermediate.width,intermediate.height);
       const padded=Math.max(intermediate.width,intermediate.height), modelScale=448/padded;
       context.fillStyle='#fff'; context.fillRect(0,0,448,448);
       context.imageSmoothingEnabled=true; context.imageSmoothingQuality='high';
@@ -73,6 +103,7 @@ export async function sampleScene(doc, scene, setting, signal, frameReady) {
     }
     return plan;
   } finally {
+    if(media!==video){media.removeAttribute('src');media.load();}
     video.removeEventListener('pointerdown',interrupt);video.removeEventListener('keydown',interrupt);
     if (!interaction.signal.aborted && sameScene(doc,scene)) {
       try { await seek(video,originalTime,AbortSignal.timeout(3000)); } catch {}

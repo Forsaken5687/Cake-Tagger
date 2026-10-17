@@ -29,7 +29,7 @@ Use **Download JSON** to keep results before closing or reloading the upload pag
 
 ## Existing videos
 
-On a normal video page, open **Cake Tagger · Missing tags** and choose **Analyze video**. Playback pauses briefly while images are sampled. Review the missing tags and use `+` to suggest one through the site's native tag search. Depending on your site permissions, it is added immediately or submitted for review. Moderator views are excluded.
+On a normal video page, expand **Add tags**, then open the panel below **Tags & performers**: **Cake Tagger · Missing tags** and choose **Analyze video**. Playback pauses briefly while images are sampled. Review the missing tags and use `+` to suggest one through the site's native tag search. Depending on your site permissions, it is added immediately or submitted for review. Moderator views are excluded.
 
 ## Settings and limits
 

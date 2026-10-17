@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSceneService } from '../extension/scene-service.mjs';
-import { activeScene, addSceneTag, encodeFrame, sampleScene } from '../extension/scene-adapter.mjs';
+import { activeScene, addSceneTag, encodeFrame, sampleScene, sceneMount, samplingSource } from '../extension/scene-adapter.mjs';
 import { missingSuggestions } from '../extension/scene-ui.mjs';
 import { normalizeSettings } from '../src/shared/preferences.mjs';
 
@@ -110,4 +110,53 @@ test('moderation overlays suppress scene detection even when the normal feed rou
   const f=sceneFixture(),query=f.doc.querySelectorAll;
   f.doc.querySelectorAll=selector=>selector==='.adm-shell'?[{isConnected:true,closest:()=>null,getClientRects:()=>[{}]}]:query(selector);
   assert.equal(activeScene(f.doc),null);
+});
+
+
+test('scene panel mounts inside native tags even when the sidebar body has no layout box',()=>{
+  const list={},panel={querySelector:()=>list};
+  const rail={isConnected:true,closest:()=>null,getClientRects:()=>[{}],querySelector:()=>panel};
+  const doc={body:{},querySelector:()=>rail,querySelectorAll:()=>[]};
+  assert.deepEqual(sceneMount(doc),{parent:panel,before:list,floating:false});
+  rail.getClientRects=()=>[];
+  const sheet={...rail,querySelector:()=>panel,getClientRects:()=>[{}]};
+  doc.querySelectorAll=()=>[sheet];
+  assert.equal(sceneMount(doc).parent,panel);
+  doc.querySelectorAll=()=>[];
+  assert.deepEqual(sceneMount(doc),{parent:doc.body,before:null,floating:true});
+});
+
+test('browser decoder maps only the exact authorized Cake scene stream to the same origin',()=>{
+  const doc={defaultView:{location:{origin:'https://cake.ski'}}};
+  const scene={id:'7',video:{currentSrc:'https://cdn-stream.cake.ski/scene/7/stream?token=example&expires=123'}};
+  assert.equal(samplingSource(doc,scene),'https://cake.ski/scene/7/stream?token=example&expires=123');
+  for(const source of ['https://cdn-stream.cake.ski/scene/8/stream','https://evil.example/scene/7/stream','https://cdn-stream.cake.ski:444/scene/7/stream','https://user:pass@cdn-stream.cake.ski/scene/7/stream','http://cdn-stream.cake.ski/scene/7/stream','blob:https://cake.ski/example']){
+    scene.video.currentSrc=source;assert.equal(samplingSource(doc,scene),null);
+  }
+  scene.video.currentSrc='https://cdn-stream.cake.ski/scene/7/stream';
+  doc.defaultView.location.origin='https://other.example';
+  assert.equal(samplingSource(doc,scene),null);
+});
+
+
+test('temporary same-origin decoder is released and original playback restored on success and decode failure',async()=>{
+  for(const fail of [false,true]){
+    const f=sceneFixture();let time=1,paused=false,plays=0,cleared=false;
+    class Video extends EventTarget {
+      isConnected=true;duration=5;videoWidth=640;videoHeight=360;readyState=4;seeking=false;
+      get currentTime(){return this===original?time:this.time||0;}
+      set currentTime(value){if(this===original)time=value;else this.time=value;queueMicrotask(()=>this.dispatchEvent(new Event('seeked')));}
+      get paused(){return paused;}pause(){paused=true;}async play(){paused=false;plays++;}
+      getClientRects(){return[{}];}closest(){return null;}
+      load(){if(!this.src)return;queueMicrotask(()=>this.dispatchEvent(new Event(fail?'error':'loadeddata')));}
+      removeAttribute(name){assert.equal(name,'src');this.src='';cleared=true;}
+    }
+    const original=new Video(),decoder=new Video();original.currentSrc='https://cdn-stream.cake.ski/scene/7/stream?token=example';
+    f.scene.video=original;f.card.querySelector=()=>original;f.doc.defaultView.location.origin='https://cake.ski';
+    f.doc.createElement=name=>name==='video'?decoder:{getContext:()=>({fillRect(){},drawImage(){},getImageData:()=>({data:new Uint8ClampedArray(802816)})})};
+    let count=0;
+    const operation=sampleScene(f.doc,f.scene,'4',new AbortController().signal,async()=>{count++;});
+    if(fail)await assert.rejects(operation);else {await operation;assert.equal(count,4);}
+    assert.equal(cleared,true);assert.equal(time,1);assert.equal(paused,false);assert.equal(plays,1);
+  }
 });

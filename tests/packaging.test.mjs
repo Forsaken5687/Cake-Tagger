@@ -40,7 +40,7 @@ test('browser packages contain only runtime resources with relocated references'
 });
 
 test('packaged background loads its relocated service and preserves sender checks',async()=>{
- const saved={browser:globalThis.browser,fetch:globalThis.fetch,cakeServer:globalThis.cakeServer,cakeCommands:globalThis.cakeCommands};
+ const saved={browser:globalThis.browser,fetch:globalThis.fetch,cakeServer:globalThis.cakeServer,cakeCommands:globalThis.cakeCommands,cakeScenes:globalThis.cakeScenes};
  try{
   for(const target of ['firefox','chrome']){
    const root=new URL(target === 'chrome' ? '../outputs/chrome/' : '../work/extension-build/firefox/',import.meta.url);
@@ -49,6 +49,7 @@ test('packaged background loads its relocated service and preserves sender check
    globalThis.fetch=async url=>new Response(JSON.stringify(String(url).endsWith('/api/connect')?{token:'a'.repeat(48)}:{initialized:true,language:'en'}),{headers:{'Content-Type':'application/json'}});
    await import(new URL(target==='chrome'?'app/chrome-worker.mjs':'app/background.js',root).href);
    assert.equal(typeof handler,'function');
+   if(target==='chrome')assert.equal(typeof globalThis.cakeScenes?.handle,'function','Chrome initializes scene inference before handling messages');
    const sender={id:'packaging-test',url:new URL('app/bridge.html?embedded=1',root).href};
    const settings=await handler({type:'cake-tagger:settings-get'},sender);
    assert.equal(settings.language,'en');

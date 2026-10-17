@@ -1,4 +1,4 @@
-import { activeScene, sameScene, sceneTags, openSceneTags, sampleScene, encodeFrame, addSceneTag } from './scene-adapter.mjs';
+import { activeScene, sameScene, sceneMount, sceneTags, openSceneTags, sampleScene, encodeFrame, addSceneTag } from './scene-adapter.mjs';
 import { translate, messageError, errorMessage } from '../src/shared/messages.mjs';
 import { isTrustedEvent } from '../src/shared/trusted-event.mjs';
 
@@ -99,10 +99,12 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
       while(cache.size>4){const key=cache.keys().next().value;cache.delete(key);}
       entry.scene=scene;active=entry;
       root=element('details',null,'cake-tagger-panel cake-tagger-scene');
-      const rail=doc.querySelector('.stok-rpanel .stok-rp-body');
-      if(rail && rail.getClientRects().length)rail.append(root);
-      else {root.classList.add('is-floating');doc.body.append(root);}
       render();
+    }
+    if(root) {
+      const mount=sceneMount(doc);
+      if(root.parentElement!==mount.parent)mount.parent.insertBefore(root,mount.before);
+      root.classList.toggle('is-floating',mount.floating);
     }
   }
   void runtime.sendMessage({type:'cake-tagger:settings-get'}).then(response=>{if(response?.settings){settings=response.settings;render();}}).catch(()=>{});
