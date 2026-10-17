@@ -10,7 +10,7 @@ export function missingSuggestions(analysis, present, allowed, settings) {
   return [...found.values()].sort((a,b)=>b.confidence-a.confidence || a.tag.localeCompare(b.tag));
 }
 export function mountSceneSuggestions(doc,runtime,allowed) {
-  const cache=new Map(); let active, root, timer, stopped=false;
+  const cache=new Map(); let active, root, timer, stopped=false, expanded=false;
   let settings={language:'auto',showScores:true,showUncertain:true,excludedTags:[]};
   const language=()=>settings.language==='de' || (settings.language!=='en' && doc.documentElement.lang.startsWith('de'))?'de':'en';
   const t=(key,params)=>translate(key,language(),params);
@@ -28,10 +28,12 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
     if(!root || !active)return;
     const entry=active;
     if(!root.firstElementChild) {
-      root.append(element('summary'));
+      const heading=element('summary',null,'cake-tagger-scene-heading');
+      heading.append(element('span','Cake Tagger','stok-tv-suglabel'),element('span','\u203a','cake-tagger-scene-chevron'));
+      root.append(heading);
       const body=element('div',null,'cake-tagger-scene-body');
       const actions=element('div',null,'cake-tagger-result-actions');
-      const analyze=element('button',null,'cake-tagger-primary');analyze.type='button';
+      const analyze=element('button',null,'cake-tagger-scene-analyze');analyze.type='button';
       const cancelButton=element('button',null,'cake-tagger-scene-cancel');cancelButton.type='button';
       analyze.addEventListener('click',event=>{if(isTrustedEvent(event))void analyzeScene(entry);});
       cancelButton.addEventListener('click',event=>{if(isTrustedEvent(event))cancel(entry);});
@@ -39,10 +41,12 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
       body.append(actions,element('p',null,'cake-tagger-scene-status'),element('div',null,'cake-tagger-scene-list'));
       root.append(body);
     }
-    root.querySelector('summary').textContent='Cake Tagger \u00b7 '+t('scene.title');
-    const analyze=root.querySelector('.cake-tagger-primary');analyze.textContent=t('scene.analyze');analyze.disabled=entry.busy;
+    root.querySelector('summary').title=t('scene.title');
+    const analyze=root.querySelector('.cake-tagger-scene-analyze');analyze.textContent=t('scene.analyze');analyze.disabled=entry.busy;
     const cancelButton=root.querySelector('.cake-tagger-scene-cancel');cancelButton.textContent=t('scene.cancel');cancelButton.hidden=!entry.busy;
-    root.querySelector('.cake-tagger-scene-status').textContent=entry.message || t('scene.hint');
+    const status=root.querySelector('.cake-tagger-scene-status');
+    status.textContent=entry.message || '';status.hidden=!entry.message || entry.message===t('scene.ready');
+    analyze.title=t('scene.hint');
     const list=root.querySelector('.cake-tagger-scene-list'), present=sceneTags(doc), kept=new Set();
     list.querySelector('.cake-tagger-scene-empty')?.remove();
     let position=0;
@@ -52,8 +56,8 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
       kept.add(row.tag);
       let button=[...list.children].find(node=>node.dataset.tag===row.tag);
       if(!button){
-        button=element('button',null,'cake-tagger-scene-tag');button.type='button';button.dataset.tag=row.tag;
-        button.append(element('span',row.tag),element('small'),element('span','+'));
+        button=element('button',null,'cake-tagger-scene-tag stok-tv-coocchip');button.type='button';button.dataset.tag=row.tag;
+        button.append(element('span','#'+row.tag),element('small'),element('span','+'));
         button.addEventListener('click',event=>{if(isTrustedEvent(event))void addTag(entry,row.tag);});
         list.append(button);
       }
@@ -69,7 +73,7 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
 
   async function analyzeScene(entry) {
     if(entry!==active || entry.busy || !sameScene(doc,entry.scene))return;
-    entry.busy=true;entry.controller=new AbortController();entry.message=t('scene.sampling');root.open=true;render();
+    entry.busy=true;entry.controller=new AbortController();entry.message=t('scene.sampling');expanded=true;root.open=true;render();
     try {
       const started=await call('cake-tagger:scene-start',{duration:entry.scene.video.duration});
       entry.job=started.job;settings=started.settings;
@@ -107,13 +111,15 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
     const scene=activeScene(doc);
     if(!scene || !active || !sameScene(doc,active.scene) || !root?.isConnected) {
       if(active?.busy) cache.set(active.scene.id,{...active,busy:false,message:'',job:null,controller:null});
+      if(root)expanded=root.open;
       cancel(active);root?.remove();root=null;active=null;
       if(!scene)return;
       let entry=cache.get(scene.id);
       if(!entry){entry={analysis:null,outcomes:new Map(),busy:false,message:'',job:null};cache.set(scene.id,entry);}
       while(cache.size>4){const key=cache.keys().next().value;cache.delete(key);}
       entry.scene=scene;active=entry;
-      root=element('details',null,'cake-tagger-panel cake-tagger-scene');root.dataset.sceneId=scene.id;
+      root=element('details',null,'cake-tagger-scene');root.dataset.sceneId=scene.id;root.open=expanded;
+      root.addEventListener('toggle',event=>{if(event.target===root)expanded=root.open;});
       render();
     }
     if(root) {

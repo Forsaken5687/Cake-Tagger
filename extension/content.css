@@ -48,16 +48,23 @@
 /* Hide only the site's AI suggestions; retain upload fields and extension results. */
 .cake-tagger-hide-site-ai .stok-ai-suggestions{display:none!important}
 
-/* Use the native tag panel's theme and single scrolling surface. */
-.cake-tagger-scene{flex-shrink:0;min-width:0;margin:10px 0;padding:0 18px;border:0;border-top:1px solid var(--cake-border,#333);border-bottom:1px solid var(--cake-border,#333);border-radius:0;background:transparent;color:inherit;font:inherit;overflow:visible;overflow-anchor:none}
-.cake-tagger-scene>summary{cursor:pointer;padding:10px 0;font-size:12px;font-weight:650;list-style-position:inside}
-.cake-tagger-scene-body{padding:0 0 10px}
-.cake-tagger-scene .cake-tagger-result-actions{margin-top:0;gap:8px}
-.cake-tagger-scene-status{margin:8px 0;color:var(--cake-text-2,#aaa);font-size:12px;line-height:1.5}
+/* Keep this section in the same visual rhythm as Cake's suggested tags. */
+.cake-tagger-scene{flex-shrink:0;min-width:0;margin:0;padding:12px 18px;border:0;background:transparent;color:inherit;font:inherit;overflow:visible;overflow-anchor:none}
+.cake-tagger-scene>.cake-tagger-scene-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;list-style:none}
+.cake-tagger-scene>.cake-tagger-scene-heading::-webkit-details-marker{display:none}
+.cake-tagger-scene-heading>.stok-tv-suglabel{margin:0;color:var(--cake-text-2,#9a9a9a);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.cake-tagger-scene-chevron{color:var(--cake-text-2,#9a9a9a);font-size:14px;line-height:1;transform:rotate(0deg)}
+.cake-tagger-scene[open]>.cake-tagger-scene-heading .cake-tagger-scene-chevron{transform:rotate(90deg)}
+.cake-tagger-scene .cake-tagger-result-actions{margin:8px 0;gap:8px}
+.cake-tagger-scene-status,.cake-tagger-scene-empty{margin:8px 0;color:var(--cake-text-2,#9a9a9a);font-size:12px;line-height:1.5}
 .cake-tagger-scene-list{display:flex;flex-wrap:wrap;gap:6px;overflow:visible}
-.cake-tagger-scene button{font:inherit;font-size:12px;padding:6px 9px;border-radius:var(--cake-radius-control,8px)}
-.cake-tagger-scene .cake-tagger-scene-tag{display:inline-flex;align-items:center;gap:7px;text-align:left;background:var(--cake-hover,#303030);border:1px dashed var(--cake-border-2,#444);color:inherit}
-.cake-tagger-scene-tag small{color:var(--cake-text-2,#aaa);font-size:10px}
+.cake-tagger-scene button{font:inherit;font-size:11px;cursor:pointer}
+.cake-tagger-scene-analyze,.cake-tagger-scene-cancel{padding:5px 9px;border:1px solid var(--cake-border-2,#444);border-radius:var(--cake-radius-control,8px);background:var(--cake-hover,#303030);color:var(--cake-text-2,#9a9a9a)}
+.cake-tagger-scene :is(.cake-tagger-scene-analyze,.cake-tagger-scene-cancel):hover{color:var(--cake-text,#fff);background:var(--cake-hover,#303030)}
+.cake-tagger-scene .cake-tagger-scene-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:var(--cake-hover,#303030);border:1px dashed var(--cake-border-2,#444);color:inherit;line-height:1.2}
+.cake-tagger-scene .cake-tagger-scene-tag:hover{border-color:var(--cake-accent,#fe2c55)}
+.cake-tagger-scene-tag small{color:var(--cake-text-2,#9a9a9a);font-size:10px}
 .cake-tagger-scene button:disabled{opacity:.5;cursor:default}
+.cake-tagger-scene :is(button,summary):focus-visible{outline:2px solid var(--cake-accent,#fe2c55);outline-offset:2px}
 .cake-tagger-scene [hidden]{display:none!important}
-.cake-tagger-scene.is-floating{position:fixed;right:12px;bottom:16px;z-index:1001;width:min(340px,calc(100vw - 24px));max-height:70dvh;overflow:auto;padding:0 12px;border:1px solid var(--cake-border,#333);border-radius:var(--cake-radius-card,12px);background:var(--cake-surface,#141414);color:var(--cake-text,#fff);box-shadow:0 6px 24px #0006}
+.cake-tagger-scene.is-floating{position:fixed;right:12px;bottom:16px;z-index:1001;width:min(340px,calc(100vw - 24px));box-sizing:border-box;max-height:70dvh;overflow:auto;border:1px solid var(--cake-border,#333);border-radius:var(--cake-radius-card,12px);background:var(--cake-surface,#141414);color:var(--cake-text,#fff);box-shadow:0 6px 24px #0006}
