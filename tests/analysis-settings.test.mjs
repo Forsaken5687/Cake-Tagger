@@ -34,3 +34,16 @@ test('native scheduling diagnostics survive export and reject malformed policy f
   assert.deepEqual(exportItem(applyRecord({file: entry.file}, record)).runtime, runtime);
   for (const broken of [{...runtime, threadSpinning: 'false'}, {...runtime, processPriority: 'high'}, {...runtime, processPowerPolicy: 'arbitrary'}, {...runtime, clientBrowser:{family:'unknown',visibilityState:'visible'}}]) assert.throws(() => validateRuntime(broken));
 });
+
+test('runtime versions and CPU metadata reject oversized or noncanonical text', () => {
+  const runtime = {provider: 'native-cpu', hardwareConcurrency: 8, configuredNativeThreads: 4,
+    runtimeVersion: '1.30.0', modelSha256: 'a'.repeat(64)};
+  assert.equal(validateRuntime(runtime).runtimeVersion, '1.30.0');
+  assert.equal(validateRuntime({...runtime, parallelismLimit: '9007199254740991'}).parallelismLimit, '9007199254740991');
+  for (const version of ['0'.repeat(1000000), '1.2.3\n', '1.2.3\r\n', '\u0661.\u0662.\u0663', '1.2', '1.2.3.4', '1'.repeat(11)+'.2.3', 123]) {
+    assert.throws(() => validateRuntime({...runtime, runtimeVersion: version}));
+  }
+  for (const limit of ['9'.repeat(10000), '9007199254740992', '2\n', 2]) {
+    assert.throws(() => validateRuntime({...runtime, parallelismLimit: limit}));
+  }
+});

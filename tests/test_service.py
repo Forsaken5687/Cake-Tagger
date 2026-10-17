@@ -18,7 +18,7 @@ from server.config import capabilities, load_catalog, normalize_settings
 from server.review import review_export
 from server.service import Handler, LocalService, RequestError
 from server.core import FRAME_BYTES
-from server.validation import export_item, validate_record
+from server.validation import export_item, validate_record, runtime, number
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -110,6 +110,63 @@ class ServiceTests(unittest.TestCase):
             403,
         )
 
+    def test_origin_injection_cannot_reach_response_headers_or_inference(self):
+        origin = "chrome-extension://" + "a" * 32
+        engine = SimpleNamespace(submit=Mock())
+        self.service.engine = engine
+        for suffix in ("\r\n X-Injected: yes", "\r\n\tX-Injected: yes", "%0d%0aX-Injected:yes", "\n X-Injected: yes"):
+            for path in ("/api/status", "/api/infer"):
+                method = "POST" if path.endswith("infer") else "GET"
+                request = (
+                    f"{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\n"
+                    f"Authorization: Bearer {self.service.token}\r\n"
+                    f"Origin: {origin}{suffix}\r\nContent-Length: 0\r\n"
+                    "Content-Type: application/octet-stream\r\nConnection: close\r\n\r\n"
+                ).encode()
+                with self.subTest(path=path, suffix=repr(suffix)):
+                    with socket.create_connection(("127.0.0.1", self.port), timeout=5) as connection:
+                        connection.sendall(request)
+                        chunks = []
+                        while chunk := connection.recv(65536):
+                            chunks.append(chunk)
+                    response = b"".join(chunks)
+                    self.assertIn(b"403", response.split(b"\r\n", 1)[0])
+                    self.assertNotIn(b"Access-Control-Allow-Origin:", response)
+                    self.assertNotIn(b"X-Injected:", response)
+        engine.submit.assert_not_called()
+
+    def test_cors_output_revalidates_before_writing_headers(self):
+        handler = SimpleNamespace(cors="chrome-extension://" + "a" * 32 + "\r\nInjected: yes")
+        handler.cors_headers = lambda: Handler.cors_headers(handler)
+        handler.send_response = Mock()
+        with self.assertRaises(RequestError):
+            Handler.reply(handler, 200, {"ok": True})
+        handler.send_response.assert_not_called()
+        with self.assertRaises(RequestError):
+            Handler.infer(handler, {})
+        handler.send_response.assert_not_called()
+        for origin in ("chrome-extension://" + "a" * 32, "moz-extension://12345678-1234-1234-1234-123456789abc"):
+            handler.cors = origin
+            self.assertEqual(Handler.cors_headers(handler), {"Access-Control-Allow-Origin": origin, "Vary": "Origin"})
+
+    def test_export_rejects_oversized_runtime_values_and_remains_available(self):
+        fixture = ValidationTests()
+        fixture.setUp()
+        base = dict(provider="native-cpu", hardwareConcurrency=8, configuredNativeThreads=4,
+                    runtimeVersion="1.30.0", modelSha256="a" * 64)
+        for field, value in [("hardwareConcurrency", 10 ** 1000), ("configuredNativeThreads", -(10 ** 1000)),
+                             ("runtimeVersion", "0" * 100000), ("parallelismLimit", "9" * 10000)]:
+            record = copy.deepcopy(fixture.record)
+            record["result"]["runtime"] = dict(base, **{field: value})
+            status, body, _ = self.request("/api/export", "POST", {
+                "Authorization": "Bearer " + self.service.token,
+                "Content-Type": "application/json",
+            }, json.dumps({"items": [record]}).encode())
+            with self.subTest(field=field):
+                self.assertEqual(status, 400)
+                self.assertEqual(json.loads(body)["error"], "error.invalidAnalysisRuntime")
+                self.assertEqual(self.request()[0], 200)
+
     def test_duplicate_origins_and_huge_body_lengths_are_rejected(self):
         host = f"Host: 127.0.0.1:{self.port}\r\n"
         auth = f"Authorization: Bearer {self.service.token}\r\n"
@@ -178,6 +235,7 @@ class ServiceTests(unittest.TestCase):
         handler = SimpleNamespace(server=server, headers={}, cors=None,
             body=lambda *_: bytes(FRAME_BYTES), send_response=Mock(), send_header=Mock(),
             end_headers=Mock(side_effect=BrokenPipeError("disconnected")))
+        handler.cors_headers = lambda: Handler.cors_headers(handler)
         Handler.infer(handler, {})
         engine.cancel.assert_called_once_with(engine.submit.call_args.args[0])
         self.assertTrue(future.done())
@@ -328,6 +386,24 @@ class ValidationTests(unittest.TestCase):
                 durationSeconds=10,
             ),
         )
+
+    def test_numeric_validation_never_converts_unbounded_integers_to_float(self):
+        for value in (10 ** 1000, -(10 ** 1000), float("inf"), float("nan"), True):
+            self.assertFalse(number(value))
+        self.assertTrue(number(9007199254740991, integer=True))
+
+    def test_runtime_text_fields_are_bounded_before_parsing(self):
+        base = dict(provider="native-cpu", hardwareConcurrency=8, configuredNativeThreads=4,
+                    runtimeVersion="1.30.0", modelSha256="a" * 64)
+        self.assertEqual(runtime(base)["runtimeVersion"], "1.30.0")
+        self.assertEqual(runtime(dict(base, parallelismLimit="9007199254740991"))["parallelismLimit"], "9007199254740991")
+        for field, values in [
+            ("runtimeVersion", ["0" * 1000000, "1.2.3\n", "1.2.3\r\n", "\u0661.\u0662.\u0663", "1.2", "1.2.3.4", "1" * 11 + ".2.3", 123]),
+            ("parallelismLimit", ["9" * 10000, "9007199254740992", "2\n", 2]),
+        ]:
+            for value in values:
+                with self.subTest(field=field, kind=type(value).__name__), self.assertRaisesRegex(ValueError, "^error.invalidAnalysisRuntime$"):
+                    runtime(dict(base, **{field: value}))
 
     def test_long_filename_export_boundaries(self):
         for name in ["a" * 237 + ".mp4", "a" * 251 + ".mp4", "\U0001f600" * 125 + "a.mp4"]:

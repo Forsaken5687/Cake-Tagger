@@ -10,8 +10,8 @@ SAFE_INTEGER = 9007199254740991
 def number(value, low=0, high=SAFE_INTEGER, integer=False):
     return (
         type(value) in (int, float)
-        and math.isfinite(value)
         and low <= value <= high
+        and math.isfinite(value)
         and (not integer or int(value) == value)
     )
 
@@ -110,7 +110,8 @@ def runtime(value):
         require(
             number(value.get("configuredNativeThreads"), 1, cores, True)
             and isinstance(value.get("runtimeVersion"), str)
-            and re.fullmatch(r"\d+\.\d+\.\d+", value["runtimeVersion"])
+            and len(value["runtimeVersion"]) <= 32
+            and re.fullmatch(r"[0-9]{1,10}\.[0-9]{1,10}\.[0-9]{1,10}", value["runtimeVersion"])
             and isinstance(value.get("modelSha256"), str)
             and re.fullmatch("[a-f0-9]{64}", value["modelSha256"]),
             error,
@@ -138,7 +139,8 @@ def runtime(value):
         require(
             x == "auto"
             or isinstance(x, str)
-            and re.fullmatch("[1-9][0-9]*", x)
+            and len(x) <= 16
+            and re.fullmatch("[1-9][0-9]{0,15}", x)
             and int(x) <= SAFE_INTEGER,
             error,
         )

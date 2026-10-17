@@ -213,8 +213,18 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_):
         pass
 
+    def cors_headers(self):
+        if not self.cors:
+            return {}
+        # Recheck at the output boundary as well as during request admission.
+        if not EXTENSION_ORIGIN.fullmatch(self.cors):
+            raise RequestError(403, "error.nativeServer")
+        origin = self.cors.replace("\r", "").replace("\n", "")
+        return {"Access-Control-Allow-Origin": origin, "Vary": "Origin"}
+
     def reply(self, status, value=None, headers=None, body=None):
         payload = encode(value) if value is not None else body or b""
+        cors = self.cors_headers()
         self.send_response(status)
         defaults = {
             "Content-Type": "application/json; charset=utf-8",
@@ -224,10 +234,7 @@ class Handler(BaseHTTPRequestHandler):
             "Content-Length": str(len(payload)),
             "Connection": "close",
         }
-        if self.cors:
-            defaults.update(
-                {"Access-Control-Allow-Origin": self.cors, "Vary": "Origin"}
-            )
+        defaults.update(cors)
         defaults.update(headers or {})
         for key, val in defaults.items():
             self.send_header(key, val)
@@ -306,6 +313,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.flush()
 
     def infer(self, params):
+        cors = self.cors_headers()
         s = self.server
         parallelism = params.get("parallelism", ["auto"])[0] or "auto"
         try:
@@ -371,9 +379,8 @@ class Handler(BaseHTTPRequestHandler):
                 "Keep-Alive": "timeout=5",
             }.items():
                 self.send_header(key, value)
-            if self.cors:
-                self.send_header("Access-Control-Allow-Origin", self.cors)
-                self.send_header("Vary", "Origin")
+            for key, value in cors.items():
+                self.send_header(key, value)
             self.end_headers()
             self.close_connection = False
             self.stream_started = True
