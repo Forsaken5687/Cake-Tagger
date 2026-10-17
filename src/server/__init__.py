@@ -4,7 +4,7 @@ import logging
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-__version__ = "1.0.0"
+__version__ = "0.8.0"
 
 
 def create_engine(catalog_directory, model_file=None, cpu_capabilities=None):

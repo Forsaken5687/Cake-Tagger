@@ -52,7 +52,7 @@ test('missing scene suggestions omit present, pending, excluded and unknown tags
   assert.deepEqual(missingSuggestions(analysis,new Set(['solo']),new Set(['mirror','solo','watermark','glasses']),normalizeSettings()).map(row=>row.tag),['glasses','mirror']);
 });
 function sceneFixture(mode='added') {
-  let inputValue='',existing=['solo'],pending=[],clicked=0,searches=0;
+  let inputValue='',existing=['solo'],pending=[],clicked=0,searches=0,opened=0;
   class Input extends EventTarget {get value(){return inputValue;}set value(value){inputValue=value;}getClientRects(){return[{}];}closest(){return null;}isConnected=true;}
   const input=new Input();
   const label=name=>({textContent:'#'+name});
@@ -61,9 +61,9 @@ function sceneFixture(mode='added') {
   const panel={isConnected:true,getClientRects:()=>[{}],closest:()=>null,querySelector:()=>input,
     querySelectorAll:selector=>selector==='.stok-tv-name'?existing.map(label):selector==='.stok-tv-pendtag'?pending.map(label):selector==='button.stok-tv-sugopt'?[option]:[]};
   const video={isConnected:true,getClientRects:()=>[{}],closest:()=>null};
-  const card={isConnected:true,dataset:{sceneId:'7'},getClientRects:()=>[{}],closest:()=>null,querySelector:selector=>selector==='video'?video:{click(){}}};
+  const card={isConnected:true,dataset:{sceneId:'7'},getClientRects:()=>[{}],closest:()=>null,querySelector:selector=>selector==='video'?video:{click(){opened++;}}};
   const doc={defaultView:{location:{pathname:'/video/7',hash:''},HTMLInputElement:Input,Event},querySelectorAll:selector=>selector.startsWith('#stok-feed')?[card]:selector==='.stok-tv-panel'?[panel]:selector==='.stok-tv-suginput'?[input]:[]};
-  return {doc,card,video,input,option,panel,scene:{card,video,id:'7'},counts:()=>({clicked,searches}),changeVideo:()=>{card.dataset.sceneId='8';}};
+  return {doc,card,video,input,option,panel,scene:{card,video,id:'7'},counts:()=>({clicked,searches,opened}),changeVideo:()=>{card.dataset.sceneId='8';}};
 }
 test('native scene search confirms added and pending outcomes without an API call or renderer access',async()=>{
   for(const mode of ['added','pending']){
@@ -114,10 +114,10 @@ test('moderation overlays suppress scene detection even when the normal feed rou
 
 
 test('scene panel mounts inside native tags even when the sidebar body has no layout box',()=>{
-  const list={},panel={querySelector:()=>list};
+  const list={},input={},panel={querySelector:selector=>selector==='.stok-tv-suggest'?input:list};
   const rail={isConnected:true,closest:()=>null,getClientRects:()=>[{}],querySelector:()=>panel};
   const doc={body:{},querySelector:()=>rail,querySelectorAll:()=>[]};
-  assert.deepEqual(sceneMount(doc),{parent:panel,before:list,floating:false});
+  assert.deepEqual(sceneMount(doc),{parent:panel,before:input,floating:false});
   rail.getClientRects=()=>[];
   const sheet={...rail,querySelector:()=>panel,getClientRects:()=>[{}]};
   doc.querySelectorAll=()=>[sheet];
@@ -159,4 +159,27 @@ test('temporary same-origin decoder is released and original playback restored o
     if(fail)await assert.rejects(operation);else {await operation;assert.equal(count,4);}
     assert.equal(cleared,true);assert.equal(time,1);assert.equal(paused,false);assert.equal(plays,1);
   }
+});
+
+
+test('a scene-bound native tag panel is reused without opening or focusing the search again',async()=>{
+  const f=sceneFixture(),query=f.panel.querySelector;
+  f.panel.querySelector=selector=>selector==='.cake-tagger-scene'?{dataset:{sceneId:'7'}}:query(selector);
+  assert.equal((await addSceneTag(f.doc,f.scene,'mirror',new AbortController().signal)).status,'added');
+  assert.equal(f.counts().opened,0);assert.equal(f.counts().clicked,1);
+});
+
+test('a panel bound to a different scene must be opened through the active video first',async()=>{
+  const f=sceneFixture(),query=f.panel.querySelector;
+  f.panel.querySelector=selector=>selector==='.cake-tagger-scene'?{dataset:{sceneId:'8'}}:query(selector);
+  await addSceneTag(f.doc,f.scene,'mirror',new AbortController().signal);
+  assert.equal(f.counts().opened,1);
+});
+
+test('failed tag searches clear their own input without triggering the native browse-all popup',async()=>{
+  const f=sceneFixture(),query=f.panel.querySelector,results={hidden:false};
+  f.panel.querySelector=selector=>selector==='.stok-tv-sugresults'?results:query(selector);
+  f.option.querySelector=()=>({textContent:'#different'});
+  await assert.rejects(addSceneTag(f.doc,f.scene,'mirror',new AbortController().signal,{timeout:5,poll:1}));
+  assert.equal(f.input.value,'');assert.equal(f.counts().searches,1);assert.equal(results.hidden,true);assert.equal(f.counts().clicked,0);
 });

@@ -1,4 +1,4 @@
-import { activeScene, sameScene, sceneMount, sceneTags, openSceneTags, sampleScene, encodeFrame, addSceneTag } from './scene-adapter.mjs';
+import { activeScene, sameScene, sceneMount, sceneTags, sampleScene, encodeFrame, addSceneTag } from './scene-adapter.mjs';
 import { translate, messageError, errorMessage } from '../src/shared/messages.mjs';
 import { isTrustedEvent } from '../src/shared/trusted-event.mjs';
 
@@ -26,36 +26,51 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
   }
   function render() {
     if(!root || !active)return;
-    const entry=active, open=root.open;
-    root.replaceChildren();
-    const summary=element('summary','Cake Tagger · '+t('scene.title'));root.append(summary);
-    const body=element('div',null,'cake-tagger-scene-body');
-    const actions=element('div',null,'cake-tagger-result-actions');
-    const analyze=element('button',t('scene.analyze'),'cake-tagger-primary');analyze.type='button';analyze.disabled=entry.busy;
-    const cancelButton=element('button',t('scene.cancel'));cancelButton.type='button';cancelButton.hidden=!entry.busy;
-    analyze.addEventListener('click',event=>{if(isTrustedEvent(event))void analyzeScene(entry);});
-    cancelButton.addEventListener('click',event=>{if(isTrustedEvent(event))cancel(entry);});
-    actions.append(analyze,cancelButton);body.append(actions);
-    body.append(element('p',entry.message || t('scene.hint'),'cake-tagger-scene-status'));
-    const list=element('div',null,'cake-tagger-scene-list');
-    const present=sceneTags(doc);
+    const entry=active;
+    if(!root.firstElementChild) {
+      root.append(element('summary'));
+      const body=element('div',null,'cake-tagger-scene-body');
+      const actions=element('div',null,'cake-tagger-result-actions');
+      const analyze=element('button',null,'cake-tagger-primary');analyze.type='button';
+      const cancelButton=element('button',null,'cake-tagger-scene-cancel');cancelButton.type='button';
+      analyze.addEventListener('click',event=>{if(isTrustedEvent(event))void analyzeScene(entry);});
+      cancelButton.addEventListener('click',event=>{if(isTrustedEvent(event))cancel(entry);});
+      actions.append(analyze,cancelButton);
+      body.append(actions,element('p',null,'cake-tagger-scene-status'),element('div',null,'cake-tagger-scene-list'));
+      root.append(body);
+    }
+    root.querySelector('summary').textContent='Cake Tagger \u00b7 '+t('scene.title');
+    const analyze=root.querySelector('.cake-tagger-primary');analyze.textContent=t('scene.analyze');analyze.disabled=entry.busy;
+    const cancelButton=root.querySelector('.cake-tagger-scene-cancel');cancelButton.textContent=t('scene.cancel');cancelButton.hidden=!entry.busy;
+    root.querySelector('.cake-tagger-scene-status').textContent=entry.message || t('scene.hint');
+    const list=root.querySelector('.cake-tagger-scene-list'), present=sceneTags(doc), kept=new Set();
+    list.querySelector('.cake-tagger-scene-empty')?.remove();
+    let position=0;
     for(const row of missingSuggestions(entry.analysis,present,allowed,settings)) {
       const outcome=entry.outcomes.get(row.tag);
       if(outcome==='added' || outcome==='pending')continue;
-      const button=element('button',null,'cake-tagger-scene-tag');button.type='button';
+      kept.add(row.tag);
+      let button=[...list.children].find(node=>node.dataset.tag===row.tag);
+      if(!button){
+        button=element('button',null,'cake-tagger-scene-tag');button.type='button';button.dataset.tag=row.tag;
+        button.append(element('span',row.tag),element('small'),element('span','+'));
+        button.addEventListener('click',event=>{if(isTrustedEvent(event))void addTag(entry,row.tag);});
+        list.append(button);
+      }
+      if(list.children[position]!==button)list.insertBefore(button,list.children[position] || null);
+      position++;
       button.disabled=entry.busy || outcome==='unknown';
-      button.append(element('span',row.tag),element('small',settings.showScores?Math.round(row.confidence*100)+'%':''),element('span',outcome==='unknown'?t('scene.check'):'+'));
-      button.addEventListener('click',event=>{if(isTrustedEvent(event))void addTag(entry,row.tag);});
-      list.append(button);
+      button.children[1].textContent=settings.showScores?Math.round(row.confidence*100)+'%':'';
+      button.children[2].textContent=outcome==='unknown'?t('scene.check'):'+';
     }
-    if(entry.analysis && !list.children.length)list.append(element('p',t('scene.empty')));
-    body.append(list);root.append(body);root.open=open;
+    for(const button of [...list.children])if(!kept.has(button.dataset.tag))button.remove();
+    if(entry.analysis && !list.children.length)list.append(element('p',t('scene.empty'),'cake-tagger-scene-empty'));
   }
+
   async function analyzeScene(entry) {
     if(entry!==active || entry.busy || !sameScene(doc,entry.scene))return;
     entry.busy=true;entry.controller=new AbortController();entry.message=t('scene.sampling');root.open=true;render();
     try {
-      openSceneTags(doc,entry.scene);
       const started=await call('cake-tagger:scene-start',{duration:entry.scene.video.duration});
       entry.job=started.job;settings=started.settings;
       entry.controller.signal.throwIfAborted();
@@ -98,7 +113,7 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
       if(!entry){entry={analysis:null,outcomes:new Map(),busy:false,message:'',job:null};cache.set(scene.id,entry);}
       while(cache.size>4){const key=cache.keys().next().value;cache.delete(key);}
       entry.scene=scene;active=entry;
-      root=element('details',null,'cake-tagger-panel cake-tagger-scene');
+      root=element('details',null,'cake-tagger-panel cake-tagger-scene');root.dataset.sceneId=scene.id;
       render();
     }
     if(root) {

@@ -21,12 +21,12 @@ export function sceneMount(doc) {
   const rail=doc.querySelector('.stok-rpanel');
   if (visible(rail)) {
     const panel=rail.querySelector('.stok-tv-panel--rail');
-    if (panel) return {parent:panel,before:panel.querySelector('.stok-tv-list'),floating:false};
+    if (panel) return {parent:panel,before:panel.querySelector('.stok-tv-suggest'),floating:false};
   }
   const sheets=[...doc.querySelectorAll('.stok-tagsheet')].filter(visible);
   if (sheets.length===1) {
     const panel=sheets[0].querySelector('.stok-tv-panel');
-    if (panel) return {parent:panel,before:panel.querySelector('.stok-tv-list'),floating:false};
+    if (panel) return {parent:panel,before:panel.querySelector('.stok-tv-suggest'),floating:false};
   }
   return {parent:doc.body,before:null,floating:true};
 }
@@ -120,6 +120,8 @@ export function encodeFrame(frame) {
 export function openSceneTags(doc,scene) {
   if (!sameScene(doc,scene)) throw messageError('scene.changed');
   if ([...doc.querySelectorAll('.stok-tv-suginput')].filter(visible).some(node=>node.value.trim())) throw messageError('scene.inputBusy');
+  const existing=[...doc.querySelectorAll('.stok-tv-panel')].filter(visible);
+  if(existing.length===1 && existing[0].querySelector('.cake-tagger-scene')?.dataset?.sceneId===scene.id)return existing[0];
   const open=scene.card.querySelector('button.stok-tags');
   if (!open) throw messageError('scene.unavailable');
   open.click();
@@ -137,9 +139,9 @@ export async function addSceneTag(doc, scene, tag, signal, {timeout=10000,poll=5
   if (contains('.stok-tv-name')) return {status:'added'};
   if (contains('.stok-tv-pendtag')) return {status:'pending'};
   const changed=event=>{ if (event.isTrusted) edited=true; };
-  const setValue=value=>{
+  const setValue=(value,notify=true)=>{
     Object.getOwnPropertyDescriptor(doc.defaultView.HTMLInputElement.prototype,'value').set.call(input,value);
-    input.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));
+    if(notify)input.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));
   };
   input.addEventListener('input',changed);
   try {
@@ -160,6 +162,9 @@ export async function addSceneTag(doc, scene, tag, signal, {timeout=10000,poll=5
     throw error;
   } finally {
     input.removeEventListener('input',changed);
-    if (touched && !edited && sameScene(doc,scene) && input.isConnected && input.value===tag) setValue('');
+    if (touched && !edited && sameScene(doc,scene) && input.isConnected && input.value===tag) {
+      setValue('',false);
+      const results=panel.querySelector('.stok-tv-sugresults');if(results)results.hidden=true;
+    }
   }
 }

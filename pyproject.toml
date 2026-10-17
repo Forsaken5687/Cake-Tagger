@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cake-tagger-core"
-version = "1.0.0"
+version = "0.8.0"
 description = "Reusable JoyTag CPU inference and validated tag aggregation"
 requires-python = ">=3.13"
 dependencies = ["numpy==2.4.4", "onnxruntime==1.30.0"]
