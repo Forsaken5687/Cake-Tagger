@@ -10,10 +10,15 @@ export async function connect(refresh = false) {
   }
   return { token };
 }
-async function request(path, options = {}, retry = true) {
+export async function nativeRequest(path, options = {}, retry = true) {
   const connection = await connect();
-  const response = await fetch(base + path, { ...options, headers: { Authorization: 'Bearer ' + connection.token, 'Content-Type': 'application/json' }, signal: options.signal || AbortSignal.timeout(3000) });
-  if (response.status === 401 && retry) { token = undefined; return request(path, options, false); }
+  const response = await fetch(base + path, { ...options, headers: { ...options.headers, Authorization: 'Bearer ' + connection.token } });
+  // Authentication is rejected before admission; never replay an interrupted job.
+  if (response.status === 401 && retry) { token = undefined; return nativeRequest(path, options, false); }
+  return response;
+}
+async function request(path, options = {}) {
+  const response = await nativeRequest(path, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers }, signal: options.signal || AbortSignal.timeout(3000) });
   if (!response.ok) throw Error('error.nativeServer');
   return response.json();
 }

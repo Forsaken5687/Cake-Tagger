@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES = """src/shared/trusted-event.mjs extension/webext-api.js src/shared/preferences.mjs src/shared/settings-ui.mjs src/shared/messages.mjs model/tags.txt model/LICENSE.txt
+extension/scene-service.mjs extension/scene-ui.mjs extension/scene-adapter.mjs src/client/native-client.mjs src/client/sampling.mjs
 extension/background.js extension/command-relay.mjs extension/popup.html extension/popup.mjs extension/popup.css extension/server-connection.mjs
 extension/bridge.html extension/bridge.mjs extension/bridge.css extension/content.js extension/content.css extension/embedded-upload.mjs extension/upload-ui.mjs
 src/shared/site-theme.mjs src/shared/message-contract.mjs extension/upload-adapter.mjs extension/_locales/en/messages.json extension/_locales/de/messages.json""".split()
@@ -19,7 +20,7 @@ def package_path(source):
     """Keep source layout separate from the browser's deployable resources."""
     if source.startswith("extension/_locales/"):
         return source.removeprefix("extension/")
-    if source.startswith(("extension/", "src/shared/")):
+    if source.startswith(("extension/", "src/shared/", "src/client/")):
         return "app/" + posixpath.basename(source)
     if source == "model/tags.txt":
         return "assets/tags.txt"

@@ -5,13 +5,14 @@ import vm from 'node:vm';
 import {createBridgeConnection} from '../extension/command-relay.mjs';
 
 async function background(downloadFailure = false, commandReply = {accepted:true}) {
-  let listener, click;
+  let listener, click, removed, updated;
   const calls = [];
   const browser = {
     action: { onClicked: { addListener(fn) { click=fn; } } },
     runtime: { id: 'fixture', getURL: path => 'moz-extension://fixture/' + path, onConnect:{addListener(){}}, onMessage: { addListener(fn) { listener = fn; } }, sendMessage: async message => { calls.push({ runtime: message }); return commandReply; } },
     downloads: {download:async options=>{if(downloadFailure)throw Error('Download denied');calls.push({download:options});return 7;}},
     tabs: {
+      onRemoved:{addListener(fn){removed=fn;}},onUpdated:{addListener(fn){updated=fn;}},
       create: async options => { calls.push(options); },
       query: async () => [{ id: 42, title: 'Cake', url: 'https://cake.ski/' }],
       update: async (id, options) => { calls.push({ id, options }); },
@@ -19,8 +20,8 @@ async function background(downloadFailure = false, commandReply = {accepted:true
       sendMessage: async (id, message) => { calls.push({ id, message }); return { added: message.tags, skipped: [] }; }
     }
   };
-  vm.runInNewContext(await readFile(new URL('../extension/background.js', import.meta.url), 'utf8'), { browser, cakeCommands:{register:()=>({registered:true}),attach(){},send:async(tabId,channel,command)=>{calls.push({delivered:command,tabId,channel});return commandReply || {error:'error.uploadConnection'};}}, URL, crypto:globalThis.crypto, Uint8Array, cakeServer:{saveSettings:async (_browser,settings)=>{calls.push({saved:settings});return {settings};},getCapabilities:async()=>({testMaximum:24}),connect:async refresh=>{assert.equal(refresh,true);return {token:'a'.repeat(48)};}, stop: async () => { calls.push({stop:true}); return {stopped:true}; }} });
-  return { listener, calls, click };
+  vm.runInNewContext(await readFile(new URL('../extension/background.js', import.meta.url), 'utf8'), { browser, cakeScenes:{handle:async(message,sender)=>({scene:true,tabId:sender.tab.id}),closeTab:tabId=>calls.push({sceneClosed:tabId})}, cakeCommands:{register:()=>({registered:true}),attach(){},send:async(tabId,channel,command)=>{calls.push({delivered:command,tabId,channel});return commandReply || {error:'error.uploadConnection'};}}, URL, crypto:globalThis.crypto, Uint8Array, cakeServer:{saveSettings:async (_browser,settings)=>{calls.push({saved:settings});return {settings};},getCapabilities:async()=>({testMaximum:24}),connect:async refresh=>{assert.equal(refresh,true);return {token:'a'.repeat(48)};}, stop: async () => { calls.push({stop:true}); return {stopped:true}; }} });
+  return { listener, calls, click, removed, updated };
 }
 
 test('background relays tags only to the matching Cake upload tab', async () => {
@@ -163,4 +164,23 @@ test('processing bridge relays export RPCs and acknowledges dedicated port comma
  assert.equal(calls.at(-1).download.url,'http://127.0.0.1:8765'+rpc.data.message.path);
  assert.equal(posted.at(-1).message.type,'cake-tagger:rpc-response');assert.equal(posted.at(-1).message.response.started,true);
  const before=calls.length;await messageListener({...rpc,source:parent,origin:'https://cake.ski/'});assert.equal(calls.length,before);
+});
+
+
+test('scene RPCs accept only top-level content scripts from the extension on Cake',async()=>{
+  const {listener}=await background();
+  const sender={id:'fixture',url:'https://cake.ski/video/7',frameId:0,tab:{id:42}};
+  const message={type:'cake-tagger:scene-start',duration:5};
+  assert.equal((await listener(message,sender)).scene,true);
+  assert.equal((await listener(message,{...sender,frameId:1})).error,'error.sitePermission');
+  assert.equal(listener(message,{...sender,id:'other'}),undefined);
+  assert.equal(listener(message,{...sender,url:'https://example.com/'}),undefined);
+});
+
+
+test('closing or reloading a tab releases its scene jobs',async()=>{
+  const {calls,removed,updated}=await background();
+  removed(42);updated(43,{status:'loading'});updated(44,{status:'complete'});
+  await new Promise(resolve=>setTimeout(resolve,0));
+  assert.deepEqual(calls.filter(call=>call.sceneClosed).map(call=>call.sceneClosed),[42,43]);
 });

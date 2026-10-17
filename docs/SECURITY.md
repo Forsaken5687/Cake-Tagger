@@ -24,6 +24,8 @@ Messages validate parent window, origin, channel and file objects. Background re
 
 Trusted user actions are required for applying tags, downloads and Quit. Connection recovery probes the transport before commands and preserves current results. Actions with unknown outcomes are never replayed automatically. Content Security Policy restricts local scripts and embedding to validated extension bridges and cake.ski.
 
+Existing-video analysis reads only the active player after an explicit user action. The backend receives sampled images, never a site-selected stream URL. The extension background checks sender identity, top-level frame, tab/document ownership, frame dimensions/count and ordering. Idle jobs expire; closing the tab or cancelling drops queued images and aborts the owned inference client. Per-tag actions use the native search UI, stop on navigation or manual input changes and do not automatically retry unconfirmed submissions. Moderator routes are excluded.
+
 ## Dependencies and external use
 
 CPython, CPU ONNX Runtime, model weights and wheels are pinned in `scripts/assets.json`. Setup verifies archive SHA-256 values before extraction; wheel paths are checked before installation. Third-party licenses remain in the prepared runtime and installed package metadata. Hashes establish artifact identity, not semantic safety.

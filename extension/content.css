@@ -47,3 +47,5 @@
 
 /* Hide only the site's AI suggestions; retain upload fields and extension results. */
 .cake-tagger-hide-site-ai .stok-ai-suggestions{display:none!important}
+
+.cake-tagger-scene{margin:12px 0;overflow:hidden}.cake-tagger-scene>summary{cursor:pointer;padding:12px 14px;font-weight:650}.cake-tagger-scene-body{padding:0 12px 12px}.cake-tagger-scene-status{color:var(--cake-text-2,#aaa);font-size:12px;line-height:1.5}.cake-tagger-scene-list{display:flex;flex-direction:column;gap:6px;max-height:40vh;overflow:auto}.cake-tagger-scene-tag{display:flex;align-items:center;gap:8px;text-align:left}.cake-tagger-scene-tag>span:first-child{flex:1}.cake-tagger-scene-tag small{color:var(--cake-text-2,#aaa)}.cake-tagger-scene button:disabled{opacity:.5;cursor:default}.cake-tagger-scene [hidden]{display:none!important}.cake-tagger-scene.is-floating{position:fixed;right:12px;bottom:16px;z-index:1001;width:min(340px,calc(100vw - 24px));max-height:70vh;overflow:auto;box-shadow:0 6px 24px #0006}

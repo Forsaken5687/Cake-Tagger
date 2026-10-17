@@ -1,3 +1,12 @@
+let sceneServicePromise;
+function sceneService() {
+  return globalThis.cakeScenes ? Promise.resolve(globalThis.cakeScenes) : (sceneServicePromise ||= import(browser.runtime.getURL('extension/scene-service.mjs')).then(module => module.createSceneService(browser)));
+}
+function closeScenes(tabId) {
+  if (sceneServicePromise || globalThis.cakeScenes) void sceneService().then(service => service.closeTab(tabId));
+}
+browser.tabs?.onRemoved?.addListener(closeScenes);
+browser.tabs?.onUpdated?.addListener((tabId,change) => { if (change.status === 'loading') closeScenes(tabId); });
 let relayPromise;
 function commandService() {
  return globalThis.cakeCommands ? Promise.resolve(globalThis.cakeCommands) : (relayPromise ||= import(browser.runtime.getURL('extension/command-relay.mjs')).then(module=>module.createCommandRelay(browser.runtime)));
@@ -18,6 +27,10 @@ browser.runtime.onMessage.addListener((message, sender) => {
   const fromAnalysis = popup || sender.url === analysisUrl || sender.url?.startsWith(analysisUrl + '?');
   const fromCake = sender.url?.startsWith('https://cake.ski/');
   if (sender.id !== browser.runtime.id || (!fromAnalysis && !fromCake)) return;
+  if (fromCake && ['cake-tagger:scene-start','cake-tagger:scene-frame','cake-tagger:scene-finish','cake-tagger:scene-cancel'].includes(message?.type)) {
+    if (sender.frameId !== 0 || !Number.isInteger(sender.tab?.id)) return Promise.resolve({error:'error.sitePermission'});
+    return sceneService().then(service => service.handle(message,sender)).catch(() => ({error:'error.nativeServer'}));
+  }
   if (fromCake && message?.type === 'cake-tagger:site-theme' && Number.isInteger(sender.tab?.id) && message.theme && JSON.stringify(message.theme).length <= 4096) {
     return browser.runtime.sendMessage({ type: 'cake-tagger:site-theme-updated', tabId: sender.tab.id, theme: message.theme }).catch(() => null);
   }

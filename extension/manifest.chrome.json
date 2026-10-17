@@ -57,7 +57,10 @@
         "extension/upload-ui.mjs",
         "src/shared/settings-ui.mjs",
         "src/shared/preferences.mjs",
-        "src/shared/trusted-event.mjs"
+        "src/shared/trusted-event.mjs",
+        "extension/scene-ui.mjs",
+        "extension/scene-adapter.mjs",
+        "src/client/sampling.mjs"
       ],
       "matches": [
         "https://cake.ski/*"

@@ -27,6 +27,10 @@ The extension preserves existing tags and never publishes posts. **Bulk file sel
 
 Use **Download JSON** to keep results before closing or reloading the upload page. Stop the local service with **Quit** in the extension or **Ctrl+C** in its terminal.
 
+## Existing videos
+
+On a normal video page, open **Cake Tagger · Missing tags** and choose **Analyze video**. Playback pauses briefly while images are sampled. Review the missing tags and use `+` to suggest one through the site's native tag search. Depending on your site permissions, it is added immediately or submitted for review. Moderator views are excluded.
+
 ## Settings and limits
 
 Adjust sampling, CPU parallelism, suggestion thresholds, tag counts and exclusions in **Settings**. Preferences persist locally and are shared by connected browsers. See the [settings guide](docs/SETTINGS.md).

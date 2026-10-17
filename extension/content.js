@@ -6,6 +6,8 @@
   const allowed = new Set(text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean));
   const { mountUploadPanel } = await import(browser.runtime.getURL('extension/embedded-upload.mjs'));
   mountUploadPanel(document, browser.runtime);
+  const { mountSceneSuggestions } = await import(browser.runtime.getURL('extension/scene-ui.mjs'));
+  mountSceneSuggestions(document,browser.runtime,allowed);
   let busy = false;
   browser.runtime.onMessage.addListener((message, sender) => {
     // Website scripts cannot directly invoke this listener; also verify our sender.

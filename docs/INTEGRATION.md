@@ -30,6 +30,14 @@ Inherited Bulk tags count as present. A shared tag explicitly removed from one c
 
 The extension does not submit files, captions, performers, upload questions, confirmations or publishing actions. Filename matching does not verify content identity between the analysis file and upload card.
 
+## Existing videos
+
+On normal video pages, **Cake Tagger · Missing tags** provides a manual **Analyze video** action. It samples the active HTML video element, including HLS playback already decoded by the site. Sampling briefly pauses and seeks the player, then restores its position and playback state. Browsers may deny canvas access for cross-origin media; this produces an error instead of fetching arbitrary stream URLs through the server.
+
+Only missing catalog tags are offered. Each plus button uses the video's native tag button and an exact existing search result, preserving the site's authentication and permission checks. Existing search text is preserved. The native list or pending-review list must confirm the outcome; uncertain submissions are not automatically repeated. Moderator routes are excluded.
+
+The content script sends one bounded base64 RGBA frame at a time to its extension background. Jobs are bound to the top-level tab/document, expire when idle and are limited to two at once. The background reuses `/api/infer` with saved preferences and aggregated output. There are no additional host or scripting permissions, site API calls from the extension, model inputs saved to disk, or new backend routes.
+
 ## Settings, theme and browser differences
 
 Preferences are stored on the local backend. Content scripts read them through the extension background; settings saves use the authenticated backend API. Legacy extension settings migrate only if server settings have not been initialized. Theme updates carry only known color tokens and page language; they are not persisted.
