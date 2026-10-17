@@ -57,15 +57,19 @@ export function mountSceneSuggestions(doc,runtime,allowed) {
       let button=[...list.children].find(node=>node.dataset.tag===row.tag);
       if(!button){
         button=element('button',null,'cake-tagger-scene-tag stok-tv-coocchip');button.type='button';button.dataset.tag=row.tag;
-        button.append(element('span','#'+row.tag),element('small'),element('span','+'));
+        button.append(element('span','#'+row.tag,'cake-tagger-tag-name'),element('small',null,'cake-tagger-score'),element('span','+','cake-tagger-tag-action'));
+        button.children[2].setAttribute('aria-hidden','true');
         button.addEventListener('click',event=>{if(isTrustedEvent(event))void addTag(entry,row.tag);});
         list.append(button);
       }
       if(list.children[position]!==button)list.insertBefore(button,list.children[position] || null);
       position++;
       button.disabled=entry.busy || outcome==='unknown';
-      button.children[1].textContent=settings.showScores?Math.round(row.confidence*100)+'%':'';
+      button.children[1].textContent=Math.round(row.confidence*100)+'%';
+      button.children[1].hidden=!settings.showScores;
+      button.children[1].title=t('tags.score',{score:Math.round(row.confidence*100)});
       button.children[2].textContent=outcome==='unknown'?t('scene.check'):'+';
+      button.children[2].setAttribute('aria-hidden',String(outcome!=='unknown'));
     }
     for(const button of [...list.children])if(!kept.has(button.dataset.tag))button.remove();
     if(entry.analysis && !list.children.length)list.append(element('p',t('scene.empty'),'cake-tagger-scene-empty'));

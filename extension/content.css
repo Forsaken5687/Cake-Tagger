@@ -48,20 +48,24 @@
 /* Hide only the site's AI suggestions; retain upload fields and extension results. */
 .cake-tagger-hide-site-ai .stok-ai-suggestions{display:none!important}
 
-/* A permanent section using Cake's native tag spacing, typography and colors. */
+/* Keep video suggestions in the native tag flow, with readable names and quieter scores. */
 .cake-tagger-scene{flex-shrink:0;min-width:0;margin:0;padding:10px 18px 12px;border:0;background:transparent;color:inherit;font:inherit;overflow:visible;overflow-anchor:none}
 .cake-tagger-scene-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:26px}
 .cake-tagger-scene-label{color:var(--cake-text-2,#9a9a9a);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .cake-tagger-scene .cake-tagger-result-actions{margin:0;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .cake-tagger-scene-status,.cake-tagger-scene-empty{margin:8px 0 0;color:var(--cake-text-2,#9a9a9a);font-size:12px;line-height:1.5}
-.cake-tagger-scene-list{display:flex;flex-wrap:wrap;gap:6px;overflow:visible}
-.cake-tagger-scene-list:not(:empty){margin-top:8px}
+.cake-tagger-scene-list{display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;overflow:visible}
+.cake-tagger-scene-list:not(:empty){margin-top:10px}
 .cake-tagger-scene button{font:inherit;font-size:11px;cursor:pointer}
 .cake-tagger-scene-analyze,.cake-tagger-scene-cancel{padding:4px 0;border:0;background:transparent;color:var(--cake-accent,#fe2c55);white-space:nowrap}
 .cake-tagger-scene :is(.cake-tagger-scene-analyze,.cake-tagger-scene-cancel):hover{color:var(--cake-accent-hi,#ff5277);text-decoration:underline}
-.cake-tagger-scene .cake-tagger-scene-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:var(--cake-hover,#303030);border:1px dashed var(--cake-border-2,#444);color:inherit;line-height:1.2}
-.cake-tagger-scene .cake-tagger-scene-tag:hover{border-color:var(--cake-accent,#fe2c55)}
-.cake-tagger-scene-tag small{color:var(--cake-text-2,#9a9a9a);font-size:10px}
+.cake-tagger-scene .cake-tagger-scene-tag{display:inline-flex;align-items:center;gap:8px;max-width:100%;min-height:32px;box-sizing:border-box;padding:5px 7px 5px 11px;border-radius:999px;background:var(--cake-hover,#303030);border:1px solid var(--cake-border-2,#444);color:var(--cake-text,#eee);font-size:12px;line-height:1.35;text-align:left;transition:background-color .15s,border-color .15s}
+.cake-tagger-scene .cake-tagger-scene-tag:not(:disabled):hover{background:var(--cake-accent-a12,#fe2c5520);border-color:var(--cake-accent-a45,#fe2c5580)}
+.cake-tagger-tag-name{min-width:0;overflow-wrap:anywhere;font-weight:500}
+.cake-tagger-scene .cake-tagger-score{flex:none;padding:2px 5px;border-radius:5px;background:var(--cake-surface-2,#1c1c1c);color:var(--cake-text-2,#aaa);font-size:10px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.3;white-space:nowrap}
+.cake-tagger-tag-action{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:18px;min-height:18px;border-radius:50%;color:var(--cake-text-2,#aaa);font-size:14px;line-height:1}
+.cake-tagger-scene-tag:not(:disabled):hover .cake-tagger-tag-action{background:var(--cake-accent-a12,#fe2c5520);color:var(--cake-accent,#fe2c55)}
+@media(prefers-reduced-motion:reduce){.cake-tagger-scene .cake-tagger-scene-tag{transition:none}}
 .cake-tagger-scene button:disabled{opacity:.5;cursor:default}
 .cake-tagger-scene button:focus-visible{outline:2px solid var(--cake-accent,#fe2c55);outline-offset:2px}
 .cake-tagger-scene [hidden]{display:none!important}
