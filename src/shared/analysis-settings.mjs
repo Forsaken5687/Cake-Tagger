@@ -32,7 +32,7 @@ export function validateRuntime(value) {
   const native = value?.provider === 'native-cpu';
   if (typeof value !== 'object' || Array.isArray(value) || !['wasm', 'native-cpu'].includes(value.provider)
     || (native ? !Number.isInteger(value.configuredNativeThreads) || value.configuredNativeThreads < 1 || value.configuredNativeThreads > value.hardwareConcurrency
-      || !/^\d+\.\d+\.\d+$/.test(value.runtimeVersion) || !/^[a-f0-9]{64}$/.test(value.modelSha256)
+      || typeof value.runtimeVersion !== 'string' || value.runtimeVersion.length > 32 || !/^[0-9]{1,10}\.[0-9]{1,10}\.[0-9]{1,10}$/.test(value.runtimeVersion) || value.runtimeVersion.includes('\n') || !/^[a-f0-9]{64}$/.test(value.modelSha256)
       : !Number.isInteger(value.configuredWasmThreads) || value.configuredWasmThreads < 1 || value.configuredWasmThreads > 8)
     || !Number.isInteger(value.hardwareConcurrency) || value.hardwareConcurrency < 1 || !Number.isSafeInteger(value.hardwareConcurrency)
     || (!native && (typeof value.crossOriginIsolated !== 'boolean' || typeof value.sharedArrayBufferAvailable !== 'boolean'
@@ -41,7 +41,7 @@ export function validateRuntime(value) {
   if (native && ((value.backendImplementation != null && !['node','python'].includes(value.backendImplementation))
     || (value.inferenceRssBytes != null && (!Number.isSafeInteger(value.inferenceRssBytes) || value.inferenceRssBytes < 0))
     || (value.inferenceProcessPowerPolicy != null && !['high-qos','unavailable'].includes(value.inferenceProcessPowerPolicy)))) throw messageError('error.invalidAnalysisRuntime');
-  if (value.parallelismLimit != null && value.parallelismLimit !== 'auto' && (!/^[1-9]\d*$/.test(value.parallelismLimit) || !Number.isSafeInteger(Number(value.parallelismLimit)))) throw messageError('error.invalidAnalysisRuntime');
+  if (value.parallelismLimit != null && value.parallelismLimit !== 'auto' && (typeof value.parallelismLimit !== 'string' || value.parallelismLimit.length > 16 || !/^[1-9][0-9]{0,15}$/.test(value.parallelismLimit) || value.parallelismLimit.includes('\n') || !Number.isSafeInteger(Number(value.parallelismLimit)))) throw messageError('error.invalidAnalysisRuntime');
   if (native && value.threadsPerSession != null && (!Array.isArray(value.threadsPerSession)
     || value.threadsPerSession.length !== value.inferenceWorkers || value.threadsPerSession.some(count => !Number.isSafeInteger(count) || count < 1)
     || value.threadsPerSession.reduce((sum,count)=>sum+count,0) !== value.configuredNativeThreads
